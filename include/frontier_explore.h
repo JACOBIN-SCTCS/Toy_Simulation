@@ -6,6 +6,7 @@
 #include <queue>
 #include <functional>
 #include <climits>
+#include <algorithm>
 
 class FrontierExplore
 {
