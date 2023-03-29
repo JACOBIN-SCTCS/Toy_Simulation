@@ -138,6 +138,11 @@ public:
 
 	}
 
+	void topological_explore()
+	{
+		;
+	}
+
 	Framework fw;
 
 private:

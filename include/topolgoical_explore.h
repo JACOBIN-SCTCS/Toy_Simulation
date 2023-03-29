@@ -9,6 +9,8 @@
 #include <queue>
 #include <Eigen/Dense>
 #include <complex>
+#include <unordered_map>
+#include <set>
 
 
 class TopolgicalExplore
@@ -154,7 +156,7 @@ class TopolgicalExplore
         
 
 
-        std::vector<std::vector<std::complex<double>>> getPaths(int x , int y)
+        std::vector<std::vector<std::pair<int,int>>> getPaths(int x , int y)
         {
             auto customOp = [](const std::complex<double>& a, const std::complex<double>& b) -> double
             {
@@ -175,8 +177,10 @@ class TopolgicalExplore
             };
 
             int limit = 5;
+            int count = 0;
             findFrontiers(x,y);
             std::vector<std::vector<int>>& obstacles_ref = *obstacles_seen;
+            std::vector<std::vector<int>>& grid_ref = *grid;
             Eigen::VectorXcd obstacle_points = Eigen::VectorXcd::Zero(obstacles_ref.size());
             for(unsigned int i= 0 ; i < obstacles_ref.size();++i)
                 obstacle_points(i) = std::complex<double>(obstacles_ref[i][0],obstacles_ref[i][1]);
@@ -197,157 +201,107 @@ class TopolgicalExplore
                 std::complex<double>(-1.0,-1.0),
             };
 
-            return paths;
 
-        }   
-       
+            std::vector<std::vector<std::pair<int,int>>> paths;	
+            std::priority_queue<DijkstraNode*, std::vector<DijkstraNode*>, std::function<bool(DijkstraNode*, DijkstraNode*)>> pq([](DijkstraNode* a, DijkstraNode* b) { return a->cost > b->cost; });
+            std::unordered_map<std::string,double> distance_count;
+            std::set<std::string> visited;
+            std::stringstream ss;
+            Eigen::VectorXd zeros = Eigen::VectorXd::Zero(obstacles_ref.size());
+	        ss << start_point << "-\n"<< zeros;
+	        distance_count[ss.str()] = std::abs(goal_point-start_point);
 
-    //    void Utils::findPath(geometry_msgs::msg::PoseStamped pose)
-    // {
+	        for(unsigned int i=0;i<directions.size();++i)
+	        {
+                std::complex<double> new_point = start_point + directions[i];
+                //unsigned int new_point_index = costmap_->getIndex((unsigned int)new_point.real(),(unsigned int)new_point.imag());
 
-      
-
-
-
-
-    //     Eigen::VectorXcd obstacle_points = Eigen::VectorXcd::Zero(obstacles_.size());
-    //     for(unsigned int i= 0 ; i < obstacles_.size();++i)
-    //         obstacle_points(i) = std::complex<double>(obstacles_[i].rep[0],obstacles_[i].rep[1]);
-    //     std::complex<double> start_point(mx,my);
-    //     std::complex<double> goal_point(current_frontier.map_coord[0],current_frontier.map_coord[1]);
-    //     RCLCPP_INFO(rclcpp::get_logger("FrontierExploration"), "Start point : %f %f",start_point.real(),start_point.imag());
-    //     RCLCPP_INFO(rclcpp::get_logger("FrontierExploration"), "Goal point : %f %f",goal_point.real(),goal_point.imag());
-
-    //     std::vector<std::complex<double>> directions = {
-    //         std::complex<double>(1.0,0.0),
-    //         std::complex<double>(0.0,1.0),
-    //         std::complex<double>(-1.0,0.0),
-    //         std::complex<double>(0.0,-1.0),
-    //         std::complex<double>(1.0,1.0),
-    //         std::complex<double>(-1.0,1.0),
-    //         std::complex<double>(1.0,-1.0),
-    //         std::complex<double>(-1.0,-1.0),
-    //     };
-
-	//     std::vector<std::vector<std::complex<double>>> paths;	
-	//     std::priority_queue<DijkstraNode*, std::vector<DijkstraNode*>, std::function<bool(DijkstraNode*, DijkstraNode*)>> pq([](DijkstraNode* a, DijkstraNode* b) { return a->cost > b->cost; });
-	//     std::unordered_map<std::string,double> distance_count;
-	//     std::set<std::string> visited;
-
-	//     std::stringstream ss;
-	//     Eigen::VectorXd zeros = Eigen::VectorXd::Zero(obstacle_points.size());
-	//     ss << start_point << "-\n"<< zeros;
-	//     distance_count[ss.str()] = std::abs(goal_point-start_point);
-
-	//     for(unsigned int i=0;i<directions.size();++i)
-	//     {
-    //         std::complex<double> new_point = start_point + directions[i];
-    //         unsigned int new_point_index = costmap_->getIndex((unsigned int)new_point.real(),(unsigned int)new_point.imag());
-
-    //         if(real(new_point)<0.0 || real(new_point)>map_size_x || imag(new_point)<0.0 || imag(new_point)>map_size_y || (costmap_data[new_point_index] == nav2_costmap_2d::LETHAL_OBSTACLE || costmap_data[new_point_index] == nav2_costmap_2d::INSCRIBED_INFLATED_OBSTACLE))
-    //                     continue;
-    //         Eigen::VectorXcd s_vec = Eigen::VectorXcd::Constant(obstacle_points.size(),start_point) - obstacle_points;
-    //         Eigen::VectorXcd e_vec = Eigen::VectorXcd::Constant(obstacle_points.size(),new_point) - obstacle_points;
-    //         Eigen::VectorXd temp = s_vec.array().binaryExpr(e_vec.array(),customOp);
-    //         double cell_cost = costmap_data[new_point_index];
-    //         if(cell_cost == nav2_costmap_2d::NO_INFORMATION)
-    //             cell_cost = 1.0;
-    //         double c = cell_cost + std::abs(new_point-goal_point);
-    //         std::vector<std::complex<double>> e = {start_point,new_point};
-    //         DijkstraNode* node = new DijkstraNode(new_point,temp,c,NULL,e);
-    //         pq.push(node);
-	//     }
+                if(real(new_point)<0.0 || real(new_point)>grid_ref.size() || imag(new_point)<0.0 || imag(new_point)>grid_ref[0].size() || grid_ref[new_point.real()][new_point.imag()]==0)
+                        continue;
+                Eigen::VectorXcd s_vec = Eigen::VectorXcd::Constant(obstacle_points.size(),start_point) - obstacle_points;
+                Eigen::VectorXcd e_vec = Eigen::VectorXcd::Constant(obstacle_points.size(),new_point) - obstacle_points;
+                Eigen::VectorXd temp = s_vec.array().binaryExpr(e_vec.array(),customOp);
+                
+                double cell_cost = grid_ref[new_point.real()][new_point.imag()];
+                if(cell_cost == -1)
+                    cell_cost = 1.0;
+                double c = cell_cost + std::abs(new_point-goal_point);
+                std::vector<std::complex<double>> e = {start_point,new_point};
+                DijkstraNode* node = new DijkstraNode(new_point,temp,c,NULL,e);
+                pq.push(node);
+	        }
 	
-    //     while(!pq.empty())
-    //     {
-    //         DijkstraNode* node = pq.top();
-    //         pq.pop();
-    //         if(node->point == goal_point)
-    //         {
-    //             std::stringstream ss;
-    //             ss << node->h_signature;
-    //             std::string key = ss.str();
-    //             Eigen::VectorXd filtered = (1.0/(2*M_PIf64))*node->h_signature;
-	// 		    if((filtered.array()> 1.0).any() || (filtered.array() < -1.0).any())
-	// 			    continue;
+            while(!pq.empty())
+            {
+                DijkstraNode* node = pq.top();
+                pq.pop();
+                if(node->point == goal_point)
+                {
+                    std::stringstream ss;
+                    ss << node->h_signature;
+                    std::string key = ss.str();
+                    Eigen::VectorXd filtered = (1.0/(2*M_PIf64))*node->h_signature;
+			        if((filtered.array()> 1.0).any() || (filtered.array() < -1.0).any())
+				        continue;
 			
                 
-    //             if(visited.find(key) == visited.end())
-    //             {
-    //                 //std::cout<<key<<std::endl<<std::endl;
-    //                 count +=1;
-    //                 RCLCPP_INFO(rclcpp::get_logger("FrontierExploration"), "Path %d = %s",count,key.c_str());
+                    if(visited.find(key) == visited.end())
+                    {
+                        //std::cout<<key<<std::endl<<std::endl;
+                        count +=1;
+                        visited.insert(key);
+                        std::vector<std::pair<int,int>> path;
+                        DijkstraNode* temp = node;
+                        while(temp!=NULL)
+                        {
+                            int current_point_x  = temp->point.real(), current_point_y = temp->point.imag();
+                            path.push_back(std::pair<int,int>(current_point_x,current_point_y));
+                            temp = temp->parent;
+                        }
+                        std::reverse(path.begin(),path.end());
+                        paths.push_back(path);
+                        if(count>=limit)
+                        {
+                            return paths;
+                        }
+                    }
+                }
+                else
+                {
+                    for(unsigned int i=0;i<directions.size();++i)
+                    {
+                        std::complex<double> new_point = node->point + directions[i];
+                        if(real(new_point)<0.0 || real(new_point)> grid_ref.size() || imag(new_point)<0.0 || imag(new_point)>grid_ref[0].size() || grid_ref[new_point.real()][new_point.imag()]==0)
+                            continue;
+                        Eigen::VectorXcd s_vec = Eigen::VectorXcd::Constant(obstacle_points.size(),node->point) - obstacle_points;
+                        Eigen::VectorXcd e_vec = Eigen::VectorXcd::Constant(obstacle_points.size(),new_point) - obstacle_points;
+                        Eigen::VectorXd t =   s_vec.array().binaryExpr(e_vec.array(),customOp);
+                        Eigen::VectorXd temp =  node->h_signature + t;
+                        Eigen::VectorXd filtered = (1.0/(2*M_PIf64))*temp;
+                        if((filtered.array()> 1.0).any() || (filtered.array() < -1.0).any())
+                            continue;
+                        double cell_cost = grid_ref[new_point.real()][new_point.imag()];
+                        if(cell_cost == -1)
+                            cell_cost = 1.0;
+                        double c = node->cost + cell_cost + std::abs(new_point-goal_point);
+                        
+                        std::stringstream ss;
+                        ss << new_point << "-\n"<< temp;
+                        std::string key = ss.str();
+                        if(distance_count.find(key)==distance_count.end() || distance_count[key] > c)
+                        {
+                            distance_count[key] = c;
+                            std::vector<std::complex<double>> edge = { node->point,new_point}; 
+                            DijkstraNode* new_node = new DijkstraNode(new_point,temp,c,node,edge);
+                            pq.push(new_node);
+                        }
+                    }
+                }
 
+	        }
 
-    //                 visited.insert(key);
-    //                 std::vector<geometry_msgs::msg::Point> path;
-    //                 DijkstraNode* temp = node;
-    //                 RCLCPP_INFO(rclcpp::get_logger("FrontierExploration"), "Before path logging");
-    //                 while(temp!=NULL)
-    //                 {
+        }   
 
-    //                     double current_point_x , current_point_y;
-    //                     try
-    //                     {
-    //                         costmap_->mapToWorld((unsigned int)temp->point.real(),(unsigned int)temp->point.imag(),current_point_x,current_point_y);
-    //                     }
-    //                     catch(const std::exception& e)
-    //                     {
-    //                         std::cerr << e.what() << '\n';
-    //                     }
-    //                     geometry_msgs::msg::Point current_point;
-    //                     current_point.x = current_point_x;
-    //                     current_point.y = current_point_y;
-    //                     RCLCPP_INFO(rclcpp::get_logger("FrontierExploration"),"(%lf,%lf)",current_point.x,current_point.y);
-    //                     path.push_back(current_point);
-    //                     temp = temp->parent;
-    //                 }
-
-    //                 std::reverse(path.begin(),path.end());
-    //                 paths_.push_back(path);
-    //                 if(count>=count_limit)
-    //                 {
-    //                     //RCLCPP_INFO(rclcpp::get_logger("FrontierExploration"), "Path Size = %lu",paths[0].size());
-    //                     return;
-    //                 }
-    //             }
-    //         }
-    //         else
-    //         {
-    //             for(unsigned int i=0;i<directions.size();++i)
-    //             {
-    //                 std::complex<double> new_point = node->point + directions[i];
-    //                 unsigned int new_point_index = costmap_->getIndex((unsigned int)new_point.real(),(unsigned int)new_point.imag());
-    //                 if(real(new_point)<0.0 || real(new_point)> map_size_x || imag(new_point)<0.0 || imag(new_point)>map_size_y || (costmap_data[new_point_index] == nav2_costmap_2d::LETHAL_OBSTACLE || costmap_data[new_point_index] == nav2_costmap_2d::INSCRIBED_INFLATED_OBSTACLE))
-    //                     continue;
-    //                 Eigen::VectorXcd s_vec = Eigen::VectorXcd::Constant(obstacle_points.size(),node->point) - obstacle_points;
-    //                 Eigen::VectorXcd e_vec = Eigen::VectorXcd::Constant(obstacle_points.size(),new_point) - obstacle_points;
-    //                 Eigen::VectorXd t =   s_vec.array().binaryExpr(e_vec.array(),customOp);
-    //                 Eigen::VectorXd temp =  node->h_signature + t;
-    //                 Eigen::VectorXd filtered = (1.0/(2*M_PIf64))*temp;
-	// 		        if((filtered.array()> 1.0).any() || (filtered.array() < -1.0).any())
-	// 			        continue;
-	// 		        double cell_cost = costmap_data[new_point_index];
-    //                 if(cell_cost == nav2_costmap_2d::NO_INFORMATION)
-    //                     cell_cost = 1.0;
-    //                 double c = node->cost + cell_cost + std::abs(new_point-goal_point);
-                    
-    //                 std::stringstream ss;
-    //                 ss << new_point << "-\n"<< temp;
-    //                 std::string key = ss.str();
-    //                 if(distance_count.find(key)==distance_count.end() || distance_count[key] > c)
-    //                 {
-    //                     distance_count[key] = c;
-    //                     std::vector<std::complex<double>> edge = { node->point,new_point}; 
-    //                     DijkstraNode* new_node = new DijkstraNode(new_point,temp,c,node,edge);
-    //                     pq.push(new_node);
-    //                 }
-    //             }
-    //         }
-
-	//     }
-
-    // }
         std::vector<std::vector<int>>* grid;
         std::vector<std::vector<int>>* obstacles_seen;
         std::vector<Frontier> frontiers;
