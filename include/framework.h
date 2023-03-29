@@ -45,7 +45,7 @@ class Framework
 					}
 					else if(grid[i][j]==0)
 					{
-						SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+						SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 						SDL_RenderDrawPoint(renderer,i,j);
 					}
 					else if(grid[i][j]==1)
