@@ -53,10 +53,20 @@ class Framework
 						SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 						SDL_RenderDrawPoint(renderer,i,j);
 					}
-					else
+					else if(grid[i][j]==2)
 					{
 						SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
 						SDL_RenderDrawPoint(renderer,i,j);	
+					}
+					else if(grid[i][j]==3)
+					{
+						SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+						SDL_RenderDrawPoint(renderer,i,j);
+					}
+					else
+					{
+						SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
+						SDL_RenderDrawPoint(renderer,i,j);
 					}
 				}
 			}

@@ -163,7 +163,6 @@ class FrontierExplore
 
             distance[start_x][start_y] = 0;
     	    std::priority_queue<DijkstraNode*, std::vector<DijkstraNode*>, std::function<bool(DijkstraNode*, DijkstraNode*)>> pq([](DijkstraNode* a, DijkstraNode* b) {
-
                 return  ((a->f + a->g) > (b->f + b->g));
              });
 
@@ -178,6 +177,7 @@ class FrontierExplore
             while(!pq.empty())
             {
                 DijkstraNode* curr = pq.top();
+                std::cout<<"("<<curr->x<<","<<curr->y<<")"<<std::endl;
                 pq.pop();
                 int x = curr->x;
                 int y = curr->y;
@@ -200,7 +200,7 @@ class FrontierExplore
                         continue;
                     else
                     {
-                        int g_new = curr->g + sqrt((x_new-x)*(x_new-x) + (y_new-y)*(y_new-y));
+                        int g_new = curr->g + sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
                         int f_new = curr->f  + 1;
                         if((f_new+g_new) < distance[f_new][g_new])
                         {

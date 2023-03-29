@@ -60,19 +60,26 @@ public:
 		}
 		sensor_model(x, y);
 		
-		// for(int i= 0;i < 30;++i)
-		// {
-		// 	sensor_model(x+i,y+i);
-		// 	grid[x+i][y+i] = 2;
-		// 	fw.render_screen(grid);
-		// }
+		for(int i= 0;i < 30;++i)
+		{
+			sensor_model(x+i,y+i);
+			grid[x+i][y+i] = 2;
+			fw.render_screen(grid);
+		}
 
 		FrontierExplore f_explore(&grid);
 		f_explore.findFrontiers(x,y);
-		std::vector<std::pair<int,int>> path = f_explore.getPath(x,y,f_explore.frontiers[0].cells[0].first,f_explore.frontiers[0].cells[0].second);
+		std::cout<<"Before computing path"<<std::endl;
+		std::vector<std::pair<int,int>> path = f_explore.getPath(x+29,y+29,f_explore.frontiers[0].cells[0].first,f_explore.frontiers[0].cells[0].second);
+		// std::cout<<"After computing path between source and destination node"<<std::endl;
+		// std::cout << "Length of path = " <<path.size()<<std::endl;
 		
+		for(int i=0;i<path.size();++i)
+		{
+			grid[path[i].first][path[i].second] = 4;
+		}
 		grid[x][y] = 2;
-		grid[f_explore.frontiers[0].x][f_explore.frontiers[0].y] = 2;
+		grid[f_explore.frontiers[0].x][f_explore.frontiers[0].y] = 3;
 
 		// for(int i =0;i<f_explore.frontiers[0].cells.size();++i)
 		// {
