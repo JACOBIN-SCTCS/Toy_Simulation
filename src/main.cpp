@@ -59,7 +59,6 @@ public:
 			}
 		}
 		sensor_model(x, y);
-		fw.render_screen(grid);
 		
 		// for(int i= 0;i < 30;++i)
 		// {
@@ -70,11 +69,23 @@ public:
 
 		FrontierExplore f_explore(&grid);
 		f_explore.findFrontiers(x,y);
-		for(int i=0;i<f_explore.frontiers.size();++i)
-		{
-			std::cout << "Frontier " << i << " = " << f_explore.frontiers[i].x << " " << f_explore.frontiers[i].y << std::endl;
-		}
+		std::vector<std::pair<int,int>> path = f_explore.getPath(x,y,f_explore.frontiers[0].cells[0].first,f_explore.frontiers[0].cells[0].second);
+		
+		grid[x][y] = 2;
+		grid[f_explore.frontiers[0].x][f_explore.frontiers[0].y] = 2;
 
+		// for(int i =0;i<f_explore.frontiers[0].cells.size();++i)
+		// {
+		// 		grid[f_explore.frontiers[0].cells[i].first][f_explore.frontiers[0].cells[i].second] = 2;
+		// }
+		// std::cout << "Path size = " << path.size() << std::endl;
+		// for(int i=0; i<path.size();++i)
+		// {
+		// 	grid[path[i].first][path[i].second] = 2;
+		// 	fw.render_screen(grid);
+		// }
+
+		fw.render_screen(grid);
 
 	}
 
