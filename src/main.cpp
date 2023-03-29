@@ -1,36 +1,35 @@
 #include <iostream>
-#include <SDL2/SDL.h>
+#include <time.h>
+#include "framework.h"
 
-class Framework
-{
+class Robot
+{	
 	public:
-		Framework(int h ,  int w) : height(h), width(w)
+		Robot(int size) : grid_size(size) , fw(size,size)
 		{
-			SDL_Init(SDL_INIT_VIDEO);
-			SDL_CreateWindowAndRenderer(width, height, 0, &window, &renderer);		
-			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-			SDL_RenderClear(renderer);
-			SDL_RenderPresent(renderer);
+			grid.resize(grid_size,std::vector<int>(grid_size,1));
+
+			for(int i=100;i<150;++i)
+				for(int j=100;j<150;++j)
+					grid[i][j] = 0;
+			
+			fw.render_screen(grid);
 		}
-		~Framework()
-		{
-			SDL_DestroyRenderer(renderer);
-			SDL_DestroyWindow(window);
-			SDL_Quit();
-    	}
 
 	private:
-		int height;
-		int width;
-		SDL_Window *window = NULL;
-		SDL_Renderer *renderer = NULL;
+		int grid_size;
+		std::vector<std::vector<int>> grid;
+		Framework fw;
+
 };
 
 int main(int argc, char *argv[])
 {
-	Framework fw(600, 600);
-	SDL_Event event;
+	srand (time(NULL));
 
+	Robot robot(600);
+
+	SDL_Event event;
 	while (!(event.type == SDL_QUIT))
 	{
 		SDL_Delay(10);
