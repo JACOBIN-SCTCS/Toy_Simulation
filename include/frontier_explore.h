@@ -177,18 +177,21 @@ class FrontierExplore
             while(!pq.empty())
             {
                 DijkstraNode* curr = pq.top();
-                std::cout<<"("<<curr->x<<","<<curr->y<<")"<<std::endl;
+                // std::cout<<"("<<curr->x<<","<<curr->y<<")"<<std::endl;
                 pq.pop();
                 int x = curr->x;
                 int y = curr->y;
                 if(x==end_x && y==end_y)
                 {
+                    std::cout <<"Path found";
                     DijkstraNode* ptr = curr;
                     while(curr!=NULL)
                     {
+                        std::cout<<"("<<curr->x<<","<<curr->y<<")"<<std::endl;
                         path.push_back({curr->x,curr->y});
                         curr = curr->parent;
                     }
+                    std::reverse(path.begin(),path.end());
                     return path;
                 }
                 std::vector<std::pair<int,int>> neighbours = getNeighbours(x,y,grid_ref.size(),grid_ref[0].size());
@@ -196,7 +199,25 @@ class FrontierExplore
                 {
                     int x_new = neighbours[i].first;
                     int y_new = neighbours[i].second;
-                    if(grid_ref[x_new][y_new]==0)
+                    if(x_new==end_x && y_new==end_y)
+                    {
+                        int g_new = curr->g + sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
+                        int f_new = curr->f  + 1;
+                        if((f_new+g_new) < distance[f_new][g_new])
+                        {
+                            distance[f_new][g_new] = f_new + g_new;
+                            DijkstraNode* new_node = new DijkstraNode();
+                            new_node->x = x_new;
+                            new_node->y = y_new;
+                            new_node->g = curr->g + sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
+                            new_node->f = curr->f  + 1;
+                            new_node->parent = curr;
+                            pq.push(new_node);
+                            continue;
+                        }
+                    }
+
+                    if(grid_ref[x_new][y_new]==0 || grid_ref[x_new][y_new]==-1)
                         continue;
                     else
                     {

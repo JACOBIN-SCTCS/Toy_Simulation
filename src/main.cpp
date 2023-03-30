@@ -29,6 +29,11 @@ public:
 				double dist = (x - i) * (x - i) + (y - j) * (y - j);
 				if (i >= 0 && i < grid_size && j >= 0 && j < grid_size && dist <= (lidar_range * lidar_range))
 				{
+					if(i==x && j==y)
+					{
+						grid[i][j] = 2;
+						continue;
+					}
 					bool flag = false;
 					for (int k = 0; k < obstacles.size(); ++k)
 					{
@@ -50,6 +55,9 @@ public:
 
 	void start_exploring(int x, int y)
 	{
+		int current_x = x ;
+		int current_y = y;
+
 		for (int i = 0; i < obstacles.size(); ++i)
 		{
 			if (obstacles[i][0] == x && obstacles[i][1] == y)
@@ -58,28 +66,63 @@ public:
 				return;
 			}
 		}
-		sensor_model(x, y);
-		
-		for(int i= 0;i < 30;++i)
-		{
-			sensor_model(x+i,y+i);
-			grid[x+i][y+i] = 2;
-			fw.render_screen(grid);
-		}
+		sensor_model(current_x, current_y);
 
 		FrontierExplore f_explore(&grid);
-		f_explore.findFrontiers(x,y);
-		std::cout<<"Before computing path"<<std::endl;
-		std::vector<std::pair<int,int>> path = f_explore.getPath(x+29,y+29,f_explore.frontiers[0].cells[0].first,f_explore.frontiers[0].cells[0].second);
-		// std::cout<<"After computing path between source and destination node"<<std::endl;
-		// std::cout << "Length of path = " <<path.size()<<std::endl;
-		
-		for(int i=0;i<path.size();++i)
+		f_explore.findFrontiers(current_x, current_y);
+
+		while(f_explore.frontiers.size() > 0)
 		{
-			grid[path[i].first][path[i].second] = 4;
+			 std::cout << "Frontiers size = " << f_explore.frontiers.size() << std::endl;
+			// std::cout << "Before computing path" << std::endl;
+			std::vector<std::pair<int, int>> path = f_explore.getPath(current_x, current_y, f_explore.frontiers[0].cells[0].first, f_explore.frontiers[0].cells[0].second);
+			// grid[current_x][current_y] = 2;
+			grid[f_explore.frontiers[0].x][f_explore.frontiers[0].y] = 3;
+
+			// for (int i = 0; i < f_explore.frontiers[0].cells.size(); ++i)
+			// {
+			// 	grid[f_explore.frontiers[0].cells[i].first][f_explore.frontiers[0].cells[i].second] = 2;
+			// }
+
+			std::cout << "Path size = " << path.size() << std::endl;
+			for (int i = 0; i < path.size(); ++i)
+			{
+				grid[current_x][current_y] = 1;
+				current_x = path[i].first;
+				current_y = path[i].second;
+				grid[current_x][current_y] = 2;
+				sensor_model(current_x,current_y);
+				fw.render_screen(grid);
+				SDL_Delay(500);
+			}
+			// fw.render_screen(grid);
+			current_x = path[path.size() - 1].first;
+			current_y = path[path.size() - 1].second;
+			sensor_model(current_x, current_y);
+			fw.render_screen(grid);
+			f_explore.findFrontiers(current_x, current_y);
 		}
-		grid[x][y] = 2;
-		grid[f_explore.frontiers[0].x][f_explore.frontiers[0].y] = 3;
+		
+		// for(int i= 0;i < 30;++i)
+		// {
+		// 	sensor_model(x+i,y+i);
+		// 	grid[x+i][y+i] = 2;
+		// 	fw.render_screen(grid);
+		// }
+
+		// FrontierExplore f_explore(&grid);
+		// f_explore.findFrontiers(x,y);
+		// std::cout<<"Before computing path"<<std::endl;
+		// std::vector<std::pair<int,int>> path = f_explore.getPath(x+29,y+29,f_explore.frontiers[0].cells[0].first,f_explore.frontiers[0].cells[0].second);
+		// // std::cout<<"After computing path between source and destination node"<<std::endl;
+		// // std::cout << "Length of path = " <<path.size()<<std::endl;
+		
+		// for(int i=0;i<path.size();++i)
+		// {
+		// 	grid[path[i].first][path[i].second] = 4;
+		// }
+		// grid[x][y] = 2;
+		// grid[f_explore.frontiers[0].x][f_explore.frontiers[0].y] = 3;
 
 		// for(int i =0;i<f_explore.frontiers[0].cells.size();++i)
 		// {
@@ -91,8 +134,7 @@ public:
 		// 	grid[path[i].first][path[i].second] = 2;
 		// 	fw.render_screen(grid);
 		// }
-
-		fw.render_screen(grid);
+		// fw.render_screen(grid);
 
 	}
 
@@ -112,7 +154,7 @@ int main(int argc, char *argv[])
 {
 	srand(time(NULL));
 
-	Robot robot(150, 600, 4.0, 6);
+	Robot robot(60, 600,10.0, 6);
 	robot.start_exploring(10, 10);
 
 	// robot.setInitialRobotPose(5,5);
