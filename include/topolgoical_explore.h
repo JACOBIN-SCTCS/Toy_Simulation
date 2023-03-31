@@ -176,7 +176,7 @@ class TopolgicalExplore
 
             };
 
-            int limit = 5;
+            int limit = 2;
             int count = 0;
             findFrontiers(x,y);
             std::vector<std::vector<int>>& obstacles_ref = *obstacles_seen;
@@ -185,7 +185,6 @@ class TopolgicalExplore
             for(unsigned int i= 0 ; i < obstacles_ref.size();++i)
                 obstacle_points(i) = std::complex<double>(obstacles_ref[i][0],obstacles_ref[i][1]);
 
-            std::vector<std::vector<std::complex<double>>> paths;
             std::complex<double> start_point(x,y);
             std::complex<double> goal_point(frontiers[0].x,frontiers[0].y);
             
@@ -299,7 +298,7 @@ class TopolgicalExplore
                 }
 
 	        }
-
+            return paths;
         }   
 
         std::vector<std::vector<int>>* grid;

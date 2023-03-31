@@ -2,6 +2,7 @@
 #include <time.h>
 #include "framework.h"
 #include "frontier_explore.h"
+#include "topolgoical_explore.h"
 
 class Robot
 {
@@ -17,6 +18,7 @@ public:
 			obstacles.push_back({x, y});
 			 grid[x][y] = 0.0;
 		}
+		obstacles.push_back({8,8});
 		std::cout << "Size of the grid = " << grid_size << std::endl;
 	}
 
@@ -138,9 +140,39 @@ public:
 
 	}
 
-	void topological_explore()
+	void topological_explore(int x , int y)
 	{
-		;
+		int current_x = x ;
+		int current_y = y;
+
+		for (int i = 0; i < obstacles.size(); ++i)
+		{
+			if (obstacles[i][0] == x && obstacles[i][1] == y)
+			{
+				std::cout << "Robot is in obstacle" << std::endl;
+				return;
+			}
+		}
+		sensor_model(current_x, current_y);
+		TopolgicalExplore top_explore(&grid, &obstacles_seen);
+		std::vector<std::vector<std::pair<int,int>>> paths = top_explore.getPaths(current_x, current_y);
+
+		std::cout<<"Paths size = "<<paths.size()<<std::endl;
+
+		for(int i=0;i<paths.size();++i)
+		{
+			std::cout<<"\n";
+			for(int j=0;j<paths[i].size();++j)
+			{
+				std::cout<<"("<<paths[i][j].first<<","<<paths[i][j].second<<") "<<std::endl;
+
+				grid[paths[i][j].first][paths[i][j].second] = 3;
+				fw.render_screen(grid);
+				SDL_Delay(500);
+				
+			}
+		}
+
 	}
 
 	Framework fw;
@@ -160,8 +192,8 @@ int main(int argc, char *argv[])
 	srand(time(NULL));
 
 	Robot robot(60, 600,10.0, 6);
-	robot.start_exploring(10, 10);
-
+	// robot.start_exploring(10, 10);
+	robot.topological_explore(10,10);
 	// robot.setInitialRobotPose(5,5);
 
 	// robot.fw.draw_point(300,300);
