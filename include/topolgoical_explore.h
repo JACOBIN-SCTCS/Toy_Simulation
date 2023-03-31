@@ -176,7 +176,7 @@ class TopolgicalExplore
 
             };
 
-            int limit = 2;
+            int limit = 6;
             int count = 0;
             findFrontiers(x,y);
             std::vector<std::vector<int>>& obstacles_ref = *obstacles_seen;
@@ -246,7 +246,7 @@ class TopolgicalExplore
                 
                     if(visited.find(key) == visited.end())
                     {
-                        //std::cout<<key<<std::endl<<std::endl;
+                        std::cout<<"Found="<<key<<std::endl;
                         count +=1;
                         visited.insert(key);
                         std::vector<std::pair<int,int>> path;

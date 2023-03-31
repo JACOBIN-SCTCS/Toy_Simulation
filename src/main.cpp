@@ -18,7 +18,8 @@ public:
 			obstacles.push_back({x, y});
 			 grid[x][y] = 0.0;
 		}
-		obstacles.push_back({8,8});
+		// obstacles.push_back({8,8});
+		obstacles_seen = obstacles;
 		std::cout << "Size of the grid = " << grid_size << std::endl;
 	}
 
