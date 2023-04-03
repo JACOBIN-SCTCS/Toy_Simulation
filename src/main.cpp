@@ -19,7 +19,7 @@ public:
 			 grid[x][y] = 0.0;
 		}
 		// obstacles.push_back({8,8});
-		obstacles_seen = obstacles;
+		//obstacles_seen = obstacles;
 		std::cout << "Size of the grid = " << grid_size << std::endl;
 	}
 
@@ -156,23 +156,44 @@ public:
 		}
 		sensor_model(current_x, current_y);
 		TopolgicalExplore top_explore(&grid, &obstacles_seen);
-		std::vector<std::vector<std::pair<int,int>>> paths = top_explore.getPaths(current_x, current_y);
-
-		std::cout<<"Paths size = "<<paths.size()<<std::endl;
-
-		for(int i=0;i<paths.size();++i)
+		while (top_explore.frontiers.size() > 0)
 		{
-			std::cout<<"\n";
-			for(int j=0;j<paths[i].size();++j)
-			{
-				std::cout<<"("<<paths[i][j].first<<","<<paths[i][j].second<<") "<<std::endl;
+			std::vector<std::vector<std::pair<int,int>>> paths = top_explore.getPaths(current_x, current_y);
+			std::cout<<"Paths size = "<<paths.size()<<std::endl;
+			bool replan  = false;
 
-				grid[paths[i][j].first][paths[i][j].second] = 3;
-				fw.render_screen(grid);
-				SDL_Delay(500);
-				
+			while(paths.size() >0 && replan==false)
+			{
+				for (int i = 0; i < paths[0].size(); ++i)
+				{
+					grid[current_x][current_y] = 1;
+					current_x = paths[0][i].first;
+					current_y = paths[0][i].second;
+					grid[current_x][current_y] = 2;
+					sensor_model(current_x,current_y);
+					fw.render_screen(grid);
+					SDL_Delay(500);
+				}
 			}
+
 		}
+		
+
+
+		// for(int i=0;i<paths.size();++i)
+		// {
+		// 	std::cout<<"\n";
+		// 	for(int j=0;j<paths[i].size();++j)
+		// 	{
+		// 		std::cout<<"("<<paths[i][j].first<<","<<paths[i][j].second<<") "<<std::endl;
+
+		// 		grid[paths[i][j].first][paths[i][j].second] = 3;
+		// 		fw.render_screen(grid);
+		// 		SDL_Delay(500);
+				
+		// 	}
+		// }
+
 
 	}
 

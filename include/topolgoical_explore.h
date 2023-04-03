@@ -181,7 +181,7 @@ class TopolgicalExplore
             int limit = std::min(4, std::max((int)std::pow(2,obstacles_ref.size()),1));
             int count = 0;
             findFrontiers(x,y);
-            std::vector<std::vector<int>>& obstacles_ref = *obstacles_seen;
+            //std::vector<std::vector<int>>& obstacles_ref = *obstacles_seen;
             std::vector<std::vector<int>>& grid_ref = *grid;
             Eigen::VectorXcd obstacle_points = Eigen::VectorXcd::Zero(obstacles_ref.size());
             for(unsigned int i= 0 ; i < obstacles_ref.size();++i)
