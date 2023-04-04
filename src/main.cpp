@@ -16,7 +16,7 @@ public:
 			int x = rand() % grid_size;
 			int y = rand() % grid_size;
 			obstacles.push_back({x, y});
-			 grid[x][y] = 0.0;
+			// grid[x][y] = 0.0;
 		}
 		// obstacles.push_back({8,8});
 		//obstacles_seen = obstacles;
@@ -42,8 +42,20 @@ public:
 					{
 						if (obstacles[k][0] == i && obstacles[k][1] == j)
 						{
-							obstacles_seen.push_back({i, j});
+							bool o_cflag  = false;
+							for(int o_c = 0; o_c < obstacles_seen.size(); ++o_c)
+							{
+								if((obstacles_seen[o_c][0] == i && obstacles_seen[o_c][1] == j))
+								{
+									//obstacles_seen.push_back({i, j});
+									o_cflag = true;
+									break;
+								}
+							}
+							if(!o_cflag)
+								obstacles_seen.push_back({i, j});
 							flag = true;
+							// std::cout <<"Found an obstacle"<<std::endl;
 							break;
 						}
 					}
@@ -156,26 +168,134 @@ public:
 		}
 		sensor_model(current_x, current_y);
 		TopolgicalExplore top_explore(&grid, &obstacles_seen);
+		top_explore.findFrontiers(current_x, current_y);
+		int previous_obstacle_count = obstacles_seen.size();
+	
 		while (top_explore.frontiers.size() > 0)
 		{
+			std::cout<<"Finding paths";
 			std::vector<std::vector<std::pair<int,int>>> paths = top_explore.getPaths(current_x, current_y);
 			std::cout<<"Paths size = "<<paths.size()<<std::endl;
-			bool replan  = false;
-
-			while(paths.size() >0 && replan==false)
+			
+			while(paths.size() >0)
 			{
+				bool followed_path = true;
 				for (int i = 0; i < paths[0].size(); ++i)
 				{
 					grid[current_x][current_y] = 1;
+					if(grid[paths[0][i].first][paths[0][i].second]==0)
+					{
+						int j = i;
+						while(j < paths[0].size() && grid[paths[0][j].first][paths[0][j].second]!=-1)
+						{
+							//grid[paths[0][j].first][paths[0][j].second] = 1;
+							if(grid[paths[0][j].first][paths[0][j].second]==0)
+							{
+								j++;
+								continue;
+							}
+							else
+							{
+								break;
+							}				
+						}
+						if(j==paths[0].size())
+						{
+							followed_path=false;
+							break;
+						}
+						else
+						{
+							std::vector<std::pair<int,int>> path = top_explore.getPath(paths[0][i].first,paths[0][i].second,paths[0][j].first,paths[0][j].second);
+							if(path.size()==0)
+							{
+								followed_path=false;
+								break;
+							}
+							for (int k = 0; k < path.size(); ++k)
+							{
+								grid[path[k].first][path[k].second] = 2;
+								sensor_model(path[k].first,path[k].second);
+								fw.render_screen(grid);
+								SDL_Delay(500);
+							}
+							i = j;
+						}	
+					}
 					current_x = paths[0][i].first;
 					current_y = paths[0][i].second;
 					grid[current_x][current_y] = 2;
 					sensor_model(current_x,current_y);
-					fw.render_screen(grid);
+					fw.render_screen(grid);				
 					SDL_Delay(500);
 				}
+					
+				paths.erase(paths.begin());
+				if(obstacles_seen.size() > previous_obstacle_count || !followed_path)
+				{
+					previous_obstacle_count = obstacles_seen.size();
+					break;
+				}
+				else
+				{
+					if(paths.size()>0)
+					{
+						std::vector<std::pair<int,int>> path = paths[0];
+						std::reverse(path.begin(),path.end());
+						for (int i = 0; i < path.size(); ++i)
+						{
+							grid[current_x][current_y] = 1;
+							if(grid[path[i].first][path[i].second]==0)
+							{
+								int j = i;
+								while(j < path.size() && grid[path[j].first][path[j].second]!=-1)
+								{
+									//grid[paths[0][j].first][paths[0][j].second] = 1;
+									if(grid[path[j].first][path[j].second]==0)
+									{
+										j++;
+										continue;
+									}
+									else
+									{
+										break;
+									}				
+								}
+								if(j==path.size())
+								{
+									followed_path=false;
+									break;
+								}
+								else
+								{
+									std::vector<std::pair<int,int>> new_path = top_explore.getPath(path[i].first,path[i].second,path[j].first,path[j].second);
+									if(new_path.size()==0)
+									{
+										followed_path=false;
+										break;
+									}
+									for (int k = 0; k < new_path.size(); ++k)
+									{
+										grid[new_path[k].first][new_path[k].second] = 2;
+										sensor_model(new_path[k].first,new_path[k].second);
+										fw.render_screen(grid);
+										SDL_Delay(500);
+									}
+									i = j;
+								}	
+							}
+							current_x = path[i].first;
+							current_y = path[i].second;
+							grid[current_x][current_y] = 2;
+							sensor_model(current_x,current_y);
+							fw.render_screen(grid);				
+							SDL_Delay(500);
+						}
+						paths.erase(paths.begin());	
+					}
+				}
 			}
-
+			top_explore.findFrontiers(current_x, current_y);
 		}
 		
 
@@ -213,7 +333,7 @@ int main(int argc, char *argv[])
 {
 	srand(time(NULL));
 
-	Robot robot(60, 600,10.0, 6);
+	Robot robot(60, 600,10.0, 20);
 	// robot.start_exploring(10, 10);
 	robot.topological_explore(10,10);
 	// robot.setInitialRobotPose(5,5);

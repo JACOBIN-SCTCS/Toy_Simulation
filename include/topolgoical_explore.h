@@ -180,7 +180,8 @@ class TopolgicalExplore
             std::vector<std::vector<int>>& obstacles_ref = *obstacles_seen;
             int limit = std::min(4, std::max((int)std::pow(2,obstacles_ref.size()),1));
             int count = 0;
-            findFrontiers(x,y);
+            // std::cout<<"About to find frontiers"<<std::endl;
+            // findFrontiers(x,y);
             //std::vector<std::vector<int>>& obstacles_ref = *obstacles_seen;
             std::vector<std::vector<int>>& grid_ref = *grid;
             Eigen::VectorXcd obstacle_points = Eigen::VectorXcd::Zero(obstacles_ref.size());
@@ -301,7 +302,111 @@ class TopolgicalExplore
 
 	        }
             return paths;
-        }   
+        } 
+
+        std::vector<std::pair<int,int>> getPath(int start_x, int start_y , int end_x, int end_y)
+        {
+                struct DijkstraNode
+                {
+                    int x;
+                    int y;
+                    double f;
+                    double g;
+                    struct DijkstraNode* parent;
+                };
+            
+            std::vector<std::pair<int,int>> path;
+            std::vector<std::vector<int>>& grid_ref = *grid;
+            int distance[grid_ref.size()][grid_ref[0].size()];
+
+            for(int i=0;i<grid_ref.size();++i)
+            {
+                for(int j=0;j<grid_ref[0].size();++j)
+                {
+                    distance[i][j] = INT_MAX;
+                }
+            }
+
+
+            distance[start_x][start_y] = 0;
+    	    std::priority_queue<DijkstraNode*, std::vector<DijkstraNode*>, std::function<bool(DijkstraNode*, DijkstraNode*)>> pq([](DijkstraNode* a, DijkstraNode* b) {
+                return  ((a->f + a->g) > (b->f + b->g));
+             });
+
+            DijkstraNode* start_node = new DijkstraNode();
+            start_node->x = start_x;
+            start_node->y = start_y;
+            start_node->g = sqrt((end_x-start_x)*(end_x-start_x) + (end_y-start_y)*(end_y-start_y));
+            start_node->f = 0;
+            start_node->parent = NULL;
+            pq.push(start_node);
+
+            while(!pq.empty())
+            {
+                DijkstraNode* curr = pq.top();
+                // std::cout<<"("<<curr->x<<","<<curr->y<<")"<<std::endl;
+                pq.pop();
+                int x = curr->x;
+                int y = curr->y;
+                if(x==end_x && y==end_y)
+                {
+                    std::cout <<"Path found";
+                    DijkstraNode* ptr = curr;
+                    while(curr!=NULL)
+                    {
+                        std::cout<<"("<<curr->x<<","<<curr->y<<")"<<std::endl;
+                        path.push_back({curr->x,curr->y});
+                        curr = curr->parent;
+                    }
+                    std::reverse(path.begin(),path.end());
+                    return path;
+                }
+                std::vector<std::pair<int,int>> neighbours = getNeighbours(x,y,grid_ref.size(),grid_ref[0].size());
+                for(int i=0;i<neighbours.size();++i)
+                {
+                    int x_new = neighbours[i].first;
+                    int y_new = neighbours[i].second;
+                    if(x_new==end_x && y_new==end_y)
+                    {
+                        int g_new = curr->g + sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
+                        int f_new = curr->f  + 1;
+                        if((f_new+g_new) < distance[f_new][g_new])
+                        {
+                            distance[f_new][g_new] = f_new + g_new;
+                            DijkstraNode* new_node = new DijkstraNode();
+                            new_node->x = x_new;
+                            new_node->y = y_new;
+                            new_node->g = curr->g + sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
+                            new_node->f = curr->f  + 1;
+                            new_node->parent = curr;
+                            pq.push(new_node);
+                            continue;
+                        }
+                    }
+
+                    if(grid_ref[x_new][y_new]==0 || grid_ref[x_new][y_new]==-1)
+                        continue;
+                    else
+                    {
+                        int g_new = curr->g + sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
+                        int f_new = curr->f  + 1;
+                        if((f_new+g_new) < distance[f_new][g_new])
+                        {
+                            distance[f_new][g_new] = f_new+g_new;
+                            DijkstraNode* new_node = new DijkstraNode();
+                            new_node->x = x_new;
+                            new_node->y = y_new;
+                            new_node->g = g_new;
+                            new_node->f = f_new;
+                            new_node->parent = curr;
+                            pq.push(new_node);
+                        }
+                    }
+                }
+
+            }
+            return path;
+        }
 
         std::vector<std::vector<int>>* grid;
         std::vector<std::vector<int>>* obstacles_seen;
