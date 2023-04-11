@@ -202,7 +202,7 @@ class FrontierExplore
                     int y_new = neighbours[i].second;
                     if(x_new==end_x && y_new==end_y)
                     {
-                        int g_new = curr->g + sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
+                        int g_new = sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
                         int f_new = curr->f  + 1;
                         if((f_new+g_new) < distance[f_new][g_new])
                         {
@@ -222,7 +222,7 @@ class FrontierExplore
                         continue;
                     else
                     {
-                        int g_new = curr->g + sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
+                        int g_new = sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
                         int f_new = curr->f  + 1;
                         if((f_new+g_new) < distance[f_new][g_new])
                         {
