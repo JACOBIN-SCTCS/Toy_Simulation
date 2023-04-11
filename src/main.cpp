@@ -62,7 +62,11 @@ public:
 					if (flag == true)
 						grid[i][j] = 0;
 					else
-						grid[i][j] = 1;
+					{
+						if(grid[i][j]==-1)
+							grid[i][j] = 1;
+					
+					}
 				}
 			}
 		}
@@ -180,6 +184,9 @@ public:
 			while(paths.size() >0)
 			{
 				bool followed_path = true;
+				for(int i=0;i<paths[0].size();++i)
+					grid[paths[0][i].first][paths[0][i].second] = 3;
+				
 				for (int i = 0; i < paths[0].size(); ++i)
 				{
 					grid[current_x][current_y] = 1;
@@ -238,10 +245,15 @@ public:
 				}
 				else
 				{
+					
 					if(paths.size()>0)
 					{
 						std::vector<std::pair<int,int>> path = paths[0];
+						
 						std::reverse(path.begin(),path.end());
+						for(int i=0;i<path.size();++i)
+							grid[path[i].first][path[i].second] = 3;
+
 						for (int i = 0; i < path.size(); ++i)
 						{
 							grid[current_x][current_y] = 1;

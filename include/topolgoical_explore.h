@@ -178,7 +178,7 @@ class TopolgicalExplore
             };
 
             std::vector<std::vector<int>>& obstacles_ref = *obstacles_seen;
-            int limit = std::min(4, std::max((int)std::pow(2,obstacles_ref.size()),1));
+            int limit = std::min(2, std::max((int)std::pow(2,obstacles_ref.size()),1));
             int count = 0;
             // std::cout<<"About to find frontiers"<<std::endl;
             // findFrontiers(x,y);
@@ -224,7 +224,7 @@ class TopolgicalExplore
                 Eigen::VectorXcd e_vec = Eigen::VectorXcd::Constant(obstacle_points.size(),new_point) - obstacle_points;
                 Eigen::VectorXd temp = s_vec.array().binaryExpr(e_vec.array(),customOp);
                 
-                double cell_cost = grid_ref[new_point.real()][new_point.imag()];
+                double cell_cost = 1.0;//grid_ref[new_point.real()][new_point.imag()];
                 if(cell_cost == -1)
                     cell_cost = 1.0;
                 double c = cell_cost + std::abs(new_point-goal_point);
@@ -282,7 +282,7 @@ class TopolgicalExplore
                         Eigen::VectorXd filtered = (1.0/(2*M_PIf64))*temp;
                         if((filtered.array()> 1.0).any() || (filtered.array() < -1.0).any())
                             continue;
-                        double cell_cost = grid_ref[new_point.real()][new_point.imag()];
+                        double cell_cost = 1.0; //grid_ref[new_point.real()][new_point.imag()];
                         if(cell_cost == -1)
                             cell_cost = 1.0;
                         double c = node->cost + cell_cost + std::abs(new_point-goal_point);
@@ -368,7 +368,7 @@ class TopolgicalExplore
                     int y_new = neighbours[i].second;
                     if(x_new==end_x && y_new==end_y)
                     {
-                        int g_new = curr->g + sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
+                        int g_new = sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
                         int f_new = curr->f  + 1;
                         if((f_new+g_new) < distance[f_new][g_new])
                         {
@@ -388,7 +388,7 @@ class TopolgicalExplore
                         continue;
                     else
                     {
-                        int g_new = curr->g + sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
+                        int g_new =  sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
                         int f_new = curr->f  + 1;
                         if((f_new+g_new) < distance[f_new][g_new])
                         {
