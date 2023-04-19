@@ -12,7 +12,7 @@
 #include <complex>
 #include <unordered_map>
 #include <set>
-
+#include<random>
 
 class TopolgicalExplore
 {
@@ -189,7 +189,8 @@ class TopolgicalExplore
                 obstacle_points(i) = std::complex<double>(obstacles_ref[i][0],obstacles_ref[i][1]);
 
             std::complex<double> start_point(x,y);
-            std::complex<double> goal_point(frontiers[0].x,frontiers[0].y);
+            std::vector<int> goal_coords = getGoalCoordinate();
+            std::complex<double> goal_point(goal_coords[0],goal_coords[1]);
             
 
             std::vector<std::complex<double>> directions = {
@@ -218,7 +219,7 @@ class TopolgicalExplore
                 std::complex<double> new_point = start_point + directions[i];
                 //unsigned int new_point_index = costmap_->getIndex((unsigned int)new_point.real(),(unsigned int)new_point.imag());
 
-                if(real(new_point)<0.0 || real(new_point)>grid_ref.size() || imag(new_point)<0.0 || imag(new_point)>grid_ref[0].size() || grid_ref[new_point.real()][new_point.imag()]==0)
+                if(int(real(new_point))<0 || int(real(new_point))>=grid_ref.size() || int(imag(new_point))<0 || int(imag(new_point))>=grid_ref[0].size() || grid_ref[int(new_point.real())][int(new_point.imag())]==0)
                         continue;
                 Eigen::VectorXcd s_vec = Eigen::VectorXcd::Constant(obstacle_points.size(),start_point) - obstacle_points;
                 Eigen::VectorXcd e_vec = Eigen::VectorXcd::Constant(obstacle_points.size(),new_point) - obstacle_points;
@@ -273,7 +274,7 @@ class TopolgicalExplore
                     for(unsigned int i=0;i<directions.size();++i)
                     {
                         std::complex<double> new_point = node->point + directions[i];
-                        if(real(new_point)<0.0 || real(new_point)> grid_ref.size() || imag(new_point)<0.0 || imag(new_point)>grid_ref[0].size() || grid_ref[new_point.real()][new_point.imag()]==0)
+                        if(int(real(new_point))<0 || int(real(new_point))>= grid_ref.size() || int(imag(new_point))<0 || int(imag(new_point))>=grid_ref[0].size() || grid_ref[int(real(new_point))][int(imag(new_point))]==0)
                             continue;
                         Eigen::VectorXcd s_vec = Eigen::VectorXcd::Constant(obstacle_points.size(),node->point) - obstacle_points;
                         Eigen::VectorXcd e_vec = Eigen::VectorXcd::Constant(obstacle_points.size(),new_point) - obstacle_points;
@@ -302,7 +303,7 @@ class TopolgicalExplore
 
 	        }
             return paths;
-        } 
+        }
 
         std::vector<std::pair<int,int>> getPath(int start_x, int start_y , int end_x, int end_y)
         {
@@ -408,6 +409,31 @@ class TopolgicalExplore
             return path;
         }
 
+
+        std::vector<int> getGoalCoordinate()
+        {
+            std::vector<std::vector<int>>& grid_ref = *grid;
+            std::vector<std::vector<int>> unknown_cells;
+
+            for(int i =0; i< grid_ref.size();++i)
+            {
+                for(int j=0;j<grid_ref[0].size();++j)
+                {
+                    if(grid_ref[i][j]==-1)
+                    {
+                        unknown_cells.push_back({i,j});
+                    }
+                }   
+            }
+            std::vector<int> res ;
+            std::random_device rd;
+            std::mt19937 gen(rd()); 
+            std::uniform_int_distribution<> dis(0,unknown_cells.size()); 
+            int idx = dis(gen);
+            res.push_back(unknown_cells[idx][0]);
+            res.push_back(unknown_cells[idx][1]);
+            return res;
+        }
         std::vector<std::vector<int>>* grid;
         std::vector<std::vector<int>>* obstacles_seen;
         std::vector<Frontier> frontiers;

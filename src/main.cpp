@@ -138,7 +138,45 @@ public:
 		}
 		sensor_model(current_x, current_y);
 		TopolgicalExplore top_explore(&grid, &obstacles_seen);
-		
+		int iterations = 0;
+		while(iterations < 100)
+		{
+			std::cout << "Iteration :" << iterations<<std::endl;
+			std::vector<std::vector<std::pair<int,int>>> current_paths = top_explore.getPaths(current_x,current_y);
+			if(current_paths.size() <=0 )
+			{
+				iterations+=1;
+				continue;
+			}
+			for(int i=0;i<current_paths[0].size();++i)
+			{
+				grid[current_x][current_y] = 1;
+				current_x = current_paths[0][i].first;
+				current_y = current_paths[0][i].second;
+				grid[current_x][current_y] = 2;
+				sensor_model(current_x,current_y);
+				fw.render_screen(grid);
+				SDL_Delay(500);
+			}
+			std::cout<<"Reached here";
+			if(current_paths.size() > 2)
+			{
+				std::vector<std::pair<int,int>> reversed_path  = current_paths[1];
+				std::reverse(reversed_path.begin(),reversed_path.end());
+				for(int i=0;i<reversed_path.size();++i)
+				{
+					grid[current_x][current_y] = 1;
+					current_x = reversed_path[i].first;
+					current_y = reversed_path[i].second;
+					grid[current_x][current_y] = 2;
+					sensor_model(current_x,current_y);
+					fw.render_screen(grid);
+					SDL_Delay(500);
+				}
+			}
+			iterations+=1;
+		}
+
 	}
 	
 	
@@ -160,8 +198,8 @@ int main(int argc, char *argv[])
 	srand(time(NULL));
 
 	Robot robot(60, 600,10.0, 20);
-	robot.start_exploring(10, 10);
-	// robot.topological_explore(10,10);
+	// robot.start_exploring(10, 10);
+	robot.topological_explore(10,10);
 	// robot.setInitialRobotPose(5,5);
 
 	// robot.fw.draw_point(300,300);
