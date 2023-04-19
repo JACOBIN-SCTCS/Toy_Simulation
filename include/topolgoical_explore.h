@@ -189,7 +189,7 @@ class TopolgicalExplore
                 obstacle_points(i) = std::complex<double>(obstacles_ref[i][0],obstacles_ref[i][1]);
 
             std::complex<double> start_point(x,y);
-            std::vector<int> goal_coords = getGoalCoordinate();
+            std::vector<int> goal_coords = getGoalCoordinate(x,y);
             std::complex<double> goal_point(goal_coords[0],goal_coords[1]);
             
 
@@ -410,10 +410,14 @@ class TopolgicalExplore
         }
 
 
-        std::vector<int> getGoalCoordinate()
+        std::vector<int> getGoalCoordinate(int start_x, int start_y)
         {
             std::vector<std::vector<int>>& grid_ref = *grid;
             std::vector<std::vector<int>> unknown_cells;
+            // std::vector<int> weights;
+            // std::complex<double> start_point(start_x,start_y);
+            
+            // double total_distance = 0;
 
             for(int i =0; i< grid_ref.size();++i)
             {
@@ -422,13 +426,26 @@ class TopolgicalExplore
                     if(grid_ref[i][j]==-1)
                     {
                         unknown_cells.push_back({i,j});
+                        std::complex<double> current_point(i,j);
+                        // double current_distance = std::abs(current_point-start_point);
+                        // weights.push_back(current_distance);
+                        // total_distance+= current_distance;
                     }
                 }   
             }
+
+            // for(int i = 0; i< weights.size();++i)
+            // {
+            //     weights[i] = 1 - (weights[i]/total_distance);
+            // }
+
+        
             std::vector<int> res ;
             std::random_device rd;
             std::mt19937 gen(rd()); 
-            std::uniform_int_distribution<> dis(0,unknown_cells.size()); 
+
+            std::uniform_int_distribution<> dis(0,unknown_cells.size());
+            // std::discrete_distribution<> dis(weights.begin(),weights.end()); 
             int idx = dis(gen);
             res.push_back(unknown_cells[idx][0]);
             res.push_back(unknown_cells[idx][1]);
