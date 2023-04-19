@@ -139,10 +139,12 @@ public:
 		sensor_model(current_x, current_y);
 		TopolgicalExplore top_explore(&grid, &obstacles_seen);
 		int iterations = 0;
-		while(iterations < 100)
+		std::vector<int> goal = top_explore.getGoalCoordinate(current_x,current_y);
+
+		while(goal.size() > 0)
 		{
 			std::cout << "Iteration :" << iterations<<std::endl;
-			std::vector<std::vector<std::pair<int,int>>> current_paths = top_explore.getPaths(current_x,current_y);
+			std::vector<std::vector<std::pair<int,int>>> current_paths = top_explore.getPaths(current_x,current_y,goal[0],goal[1]);
 			if(current_paths.size() <=0 )
 			{
 				iterations+=1;
@@ -175,6 +177,7 @@ public:
 				}
 			}
 			iterations+=1;
+			goal = top_explore.getGoalCoordinate(current_x,current_y);
 		}
 
 	}

@@ -157,7 +157,7 @@ class TopolgicalExplore
         
 
 
-        std::vector<std::vector<std::pair<int,int>>> getPaths(int x , int y)
+        std::vector<std::vector<std::pair<int,int>>> getPaths(int x , int y , int end_x, int end_y)
         {
             auto customOp = [](const std::complex<double>& a, const std::complex<double>& b) -> double
             {
@@ -189,7 +189,8 @@ class TopolgicalExplore
                 obstacle_points(i) = std::complex<double>(obstacles_ref[i][0],obstacles_ref[i][1]);
 
             std::complex<double> start_point(x,y);
-            std::vector<int> goal_coords = getGoalCoordinate(x,y);
+            // std::vector<int> goal_coords = getGoalCoordinate(x,y);
+            std::vector<int> goal_coords = {end_x,end_y};
             std::complex<double> goal_point(goal_coords[0],goal_coords[1]);
             
 
