@@ -12,7 +12,8 @@
 #include <complex>
 #include <unordered_map>
 #include <set>
-#include<random>
+#include <random>
+#include <map>
 
 class TopolgicalExplore
 {
@@ -455,4 +456,5 @@ class TopolgicalExplore
         std::vector<std::vector<int>>* grid;
         std::vector<std::vector<int>>* obstacles_seen;
         std::vector<Frontier> frontiers;
+        std::map<std::string,int> done_signatures;
 };

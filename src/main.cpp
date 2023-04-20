@@ -150,6 +150,24 @@ public:
 				iterations+=1;
 				continue;
 			}
+			
+			if(current_paths.size()>0)
+			{
+				for(int i=0;i<current_paths[0].size();++i)
+				{
+					grid[current_paths[0][i].first][current_paths[0][i].second]=3;
+					
+				}
+				if(current_paths.size()>1)
+				{
+					for(int i=0;i<current_paths[1].size();++i)
+					{
+						grid[current_paths[1][i].first][current_paths[1][i].second]=3;
+					}
+				}
+			}
+			
+
 			for(int i=0;i<current_paths[0].size();++i)
 			{
 				grid[current_x][current_y] = 1;
@@ -161,7 +179,7 @@ public:
 				SDL_Delay(500);
 			}
 			std::cout<<"Reached here";
-			if(current_paths.size() > 2)
+			if(current_paths.size() > 1)
 			{
 				std::vector<std::pair<int,int>> reversed_path  = current_paths[1];
 				std::reverse(reversed_path.begin(),reversed_path.end());
