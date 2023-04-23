@@ -144,7 +144,8 @@ public:
 		while(goal.size() > 0)
 		{
 			std::cout << "Iteration :" << iterations<<std::endl;
-			std::vector<std::vector<std::pair<int,int>>> current_paths = top_explore.getPaths(current_x,current_y,goal[0],goal[1]);
+			auto paths_to_follow = top_explore.getPaths(current_x,current_y,goal[0],goal[1]);
+			std::vector<std::vector<std::pair<int,int>>> current_paths =  paths_to_follow.paths;  //top_explore.getPaths(current_x,current_y,goal[0],goal[1]);
 			if(current_paths.size() <=0 )
 			{
 				iterations+=1;

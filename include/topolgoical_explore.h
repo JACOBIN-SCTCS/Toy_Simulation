@@ -36,7 +36,13 @@ class TopolgicalExplore
 
             AstarNode( std::complex<double> p , Eigen::VectorXd h , double c , struct AstarNode* pa ,std::vector<std::complex<double>> e) : point(p) , h_signature(h),cost(c),parent(pa) , edge(e) {}
         };
-        
+
+        struct PathsToFollow
+        {
+            std::vector<int> paths_weight;
+            std::vector<std::vector<std::pair<int,int>>> paths;
+        };
+
         TopolgicalExplore(std::vector<std::vector<int>>* g , std::vector<std::vector<int>> * o) : grid(g) , obstacles_seen(o)
         {
             ;
@@ -158,7 +164,9 @@ class TopolgicalExplore
         
 
 
-        std::vector<std::vector<std::pair<int,int>>> getPaths(int x , int y , int end_x, int end_y)
+        // std::vector<std::vector<std::pair<int,int>>> getPaths(int x , int y , int end_x, int end_y)
+
+        struct PathsToFollow getPaths(int x , int y , int end_x, int end_y)
         {
             auto customOp = [](const std::complex<double>& a, const std::complex<double>& b) -> double
             {
@@ -177,6 +185,8 @@ class TopolgicalExplore
                 return minimum_phase_difference;
 
             };
+
+            struct PathsToFollow paths_to_follow;
 
             std::vector<std::vector<int>>& obstacles_ref = *obstacles_seen;
             int limit = std::min(2, std::max((int)std::pow(2,obstacles_ref.size()),1));
@@ -212,6 +222,8 @@ class TopolgicalExplore
             std::unordered_map<std::string,double> distance_count;
             std::set<std::string> visited;
             std::stringstream ss;
+            std::vector<Eigen::VectorXd> visited_h_signatures;
+
             Eigen::VectorXd zeros = Eigen::VectorXd::Zero(obstacles_ref.size());
 	        ss << start_point << "-\n"<< zeros;
 	        distance_count[ss.str()] = std::abs(goal_point-start_point);
@@ -247,14 +259,42 @@ class TopolgicalExplore
                     std::string key = ss.str();
                     Eigen::VectorXd filtered = (1.0/(2*M_PIf64))*node->h_signature;
 			        if((filtered.array()> 1.0).any() || (filtered.array() < -1.0).any())
-				        continue;
-			
+				        continue;   
+                    
+
                 
                     if(visited.find(key) == visited.end())
                     {
+                        
                         std::cout<<"Found="<<key<<std::endl;
                         count +=1;
                         visited.insert(key);
+                        visited_h_signatures.push_back(node->h_signature);
+                        if(paths.size() > 0)
+                        {
+                             for(unsigned int i=0;i<visited_h_signatures.size()-1;++i)
+                             {
+                                Eigen::VectorXd diff = visited_h_signatures[i] - node->h_signature;
+                                Eigen::VectorXd filtered = (1.0/(2*M_PIf64))*diff;
+
+                                int size_ = filtered.size();
+                                //std::cout<<size_<<std::endl;
+
+                                auto boolean_filtered =filtered.unaryExpr([](double x)
+                                {
+                                    return (x==(double)(1) || x == (double)(-1));
+                                });
+                                std::cout<<"Boolean Filtered = " << boolean_filtered<<std::endl;
+                                // std::cout<<"Boolean filtered = "<<boolean_filtered<<std::endl;
+
+                                // std::cout<<"filtered="<<filtered<<std::endl;
+                                // auto boolean_filtered = ((filtered.array()<=-1) || (filtered.array()>=1));
+                                // std::cout<<"Boolean filtered = "<<boolean_filtered<<std::endl;
+                                // Eigen::Array<bool, Eigen::Dynamic, 1> boolArray = ((filtered.array() ==-1.0)|| (filtered.array() == 1.0));
+                                // std::cout<<"boolArray="<<boolArray<<std::endl;
+                                // Eigen::VectorXi indices = boolArray.nonZeros();
+                             }   
+                        }
                         std::vector<std::pair<int,int>> path;
                         AstarNode* temp = node;
                         while(temp!=NULL)
@@ -267,7 +307,8 @@ class TopolgicalExplore
                         paths.push_back(path);
                         if(count>=limit)
                         {
-                            return paths;
+                            paths_to_follow.paths = paths;
+                            return paths_to_follow;
                         }
                     }
                 }
@@ -304,7 +345,8 @@ class TopolgicalExplore
                 }
 
 	        }
-            return paths;
+            paths_to_follow.paths = paths;
+            return paths_to_follow;
         }
 
         std::vector<std::pair<int,int>> getPath(int start_x, int start_y , int end_x, int end_y)
