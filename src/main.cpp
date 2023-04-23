@@ -200,6 +200,32 @@ public:
 		}
 
 	}
+
+	void topological_explore_2(int x, int y)
+	{
+		int current_x = x ;
+		int current_y = y;
+
+		for (int i = 0; i < obstacles.size(); ++i)
+		{
+			if (obstacles[i][0] == x && obstacles[i][1] == y)
+			{
+				std::cout << "Robot is in obstacle" << std::endl;
+				return;
+			}
+		}
+		sensor_model(current_x, current_y);
+		TopolgicalExplore top_explore(&grid, &obstacles_seen);
+		std::vector<Eigen::VectorXd> visited_h_signatures;
+		auto ans = top_explore.getNonHomologousPaths(current_x, current_y, visited_h_signatures);
+		for(int i=0;i< ans.path.size();++i)
+		{
+				grid[ans.path[i].first][ans.path[i].second] = 2;
+		}
+		fw.render_screen(grid);
+
+
+	}
 	
 	
 
@@ -221,7 +247,7 @@ int main(int argc, char *argv[])
 
 	Robot robot(60, 600,10.0, 20);
 	// robot.start_exploring(10, 10);
-	robot.topological_explore(10,10);
+	robot.topological_explore_2(10,10);
 	// robot.setInitialRobotPose(5,5);
 
 	// robot.fw.draw_point(300,300);
