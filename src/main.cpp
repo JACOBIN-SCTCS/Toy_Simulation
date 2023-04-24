@@ -241,7 +241,10 @@ public:
 					followed_in_reverse = true;
 					std::reverse(path.begin(),path.end());
 				}
-				
+				for(int i=0;i<path.size();++i)
+				{
+					grid[path[i].first][path[i].second]  =3;
+				}
 				for(int i=0;i<path.size();++i)
 				{
 					grid[current_x][current_y] = 1;

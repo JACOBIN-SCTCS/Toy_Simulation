@@ -478,9 +478,8 @@ public:
                 for (int i = 0; i < visited_h_signatures.size(); ++i)
                 {
                     Eigen::VectorXd diff = visited_h_signatures[i] - node->h_signature;
-                    std::cout<<"Visited = "<<visited_h_signatures[i]<<std::endl;
-                    std::cout<<"Calculated = "<<node->h_signature<<std::endl;
-                    std::cout<<"Calculated differnece = "<<diff<<std::endl;
+                    // std::cout<<"Visited = "<<visited_h_signatures[i]<<std::endl;
+                    // std::cout<<"Calculated differnece = "<<diff<<std::endl;
                     if (diff.isZero(0.0001))
                     {
                         is_already_seen = true;
@@ -489,7 +488,7 @@ public:
                 }
                 if (is_already_seen)
                     continue;
-
+                std::cout<<"H signature = "<< node->h_signature << std::endl;
                 visited_h_signatures.push_back(node->h_signature);
                 std::vector<std::pair<int, int>> path;
                 AstarNode *temp = node;
@@ -569,14 +568,15 @@ public:
         Eigen::VectorXcd obstacle_points = Eigen::VectorXcd::Zero(obstacles_ref.size());
         for (unsigned int i = 0; i < obstacles_ref.size(); ++i)
             obstacle_points(i) = std::complex<double>(obstacles_ref[i][0], obstacles_ref[i][1]);
-
+        Eigen::VectorXd sum = Eigen::VectorXd::Zero(obstacle_points.size());
         for(int i=1;i<path.size();++i)
         {
             Eigen::VectorXcd s_vec = Eigen::VectorXcd::Constant(obstacle_points.size(), std::complex<double>(path[i-1].first, path[i-1].second)) - obstacle_points;
             Eigen::VectorXcd e_vec = Eigen::VectorXcd::Constant(obstacle_points.size(), std::complex<double>(path[i].first, path[i].second)) - obstacle_points;
             Eigen::VectorXd t = s_vec.array().binaryExpr(e_vec.array(), customOp);
             Eigen::VectorXd temp = t;
-            h_signatures.push_back(temp);
+            sum += temp;
+            h_signatures.push_back(sum);
         }
         return h_signatures;
     }
