@@ -384,15 +384,15 @@ public:
         return res;
     }
 
-    struct NonHomologouspaths
+    struct NonHomologouspath
     {
         std::vector<std::pair<int, int>> path;
         std::vector<Eigen::VectorXd> visited_non_homologous_paths;
     };
 
-    struct NonHomologouspaths getNonHomologousPaths(int x, int y, std::vector<Eigen::VectorXd> visited_h_signatures)
+    struct NonHomologouspath getNonHomologousPaths(int x, int y, std::vector<Eigen::VectorXd> visited_h_signatures)
     {
-        struct NonHomologouspaths p;
+        struct NonHomologouspath p;
 
         auto customOp = [](const std::complex<double> &a, const std::complex<double> &b) -> double
         {
@@ -478,6 +478,9 @@ public:
                 for (int i = 0; i < visited_h_signatures.size(); ++i)
                 {
                     Eigen::VectorXd diff = visited_h_signatures[i] - node->h_signature;
+                    std::cout<<"Visited = "<<visited_h_signatures[i]<<std::endl;
+                    std::cout<<"Calculated = "<<node->h_signature<<std::endl;
+                    std::cout<<"Calculated differnece = "<<diff<<std::endl;
                     if (diff.isZero(0.0001))
                     {
                         is_already_seen = true;
@@ -496,6 +499,7 @@ public:
                     path.push_back(std::pair<int, int>(current_point_x, current_point_y));
                     temp = temp->parent;
                 }
+                path.push_back({x,y});
                 std::reverse(path.begin(), path.end());
                 p.path = path;
                 p.visited_non_homologous_paths = visited_h_signatures;
@@ -537,11 +541,47 @@ public:
         }
         return p;
     }
+    
+    
 
-    void replan()
+    std::vector<Eigen::VectorXd>  recompute_h_signature(std::vector<std::pair<int,int>> path)
     {
         
+        auto customOp = [](const std::complex<double> &a, const std::complex<double> &b) -> double
+        {
+            double minimum_phase_difference = std::arg(b) - std::arg(a);
+            for (int i = -2; i < 3; ++i)
+            {
+                for (int j = -2; j < 3; ++j)
+                {
+                    double phase_difference = (std::arg(b) + 2 * M_PIf64 * i) - (std::arg(a) + 2 * M_PIf64 * j);
+                    if (std::abs(phase_difference) < std::abs(minimum_phase_difference))
+                    {
+                        minimum_phase_difference = phase_difference;
+                    }
+                }
+            }
+            return minimum_phase_difference;
+        };
+
+        std::vector<Eigen::VectorXd> h_signatures;
+        std::vector<std::vector<int>> &obstacles_ref = *obstacles_seen;
+        Eigen::VectorXcd obstacle_points = Eigen::VectorXcd::Zero(obstacles_ref.size());
+        for (unsigned int i = 0; i < obstacles_ref.size(); ++i)
+            obstacle_points(i) = std::complex<double>(obstacles_ref[i][0], obstacles_ref[i][1]);
+
+        for(int i=1;i<path.size();++i)
+        {
+            Eigen::VectorXcd s_vec = Eigen::VectorXcd::Constant(obstacle_points.size(), std::complex<double>(path[i-1].first, path[i-1].second)) - obstacle_points;
+            Eigen::VectorXcd e_vec = Eigen::VectorXcd::Constant(obstacle_points.size(), std::complex<double>(path[i].first, path[i].second)) - obstacle_points;
+            Eigen::VectorXd t = s_vec.array().binaryExpr(e_vec.array(), customOp);
+            Eigen::VectorXd temp = t;
+            h_signatures.push_back(temp);
+        }
+        return h_signatures;
     }
+
+
 
 std::vector<std::vector<int>> *grid;
 std::vector<std::vector<int>> *obstacles_seen;
