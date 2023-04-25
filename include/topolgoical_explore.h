@@ -387,10 +387,9 @@ public:
     struct NonHomologouspath
     {
         std::vector<std::pair<int, int>> path;
-        std::vector<Eigen::VectorXd> visited_non_homologous_paths;
     };
 
-    struct NonHomologouspath getNonHomologousPaths(int x, int y, std::vector<Eigen::VectorXd> visited_h_signatures)
+    struct NonHomologouspath getNonHomologousPaths(int x, int y, std::vector<Eigen::VectorXd> visited_h_signatures , Eigen::VectorXd start_signature = Eigen::VectorXd::Zero(3000), bool reverse_follow = false)
     {
         struct NonHomologouspath p;
 
@@ -420,7 +419,10 @@ public:
             obstacle_points(i) = std::complex<double>(obstacles_ref[i][0], obstacles_ref[i][1]);
 
         std::complex<double> start_point(x, y);
-        std::vector<int> goal_coords = {59, 59};
+        std::vector<int> goal_coords = {59,59};
+        if(reverse_follow)
+            std::vector<int> goal_coords = {10, 10};
+        
         std::complex<double> goal_point(goal_coords[0], goal_coords[1]);
 
         std::vector<std::complex<double>> directions = {
@@ -437,20 +439,24 @@ public:
         std::priority_queue<AstarNode *, std::vector<AstarNode *>, std::function<bool(AstarNode *, AstarNode *)>> pq([](AstarNode *a, AstarNode *b)
                                                                                                                      { return a->cost > b->cost; });
         std::unordered_map<std::string, double> distance_count;
-        std::set<std::string> visited;
         std::stringstream ss;
         Eigen::VectorXd zeros = Eigen::VectorXd::Zero(obstacles_ref.size());
 
-        ss << start_point << "-\n"
-           << zeros;
+        if(start_signature.size() != 3000)
+        {
+            ss << start_point << "-\n" << start_signature;
+        }
+        else
+        {
+            ss << start_point << "-\n"
+            << zeros;
+        }
         distance_count[ss.str()] = std::abs(goal_point - start_point);
-
         for (unsigned int i = 0; i < directions.size(); ++i)
         {
             std::complex<double> new_point = start_point + directions[i];
             if (int(real(new_point)) < 0 || int(real(new_point)) >= grid_ref.size() || int(imag(new_point)) < 0 || int(imag(new_point)) >= grid_ref[0].size() || grid_ref[int(new_point.real())][int(new_point.imag())] == 0)
                 continue;
-
             Eigen::VectorXcd s_vec = Eigen::VectorXcd::Constant(obstacle_points.size(), start_point) - obstacle_points;
             Eigen::VectorXcd e_vec = Eigen::VectorXcd::Constant(obstacle_points.size(), new_point) - obstacle_points;
             Eigen::VectorXd temp = s_vec.array().binaryExpr(e_vec.array(), customOp);
@@ -460,7 +466,11 @@ public:
                 cell_cost = 1.0;
             double c = cell_cost + std::abs(new_point - goal_point);
             std::vector<std::complex<double>> e = {start_point, new_point};
-            AstarNode *node = new AstarNode(new_point, temp, c, NULL, e);
+            AstarNode *node = NULL;
+            if(start_signature.size() == obstacle_points.size())
+                node = new AstarNode(new_point, temp + start_signature, c, NULL, e);
+            else
+                node = new AstarNode(new_point, temp, c, NULL, e);
             pq.push(node);
         }
 
@@ -477,7 +487,8 @@ public:
                 bool is_already_seen = false;
                 for (int i = 0; i < visited_h_signatures.size(); ++i)
                 {
-                    Eigen::VectorXd diff = visited_h_signatures[i] - node->h_signature;
+                    Eigen::VectorXd corrected_signature = (reverse_follow) ?  -node->h_signature : node->h_signature;
+                    Eigen::VectorXd diff = visited_h_signatures[i] - corrected_signature;
                     // std::cout<<"Visited = "<<visited_h_signatures[i]<<std::endl;
                     // std::cout<<"Calculated differnece = "<<diff<<std::endl;
                     if (diff.isZero(0.0001))
@@ -488,8 +499,9 @@ public:
                 }
                 if (is_already_seen)
                     continue;
-                std::cout<<"H signature = "<< node->h_signature << std::endl;
-                visited_h_signatures.push_back(node->h_signature);
+                Eigen::VectorXd corrected_signature = (reverse_follow) ?  -node->h_signature : node->h_signature;
+                std::cout<<"H signature = "<< corrected_signature << std::endl;
+                // visited_h_signatures.push_back(corrected_signature);
                 std::vector<std::pair<int, int>> path;
                 AstarNode *temp = node;
                 while (temp != NULL)
@@ -501,7 +513,7 @@ public:
                 path.push_back({x,y});
                 std::reverse(path.begin(), path.end());
                 p.path = path;
-                p.visited_non_homologous_paths = visited_h_signatures;
+                // p.visited_non_homologous_paths = visited_h_signatures;
                 return p;
             
             }
@@ -539,6 +551,53 @@ public:
             }
         }
         return p;
+    }
+
+    std::vector<std::pair<int,int>> replan(int index, std::vector<std::pair<int,int>> traversed_path,std::vector<Eigen::VectorXd> visited_h_signatures, bool reverse_follow=false)
+    {
+        auto customOp = [](const std::complex<double> &a, const std::complex<double> &b) -> double
+        {
+            double minimum_phase_difference = std::arg(b) - std::arg(a);
+            for (int i = -2; i < 3; ++i)
+            {
+                for (int j = -2; j < 3; ++j)
+                {
+                    double phase_difference = (std::arg(b) + 2 * M_PIf64 * i) - (std::arg(a) + 2 * M_PIf64 * j);
+                    if (std::abs(phase_difference) < std::abs(minimum_phase_difference))
+                    {
+                        minimum_phase_difference = phase_difference;
+                    }
+                }
+            }
+            return minimum_phase_difference;
+        };
+
+        std::vector<std::vector<int>> &obstacles_ref = *obstacles_seen;
+        std::vector<std::vector<int>> &grid_ref = *grid;
+        Eigen::VectorXcd obstacle_points = Eigen::VectorXcd::Zero(obstacles_ref.size());
+        for (unsigned int i = 0; i < obstacles_ref.size(); ++i)
+            obstacle_points(i) = std::complex<double>(obstacles_ref[i][0], obstacles_ref[i][1]);
+
+
+        Eigen::VectorXd partial_h_signature = Eigen::VectorXd::Zero(obstacle_points.size());
+        std::vector<std::pair<int,int>> new_path;
+
+        for(int i=1;i<=index;i++)
+        {
+            Eigen::VectorXcd s_vec = Eigen::VectorXcd::Constant(obstacle_points.size(), std::complex<double>(traversed_path[i-1].first,traversed_path[i-1].second)) - obstacle_points;
+            Eigen::VectorXcd e_vec = Eigen::VectorXcd::Constant(obstacle_points.size(),  std::complex<double>(traversed_path[i].first,traversed_path[i].second)) - obstacle_points;
+            Eigen::VectorXd t = s_vec.array().binaryExpr(e_vec.array(), customOp);
+            partial_h_signature += t;
+            new_path.push_back(traversed_path[i]);
+        }
+
+        auto replanned = getNonHomologousPaths(traversed_path[index].first, traversed_path[index].second,visited_h_signatures,partial_h_signature,reverse_follow);
+    
+        for(int i=0;i<replanned.path.size();i++)
+        {
+            new_path.push_back(replanned.path[i]);
+        }
+        return new_path;
     }
     
     
