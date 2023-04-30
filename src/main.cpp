@@ -124,7 +124,12 @@ public:
 
 
 		std::vector<std::vector<std::pair<int,int>>> already_traversed_paths;
+		
 		std::vector<Eigen::VectorXd> visited_h_signatures;
+		bool reverse_follow = false;
+		Eigen::VectorXd current_partial_signature;
+		std::vector<std::pair<int,int>> current_travelled_path;
+		
 		double epsilon = 1.0;
 		int t = 0;
 		while(true)
@@ -137,7 +142,10 @@ public:
 			else
 			{
 				// Adopt  a frontier based exploration strategy
-				;
+				// std::cout << "Frontier based exploration" << std::endl;
+				// f_explore.findFrontiers(current_x, current_y);
+					;
+
 			}
 			t+=1;
 			epsilon = epsilon*pow(2.71828,-0.01*t);
