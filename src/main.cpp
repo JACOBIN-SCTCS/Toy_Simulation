@@ -118,6 +118,8 @@ public:
 			}
 		}
 		int start_x = src[0] , start_y = src[1];
+		int current_x = src[0], current_y = src[1];
+
 		sensor_model(start_x, start_y);
 		TopolgicalExplore top_explore(&grid, &obstacles_seen,src,dest);
 		FrontierExplore f_explore(&grid,&obstacles);
@@ -138,7 +140,26 @@ public:
 			double drawn_number = ((double)rand()/(double)RAND_MAX);
 			if(drawn_number <= epsilon)
 			{
-				;
+				top_explore.getNonHomologousPaths(current_x,current_y);
+				for(int i=0;i<top_explore.current_path.size();++i)
+				{
+					grid[top_explore.current_path[i].first][top_explore.current_path[i].second] = 2;
+
+				}
+				for (int i = 0; i < top_explore.current_path.size(); ++i)
+				{
+					grid[current_x][current_y] = 1;
+					current_x = top_explore.current_path[i].first;
+					current_y = top_explore.current_path[i].second;
+					grid[current_x][current_y] = 2;
+					sensor_model(current_x,current_y);
+					fw.render_screen(grid);
+					SDL_Delay(500);
+				}
+				current_x = top_explore.current_path[top_explore.current_path.size() - 1].first;
+				current_y = top_explore.current_path[top_explore.current_path.size() - 1].second;
+				sensor_model(current_x, current_y);
+				fw.render_screen(grid);
 			}
 			else
 			{
@@ -173,8 +194,8 @@ int main(int argc, char *argv[])
 	srand(time(NULL));
 
 	Robot robot(60, 600,10.0, 20);
-	robot.start_exploring(10, 10);
-	// robot.topological_explore_2({10,10},{59,59});
+	// robot.start_exploring(10, 10);
+	robot.topological_explore_2({10,10},{59,59});
 	// robot.setInitialRobotPose(5,5);
 
 	// robot.fw.draw_point(300,300);

@@ -39,10 +39,8 @@ class TopolgicalExplore
 
         TopolgicalExplore(std::vector<std::vector<int>> *g, std::vector<std::vector<int>> *o,std::vector<int> start, std::vector<int> goal) : grid(g), obstacles_seen(o), start_coordinates(start) , goal_coordinates(goal)
         {
-            for(int i=0;i<start_coordinates.size();++i)
-                current_src.push_back(start_coordinates[i]);
-            for(int i=0;i<goal_coordinates.size();++i)
-                current_dest.push_back(goal_coordinates[i]);
+            current_src = {start_coordinates[0],start_coordinates[1]};
+            current_dest = {goal_coordinates[0],goal_coordinates[1]};
         }
 
         std::vector<std::pair<int, int>> getNeighbours(int x, int y, int max_x, int max_y)
@@ -110,8 +108,8 @@ class TopolgicalExplore
                     current_path_tmp.push_back({current_path[i].first,current_path[i].second});
                 
                 traversed_paths.push_back(current_path_tmp);
-                traversed_signatures.push_back(partial_signature);
-                partial_signature = Eigen::VectorXd::Zero(obstacles_ref.size());
+                // traversed_signatures.push_back(recompute_h_signature(current_path_tmp));
+                // partial_signature = Eigen::VectorXd::Zero(obstacles_ref.size());
                 current_path.clear();     
             }
 
@@ -184,9 +182,15 @@ class TopolgicalExplore
                         continue;
 
                     bool is_already_seen = false;
+                    auto corrected_signature = node->h_signature;
+                    if(start_coordinates[0] == current_dest[0] && start_coordinates[1] == current_dest[1])
+                    {
+                        corrected_signature = -node->h_signature;
+                    }
                     for (int i = 0; i < traversed_signatures.size(); ++i)
                     {
-                        Eigen::VectorXd diff = traversed_signatures[i] - node->h_signature;
+                       
+                        Eigen::VectorXd diff = traversed_signatures[i] - corrected_signature;
                         if (diff.isZero(0.0001))
                         {
                             is_already_seen = true;
@@ -196,8 +200,8 @@ class TopolgicalExplore
 
                     if (is_already_seen)
                         continue;
-                    std::cout<<"H signature = "<< node->h_signature << std::endl;
-                    traversed_signatures.push_back(node->h_signature);
+                    std::cout<<"H signature = "<< corrected_signature << std::endl;
+                    traversed_signatures.push_back(corrected_signature);
                     std::vector<std::pair<int, int>> path;
                     AstarNode *temp = node;
                     while (temp != NULL)
@@ -208,7 +212,11 @@ class TopolgicalExplore
                     }
                     path.push_back({x,y});
                     std::reverse(path.begin(), path.end());
-                                    
+                    for(int i=0;i<path.size();++i)
+                    {
+                        current_path.push_back({path[i].first,path[i].second});
+                    }
+                    return;              
                 }
                 else
                 {
