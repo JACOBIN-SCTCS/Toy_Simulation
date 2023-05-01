@@ -31,10 +31,12 @@ public:
         Eigen::VectorXd h_signature;
         double f;
         double g;
+        double cost;
         struct AstarNode *parent;
         std::vector<std::complex<double>> edge;
 
         AstarNode(std::complex<double> p, Eigen::VectorXd h, double f_,double g_,struct AstarNode *pa, std::vector<std::complex<double>> e) : point(p), h_signature(h), f(f_),g(g_), parent(pa), edge(e) {}
+        AstarNode(std::complex<double> p, Eigen::VectorXd h, double c_,struct AstarNode *pa, std::vector<std::complex<double>> e) : point(p), h_signature(h), cost(c_), parent(pa), edge(e) {}
     };
 
 
@@ -149,7 +151,7 @@ public:
         };
 
         std::priority_queue<AstarNode *, std::vector<AstarNode *>, std::function<bool(AstarNode *, AstarNode *)>> pq([](AstarNode *a, AstarNode *b)
-                                                                                                                     { return (a->f + a->g) > (b->f + b->g); });
+                                                                                                               { return (a->cost) > (b->cost); });      //{ return (a->f + a->g) > (b->f + b->g); });
         std::unordered_map<std::string, double> distance_count;
         std::set<std::string> visited;
         std::stringstream ss;
@@ -175,8 +177,11 @@ public:
             
             double f = cell_cost;
             double g = std::abs(new_point - goal_point);
+            double c = f + g;
             std::vector<std::complex<double>> e = {start_point, new_point};
-            AstarNode *node = new AstarNode(new_point, temp + partial_signature, f,g, NULL, e);
+            
+            // AstarNode *node = new AstarNode(new_point, temp + partial_signature, f,g, NULL, e);
+            AstarNode *node = new AstarNode(new_point, temp + partial_signature, c, NULL, e);
             pq.push(node);
         }
 
@@ -191,9 +196,14 @@ public:
                     continue;
 
                 bool is_already_seen = false;
+                auto corrected_signature = node->h_signature;
+                if( current_goal[0] == start_coordinates[0] && current_goal[1] == start_coordinates[1])
+                {
+                    corrected_signature = -node->h_signature;
+                }
                 for (int i = 0; i < traversed_signatures.size(); ++i)
                 {
-                    Eigen::VectorXd diff = traversed_signatures[i] - node->h_signature;
+                    Eigen::VectorXd diff = traversed_signatures[i] - corrected_signature;
                     if (diff.isZero(0.0001))
                     {
                         is_already_seen = true;
@@ -202,9 +212,8 @@ public:
                 }
                 if (is_already_seen)
                     continue;
-                // std::cout<<"H signature = "<< node->h_signature << std::endl;
+                std::cout<<"H signature = "<< corrected_signature << std::endl;
                 // visited_h_signatures.push_back(node->h_signature);
-                
                 std::vector<std::pair<int, int>> path;
                 AstarNode *temp = node;
                 while (temp != NULL)
@@ -215,11 +224,12 @@ public:
                 }
                 path.push_back({x,y});
                 std::reverse(path.begin(), path.end());
-                current_path.clear();
+                // current_path.clear();
                 for(int i=0;i<path.size();++i)
                 {
                     current_path.push_back({path[i].first,path[i].second});
                 }
+                return;
 
                 // p.path = path;
                 // return p;
@@ -243,6 +253,7 @@ public:
                         cell_cost = 1.0;
                     double f = cell_cost;
                     double g = std::abs(new_point - goal_point);
+                    double c = node->cost + f + g;
 
                     std::stringstream ss;
                     ss << new_point << "-\n"
@@ -252,7 +263,8 @@ public:
                     {
                         distance_count[key] = f+g;
                         std::vector<std::complex<double>> edge = {node->point, new_point};
-                        AstarNode *new_node = new AstarNode(new_point, temp, f,g, node, edge);
+                        // AstarNode *new_node = new AstarNode(new_point, temp, f,g, node, edge);
+                        AstarNode *new_node = new AstarNode(new_point,temp,c,node,edge);
                         pq.push(new_node);
                     }
                 }
@@ -264,7 +276,7 @@ public:
 
     Eigen::VectorXd recompute_h_signature(std::vector<std::pair<int,int>> path, int index = -1)
     {
-        int n = (index==-1)?(current_path.size()-1):index;
+        int n = (index==-1)?(path.size()-1):index;
 
         auto customOp = [](const std::complex<double> &a, const std::complex<double> &b) -> double
         {
@@ -297,7 +309,7 @@ public:
             Eigen::VectorXcd s_vec = Eigen::VectorXcd::Constant(obstacle_points.size(), std::complex<double>(path[i-1].first, path[i-1].second)) - obstacle_points;
             Eigen::VectorXcd e_vec = Eigen::VectorXcd::Constant(obstacle_points.size(), std::complex<double>(path[i].first, path[i].second)) - obstacle_points;
             Eigen::VectorXd t = s_vec.array().binaryExpr(e_vec.array(), customOp);
-            Eigen::VectorXd temp = t;
+              Eigen::VectorXd temp = t;
             sum += temp;
         }
         current_h_signature = sum;

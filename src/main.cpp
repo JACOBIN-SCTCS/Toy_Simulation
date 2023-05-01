@@ -16,6 +16,7 @@ public:
 			int y = rand() % grid_size;
 			obstacles.push_back({x, y});
 		}
+		obstacles.push_back({21,21});
 		std::cout << "Size of the grid = " << grid_size << std::endl;
 	}
 
@@ -133,9 +134,9 @@ public:
 
 		for (int i = 0; i < obstacles.size(); ++i)
 		{
-			if (obstacles[i][0] == current_x && obstacles[i][1] == current_y)
+			if ((obstacles[i][0] == current_x && obstacles[i][1] == current_y ) ||(obstacles[i][0] == goal[0] && obstacles[i][1] == goal[1] ) )
 			{
-				std::cout << "Robot is in obstacle" << std::endl;
+				std::cout << "The starting and destination points cannot be in an obstacle" << std::endl;
 				return;
 			}
 		}
@@ -158,13 +159,39 @@ public:
 				// auto current_path = top_explore.getNonHomologousPaths(current_x,current_y,{});
 				top_explore.getNonHomologousPaths(current_x,current_y,{});
 				std::vector<std::pair<int,int>> p = top_explore.current_path;
+				int start_idx = top_explore.current_path_index;
 
-				for(int i=0;i<p.size();++i)
+				// std::cout << "Printing path\n";
+				// for(int i=0;i<top_explore.current_path.size();++i)
+				// {
+				// 	std::cout<<"("<<top_explore.current_path[i].first<<","<<top_explore.current_path[i].second<<")\n";
+				// }
+
+				for(int i=start_idx;i<p.size();++i)
 				{
-					// std::cout<<"("<<p[i].first<<","<<p[i].second<<")\n";
-					grid[p[i].first][p[i].second] = 3;
+					grid[p[i].first][p[i].second] = 2;
+					
 				}
 				fw.render_screen(grid);
+				for(int i=start_idx;i < p.size();++i)
+				{
+					
+					grid[current_x][current_y] = 1;
+					current_x = p[i].first;
+					current_y = p[i].second;
+					grid[current_x][current_y] = 2;
+					sensor_model(current_x,current_y);
+					fw.render_screen(grid);
+					if((i+1)< p.size() && grid[p[i+1].first][p[i+1].second] ==0)
+					{
+			
+						top_explore.current_path.erase(p.begin()+i+1);
+						top_explore.current_path_index = i;
+						break;
+					}
+					SDL_Delay(500);
+				}
+
 
 			}
 			else
