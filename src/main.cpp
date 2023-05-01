@@ -104,7 +104,7 @@ public:
 		while(f_explore.frontiers.size() > 0)
 		{
 			 std::cout << "Frontiers size = " << f_explore.frontiers.size() << std::endl;
-			std::vector<std::pair<int, int>> path = f_explore.getPath(current_x, current_y, f_explore.frontiers[0].cells[0].first, f_explore.frontiers[0].cells[0].second);
+			std::vector<std::pair<int, int>> path = f_explore.getPath(current_x, current_y, f_explore.frontiers[0].x, f_explore.frontiers[0].y);
 			grid[f_explore.frontiers[0].x][f_explore.frontiers[0].y] = 3;
 
 			std::cout << "Frontier exploration Path size = " << path.size() << std::endl;
@@ -219,7 +219,7 @@ public:
 				std::cout<<"Doing Frontier Based exploration"<<std::endl;
 				f_explore.findFrontiers(current_x, current_y);
 				
-				std::vector<std::pair<int, int>> path = f_explore.getPath(current_x, current_y, f_explore.frontiers[0].cells[0].first, f_explore.frontiers[0].cells[0].second);
+				std::vector<std::pair<int, int>> path = f_explore.getPath(current_x, current_y, f_explore.frontiers[0].x, f_explore.frontiers[0].y);
 				grid[f_explore.frontiers[0].x][f_explore.frontiers[0].y] = 3;
 
 				std::cout << "Frontier ExplorationPath size = " << path.size() << std::endl;
@@ -245,7 +245,7 @@ public:
 				// current_y = path[path.size() - 1].second;
 				// sensor_model(current_x, current_y);
 				// fw.render_screen(grid);
-				f_explore.findFrontiers(current_x, current_y);
+				// f_explore.findFrontiers(current_x, current_y);
 					
 			}
 			t+=1;

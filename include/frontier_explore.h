@@ -57,8 +57,8 @@ class FrontierExplore
             std::vector<std::vector<int>> &obstacles_ref = *obstacles;
             frontiers.clear();
             std::vector<std::vector<int>>& grid_ref = *grid;
-            bool visited[grid_ref.size()][grid_ref[0].size()];
-            bool frontier_tag[grid_ref.size()][grid_ref[0].size()];
+            bool visited[grid_ref.size()][grid_ref[0].size()] = {false};
+            bool frontier_tag[grid_ref.size()][grid_ref[0].size()] = {false};
             std::queue<std::pair<int,int>> q;
             q.push({x,y});
             visited[x][y] = true;
