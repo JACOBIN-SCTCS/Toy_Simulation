@@ -125,23 +125,23 @@ public:
 		}
 	}
 
-	void topological_explore_2(int x, int y)
+	void topological_explore_2(std::vector<int> start, std::vector<int> goal)
 	{
-		int current_x = x ;
-		int current_y = y;
+		int current_x = start[0] ;
+		int current_y = start[1];
 		srand(time(NULL));
 
 		for (int i = 0; i < obstacles.size(); ++i)
 		{
-			if (obstacles[i][0] == x && obstacles[i][1] == y)
+			if (obstacles[i][0] == current_x && obstacles[i][1] == current_y)
 			{
 				std::cout << "Robot is in obstacle" << std::endl;
 				return;
 			}
 		}
-		int start_x = x , start_y = y;
+		int start_x = current_x , start_y = current_y;
 		sensor_model(current_x, current_y);
-		TopolgicalExplore top_explore(&grid, &obstacles_seen);
+		TopolgicalExplore top_explore(&grid, &obstacles_seen,start,goal);
 		FrontierExplore f_explore(&grid,&obstacles_seen);
 
 
@@ -154,44 +154,17 @@ public:
 			double drawn_number = ((double)rand()/(double)RAND_MAX);
 			if(drawn_number <= epsilon)
 			{
-				// Adopt topological_exploration strategy
-				auto ans = top_explore.getNonHomologousPaths(start_x, start_y, visited_h_signatures);
-				bool followed_in_reverse  = false;
-				// visited_h_signatures = ans.visited_non_homologous_paths;
-				std::vector<std::pair<int,int>> path = ans.path;
-		
-				if(start_x != current_x && start_y != current_y)
+				// Adopt a topolgical exploration strategy
+				// auto current_path = top_explore.getNonHomologousPaths(current_x,current_y,{});
+				top_explore.getNonHomologousPaths(current_x,current_y,{});
+				std::vector<std::pair<int,int>> p = top_explore.current_path;
+
+				for(int i=0;i<p.size();++i)
 				{
-					followed_in_reverse = true;
-					std::reverse(path.begin(),path.end());
+					// std::cout<<"("<<p[i].first<<","<<p[i].second<<")\n";
+					grid[p[i].first][p[i].second] = 3;
 				}
-				for(int i=0;i<path.size();++i)
-				{
-					grid[path[i].first][path[i].second]  =3;
-				}
-				for(int i=0;i<path.size();++i)
-				{
-					grid[current_x][current_y] = 1;
-					current_x = path[i].first;
-					current_y = path[i].second;
-					grid[current_x][current_y] = 2;
-					sensor_model(current_x,current_y);
-					fw.render_screen(grid);
-					SDL_Delay(500);
-				}
-				visited_h_signatures.clear();
-				for(int i=0;i<already_traversed_paths.size();++i)
-				{
-					auto path_nodes_h_signature = top_explore.recompute_h_signature(already_traversed_paths[i]);
-					visited_h_signatures.push_back(path_nodes_h_signature[path_nodes_h_signature.size()-1]);
-				}
-				if(followed_in_reverse)
-				{
-					std::reverse(path.begin(),path.end());
-				}
-				already_traversed_paths.push_back(path);
-				auto current_path_node_h_signatures = top_explore.recompute_h_signature(path);
-				visited_h_signatures.push_back(current_path_node_h_signatures[current_path_node_h_signatures.size()-1]);
+				fw.render_screen(grid);
 
 			}
 			else
@@ -226,7 +199,7 @@ int main(int argc, char *argv[])
 
 	Robot robot(60, 600,10.0, 20);
 	// robot.start_exploring(10, 10);
-	robot.topological_explore_2(10,10);
+	robot.topological_explore_2({10,10},{59,59});
 	// robot.setInitialRobotPose(5,5);
 
 	// robot.fw.draw_point(300,300);
