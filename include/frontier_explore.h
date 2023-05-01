@@ -7,6 +7,7 @@
 #include <functional>
 #include <climits>
 #include <algorithm>
+#include<math.h>
 
 class FrontierExplore
 {
@@ -27,7 +28,7 @@ class FrontierExplore
             struct DijkstraNode* parent;
         };
 
-        FrontierExplore(std::vector<std::vector<int>> *grid) : grid(grid) 
+        FrontierExplore(std::vector<std::vector<int>> *grid, std::vector<std::vector<int>> *obs) : grid(grid), obstacles(obs)
         {
             ;
         }
@@ -52,6 +53,7 @@ class FrontierExplore
 
         void findFrontiers(int x, int y)
         {
+            std::vector<std::vector<int>> &obstacles_ref = *obstacles;
             frontiers.clear();
             std::vector<std::vector<int>>& grid_ref = *grid;
             bool visited[grid_ref.size()][grid_ref[0].size()];
@@ -59,6 +61,7 @@ class FrontierExplore
             std::queue<std::pair<int,int>> q;
             q.push({x,y});
             visited[x][y] = true;
+
             while(!q.empty())
             {
                 std::pair<int,int> curr  = q.front();
@@ -74,10 +77,15 @@ class FrontierExplore
                         continue;
                     visited[x_new][y_new] = true;
                     
+
                     if(grid_ref[x_new][y_new]==0)
                         continue;
-                    
-                    else if(grid_ref[x_new][y_new]==-1)
+                    for(int i=0;i<obstacles_ref.size();++i)
+                    {
+                        if(obstacles_ref[i][0] == x_new && obstacles_ref[i][1]==y_new)
+                            continue;
+                    }
+                    if(grid_ref[x_new][y_new]==-1)
                     {
                         std::vector<std::pair<int,int>> cell_neighbours = getNeighbours(x_new,y_new,grid_ref.size(),grid_ref[0].size());
                         for(int j =0;j<4;++j)
@@ -250,5 +258,6 @@ class FrontierExplore
         }
 
         std::vector<std::vector<int>>* grid;
+        std::vector<std::vector<int>> *obstacles;
         std::vector<Frontier> frontiers;
 };

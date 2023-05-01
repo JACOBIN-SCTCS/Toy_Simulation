@@ -21,7 +21,7 @@ public:
 
 	void sensor_model(int x, int y)
 	{
-		int num_rays = 180;
+		int num_rays = 45;
 		double angle = 0;
 		int range = 8;
 
@@ -30,8 +30,8 @@ public:
 		{
 			for(int j=0;j<range;++j)
 			{
-				double new_x = x + j*cos(angle);
-				double new_y = y + j*sin(angle);
+				double new_x = floor(x + j*cos(angle));
+				double new_y = floor(y + j*sin(angle));
 
 				int new_int_x = int(new_x);
 				int new_int_y = int(new_y);
@@ -76,7 +76,7 @@ public:
 		}
 		sensor_model(current_x, current_y);
 
-		FrontierExplore f_explore(&grid);
+		FrontierExplore f_explore(&grid,&obstacles);
 		f_explore.findFrontiers(current_x, current_y);
 
 		while(f_explore.frontiers.size() > 0)
@@ -120,7 +120,8 @@ public:
 		int start_x = src[0] , start_y = src[1];
 		sensor_model(start_x, start_y);
 		TopolgicalExplore top_explore(&grid, &obstacles_seen,src,dest);
-		FrontierExplore f_explore(&grid);
+		FrontierExplore f_explore(&grid,&obstacles);
+		fw.render_screen(grid);
 
 
 		std::vector<std::vector<std::pair<int,int>>> already_traversed_paths;
