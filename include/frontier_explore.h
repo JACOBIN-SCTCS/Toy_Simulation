@@ -25,6 +25,7 @@ class FrontierExplore
             int y;
             double f;
             double g;
+            double cost;
             struct DijkstraNode* parent;
         };
 
@@ -138,6 +139,7 @@ class FrontierExplore
                                 }
                             } 
                             Frontier frontier;
+                            
                             frontier.x = x_new;
                             frontier.y = y_new;
                             frontier.cells = frontier_cells;
@@ -156,8 +158,9 @@ class FrontierExplore
 
         std::vector<std::pair<int,int>> getPath(int start_x, int start_y , int end_x, int end_y)
         {
-            
-            std::vector<std::pair<int,int>> path;
+            std::cout<<"Source = (" << start_x <<","<<start_y<<")\n";
+            std::cout<<"Destination = (" << end_x <<","<<end_y<<")\n";
+
             std::vector<std::vector<int>>& grid_ref = *grid;
             int distance[grid_ref.size()][grid_ref[0].size()];
 
@@ -172,7 +175,8 @@ class FrontierExplore
 
             distance[start_x][start_y] = 0;
     	    std::priority_queue<DijkstraNode*, std::vector<DijkstraNode*>, std::function<bool(DijkstraNode*, DijkstraNode*)>> pq([](DijkstraNode* a, DijkstraNode* b) {
-                return  ((a->f + a->g) > (b->f + b->g));
+                // return  ((a->f + a->g) > (b->f + b->g));
+                return ((a->cost) > (b->cost));
              });
 
             DijkstraNode* start_node = new DijkstraNode();
@@ -180,6 +184,7 @@ class FrontierExplore
             start_node->y = start_y;
             start_node->g = sqrt((end_x-start_x)*(end_x-start_x) + (end_y-start_y)*(end_y-start_y));
             start_node->f = 0;
+            start_node->cost = 0.0;
             start_node->parent = NULL;
             pq.push(start_node);
 
@@ -192,11 +197,12 @@ class FrontierExplore
                 int y = curr->y;
                 if(x==end_x && y==end_y)
                 {
-                    std::cout <<"Path found";
+                    // std::cout <<"Path found";
+                    std::vector<std::pair<int,int>> path;
                     DijkstraNode* ptr = curr;
                     while(curr!=NULL)
                     {
-                        std::cout<<"("<<curr->x<<","<<curr->y<<")"<<std::endl;
+                        // std::cout<<"("<<curr->x<<","<<curr->y<<")"<<std::endl;
                         path.push_back({curr->x,curr->y});
                         curr = curr->parent;
                     }
@@ -210,16 +216,20 @@ class FrontierExplore
                     int y_new = neighbours[i].second;
                     if(x_new==end_x && y_new==end_y)
                     {
-                        int g_new = sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
-                        int f_new = curr->f  + 1;
-                        if((f_new+g_new) < distance[x_new][y_new])
+                        // int g_new = sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
+                        // int f_new = curr->f  + 1;
+                        double cost_new = curr->cost +  sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y)) + 1;
+                        // if((f_new+g_new) < distance[x_new][y_new])
+                        if(cost_new < distance[x_new][y_new])
                         {
-                            distance[x_new][y_new] = f_new + g_new;
+                            // distance[x_new][y_new] = f_new + g_new;
+                            distance[x_new][y_new] = cost_new;
                             DijkstraNode* new_node = new DijkstraNode();
                             new_node->x = x_new;
                             new_node->y = y_new;
-                            new_node->g = curr->g + sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
-                            new_node->f = curr->f  + 1;
+                            // new_node->g = curr->g + sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
+                            // new_node->f = curr->f  + 1;
+                            new_node->cost = cost_new;
                             new_node->parent = curr;
                             pq.push(new_node);
                             continue;
@@ -230,16 +240,20 @@ class FrontierExplore
                         continue;
                     else
                     {
-                        int g_new = sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
-                        int f_new = curr->f  + 1;
-                        if((f_new+g_new) < distance[x_new][y_new]) //error here
+                        // int g_new = sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
+                        // int f_new = curr->f  + 1;
+                        double cost_new = curr->cost + sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y)) + 1;
+                        // if((f_new+g_new) < distance[x_new][y_new]) //error here
+                        if(cost_new < distance[x_new][y_new])
                         {
-                            distance[x_new][y_new] = f_new+g_new;
+                            // distance[x_new][y_new] = f_new+g_new;
+                            distance[x_new][y_new] = cost_new;
                             DijkstraNode* new_node = new DijkstraNode();
                             new_node->x = x_new;
                             new_node->y = y_new;
-                            new_node->g = g_new;
-                            new_node->f = f_new;
+                            // new_node->g = g_new;
+                            // new_node->f = f_new;
+                            new_node->cost = cost_new;
                             new_node->parent = curr;
                             pq.push(new_node);
                         }
@@ -247,7 +261,7 @@ class FrontierExplore
                 }
 
             }
-            return path;
+            return {};
         }
 
         void printElement()

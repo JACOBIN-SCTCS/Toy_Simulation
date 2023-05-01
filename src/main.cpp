@@ -98,7 +98,7 @@ public:
 		}
 		sensor_model(current_x, current_y);
 
-		FrontierExplore f_explore(&grid,&obstacles);
+		FrontierExplore f_explore(&grid,&obstacles_seen);
 		f_explore.findFrontiers(current_x, current_y);
 
 		while(f_explore.frontiers.size() > 0)
@@ -107,7 +107,7 @@ public:
 			std::vector<std::pair<int, int>> path = f_explore.getPath(current_x, current_y, f_explore.frontiers[0].cells[0].first, f_explore.frontiers[0].cells[0].second);
 			grid[f_explore.frontiers[0].x][f_explore.frontiers[0].y] = 3;
 
-			std::cout << "Path size = " << path.size() << std::endl;
+			std::cout << "Frontier exploration Path size = " << path.size() << std::endl;
 			for (int i = 0; i < path.size(); ++i)
 			{
 				grid[current_x][current_y] = 1;
@@ -117,11 +117,13 @@ public:
 				sensor_model(current_x,current_y);
 				fw.render_screen(grid);
 				SDL_Delay(500);
+				if((i+1)<path.size() && grid[path[i+1].first][path[i+1].second]==0)
+					break;
 			}
-			current_x = path[path.size() - 1].first;
-			current_y = path[path.size() - 1].second;
-			sensor_model(current_x, current_y);
-			fw.render_screen(grid);
+			// current_x = path[path.size() - 1].first;
+			// current_y = path[path.size() - 1].second;
+			// sensor_model(current_x, current_y);
+			// fw.render_screen(grid);
 			f_explore.findFrontiers(current_x, current_y);
 		}
 	}
@@ -157,6 +159,7 @@ public:
 			{
 				// Adopt a topolgical exploration strategy
 				// auto current_path = top_explore.getNonHomologousPaths(current_x,current_y,{});
+				std::cout<<"Doing a topological exploration strategy"<<std::endl;
 				top_explore.getNonHomologousPaths(current_x,current_y,{});
 				std::vector<std::pair<int,int>> p = top_explore.current_path;
 				int start_idx = top_explore.current_path_index;
@@ -213,12 +216,13 @@ public:
 			}
 			else
 			{
+				std::cout<<"Doing Frontier Based exploration"<<std::endl;
 				f_explore.findFrontiers(current_x, current_y);
 				
 				std::vector<std::pair<int, int>> path = f_explore.getPath(current_x, current_y, f_explore.frontiers[0].cells[0].first, f_explore.frontiers[0].cells[0].second);
 				grid[f_explore.frontiers[0].x][f_explore.frontiers[0].y] = 3;
 
-				std::cout << "Path size = " << path.size() << std::endl;
+				std::cout << "Frontier ExplorationPath size = " << path.size() << std::endl;
 				std::vector<std::pair<int,int>> new_current_path_copy;
 				for(int i =0;i<top_explore.current_path.size();++i)
 					new_current_path_copy.push_back(top_explore.current_path[i]);
