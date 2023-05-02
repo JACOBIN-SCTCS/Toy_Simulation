@@ -29,11 +29,12 @@ public:
     {
         std::complex<double> point;
         Eigen::VectorXd h_signature;
-        double cost;
+        double f;
+        double g;
         struct AstarNode *parent;
         std::vector<std::complex<double>> edge;
 
-        AstarNode(std::complex<double> p, Eigen::VectorXd h, double c, struct AstarNode *pa, std::vector<std::complex<double>> e) : point(p), h_signature(h), cost(c), parent(pa), edge(e) {}
+        AstarNode(std::complex<double> p, Eigen::VectorXd h, double f_,double g_,struct AstarNode *pa, std::vector<std::complex<double>> e) : point(p), h_signature(h), f(f_),g(g_), parent(pa), edge(e) {}
     };
 
     struct PathsToFollow
@@ -114,7 +115,7 @@ public:
 
         std::vector<std::vector<std::pair<int, int>>> paths;
         std::priority_queue<AstarNode *, std::vector<AstarNode *>, std::function<bool(AstarNode *, AstarNode *)>> pq([](AstarNode *a, AstarNode *b)
-                                                                                                                     { return a->cost > b->cost; });
+                                                                                                                     { return (a->f+a->g) > (b->f + b->g); });
         std::unordered_map<std::string, double> distance_count;
         std::set<std::string> visited;
         std::stringstream ss;
@@ -139,9 +140,10 @@ public:
             double cell_cost = 1.0; // grid_ref[new_point.real()][new_point.imag()];
             if (cell_cost == -1)
                 cell_cost = 1.0;
-            double c = cell_cost + std::abs(new_point - goal_point);
+            double f = cell_cost;
+            double g = std::abs(new_point - goal_point);
             std::vector<std::complex<double>> e = {start_point, new_point};
-            AstarNode *node = new AstarNode(new_point, temp, c, NULL, e);
+            AstarNode *node = new AstarNode(new_point, temp, f,g, NULL, e);
             pq.push(node);
         }
 
@@ -222,17 +224,18 @@ public:
                     double cell_cost = 1.0; // grid_ref[new_point.real()][new_point.imag()];
                     if (cell_cost == -1)
                         cell_cost = 1.0;
-                    double c = node->cost + cell_cost + std::abs(new_point - goal_point);
+                    double f = node->f + cell_cost;
+                    double g = std::abs(new_point - goal_point);
 
                     std::stringstream ss;
                     ss << new_point << "-\n"
                        << temp;
                     std::string key = ss.str();
-                    if (distance_count.find(key) == distance_count.end() || distance_count[key] > c)
+                    if (distance_count.find(key) == distance_count.end() || distance_count[key] > f)
                     {
-                        distance_count[key] = c;
+                        distance_count[key] = f;
                         std::vector<std::complex<double>> edge = {node->point, new_point};
-                        AstarNode *new_node = new AstarNode(new_point, temp, c, node, edge);
+                        AstarNode *new_node = new AstarNode(new_point, temp, f,g, node, edge);
                         pq.push(new_node);
                     }
                 }
@@ -435,7 +438,7 @@ public:
         };
 
         std::priority_queue<AstarNode *, std::vector<AstarNode *>, std::function<bool(AstarNode *, AstarNode *)>> pq([](AstarNode *a, AstarNode *b)
-                                                                                                                     { return a->cost > b->cost; });
+                                                                                                                     { return (a->f + a->g) > (b->f + b->g); });
         std::unordered_map<std::string, double> distance_count;
         std::set<std::string> visited;
         std::stringstream ss;
@@ -458,9 +461,11 @@ public:
             double cell_cost = 1.0; // grid_ref[new_point.real()][new_point.imag()];
             if (cell_cost == -1)
                 cell_cost = 1.0;
-            double c = cell_cost + std::abs(new_point - goal_point);
+            
+            double f = cell_cost;
+            double g = std::abs(new_point - goal_point);
             std::vector<std::complex<double>> e = {start_point, new_point};
-            AstarNode *node = new AstarNode(new_point, temp, c, NULL, e);
+            AstarNode *node = new AstarNode(new_point, temp, f,g, NULL, e);
             pq.push(node);
         }
 
@@ -522,17 +527,18 @@ public:
                     double cell_cost = 1.0; // grid_ref[new_point.real()][new_point.imag()];
                     if (cell_cost == -1)
                         cell_cost = 1.0;
-                    double c = node->cost + cell_cost + std::abs(new_point - goal_point);
+                    double f = cell_cost;
+                    double g = std::abs(new_point - goal_point);
 
                     std::stringstream ss;
                     ss << new_point << "-\n"
                     << temp;
                     std::string key = ss.str();
-                    if (distance_count.find(key) == distance_count.end() || distance_count[key] > c)
+                    if (distance_count.find(key) == distance_count.end() || distance_count[key] > f)
                     {
-                        distance_count[key] = c;
+                        distance_count[key] = f;
                         std::vector<std::complex<double>> edge = {node->point, new_point};
-                        AstarNode *new_node = new AstarNode(new_point, temp, c, node, edge);
+                        AstarNode *new_node = new AstarNode(new_point, temp, f,g, node, edge);
                         pq.push(new_node);
                     }
                 }
