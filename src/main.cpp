@@ -26,27 +26,29 @@ public:
 		int range = 8;
 
 		double resolution = (2*M_PI)/num_rays;
+		bool touched_an_obstacle[obstacles.size()] = {false};
+
 		for(int i=0;i<num_rays;++i)
 		{
 			for(int j=0;j<range;++j)
 			{
 				double new_x = floor(x + j*cos(angle));
 				double new_y = floor(y + j*sin(angle));
-
+				bool touched_any_obstacle = false;
 				int new_int_x = int(new_x);
 				int new_int_y = int(new_y);
 				if(new_int_x<0 || new_int_x >=grid_size || new_int_y<0 || new_int_y>=grid_size)
 					break;
-				bool touched_an_obstacle=false;
 				for(int k=0;k < obstacles.size();++k)
 				{
 					if(new_int_x == obstacles[k][0] && new_int_y == obstacles[k][1])
 					{
-						touched_an_obstacle = true;
+						touched_any_obstacle = true;
+						touched_an_obstacle[k] = true;
 						break;
 					}	
 				}
-				if(touched_an_obstacle)
+				if(touched_any_obstacle)
 				{
 					grid[new_int_x][new_int_y] = 0;
 					break;
@@ -57,6 +59,25 @@ public:
 				}
 			}
 			angle = angle + resolution;
+		}
+		for(int i=0;i<obstacles.size();++i)
+		{
+			if(touched_an_obstacle[i])
+			{
+				bool already_seen =  false;
+				for(int j=0;j<obstacles_seen.size();++j)
+				{
+					if(obstacles_seen[j][0] == obstacles[i][0] && obstacles_seen[j][1] == obstacles[i][1])
+					{
+						already_seen = true;
+						break;
+					}
+				}
+				if(! already_seen)
+				{
+					obstacles_seen.push_back(obstacles[i]);
+				}
+			}
 		}
 		grid[x][y] = 2;
 	}

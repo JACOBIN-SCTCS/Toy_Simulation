@@ -40,7 +40,13 @@ class TopolgicalExplore
         TopolgicalExplore(std::vector<std::vector<int>> *g, std::vector<std::vector<int>> *o,std::vector<int> start, std::vector<int> goal) : grid(g), obstacles_seen(o), start_coordinates(start) , goal_coordinates(goal)
         {
             current_src = {start_coordinates[0],start_coordinates[1]};
+            for(int i=0;i<current_src.size();++i)
+                std::cout<<current_src[i]<<" ";
+
             current_dest = {goal_coordinates[0],goal_coordinates[1]};
+            for(int i=0;i<current_dest.size();++i)
+                std::cout<<current_dest[i]<<" ";
+                
         }
 
         std::vector<std::pair<int, int>> getNeighbours(int x, int y, int max_x, int max_y)
@@ -117,6 +123,7 @@ class TopolgicalExplore
             for(int i=0;i<traversed_paths.size();++i)
             {
                 Eigen::VectorXd current_signature = recompute_h_signature(traversed_paths[i]);
+                std::cout<<"Signature "<<i<<" : "<<current_signature<<std::endl;
                 traversed_signatures.push_back(current_signature);
             }
             Eigen::VectorXd current_signature = Eigen::VectorXd::Zero(obstacles_ref.size());
@@ -276,9 +283,11 @@ class TopolgicalExplore
 
             Eigen::VectorXd h_signature;
             std::vector<std::vector<int>> &obstacles_ref = *obstacles_seen;
+    
             Eigen::VectorXcd obstacle_points = Eigen::VectorXcd::Zero(obstacles_ref.size());
             for (unsigned int i = 0; i < obstacles_ref.size(); ++i)
                 obstacle_points(i) = std::complex<double>(obstacles_ref[i][0], obstacles_ref[i][1]);
+            std::cout<<obstacle_points<<std::endl;
             Eigen::VectorXd sum = Eigen::VectorXd::Zero(obstacle_points.size());
             for(int i=1;i<=n;++i)
             {
