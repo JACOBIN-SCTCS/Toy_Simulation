@@ -160,13 +160,6 @@ public:
 				top_explore.getNonHomologousPaths(current_x,current_y,{});
 				std::vector<std::pair<int,int>> p = top_explore.current_path;
 				int start_idx = top_explore.current_path_index;
-
-				// std::cout << "Printing path\n";
-				// for(int i=0;i<top_explore.current_path.size();++i)
-				// {
-				// 	std::cout<<"("<<top_explore.current_path[i].first<<","<<top_explore.current_path[i].second<<")\n";
-				// }
-
 				for(int i=start_idx;i<p.size();++i)
 				{
 					grid[p[i].first][p[i].second] = 2;
@@ -184,20 +177,72 @@ public:
 					fw.render_screen(grid);
 					if((i+1)< p.size() && grid[p[i+1].first][p[i+1].second] ==0)
 					{
-			
-						top_explore.current_path.erase(p.begin()+i+1);
+						std::vector<std::pair<int,int>> new_current_path;
+						for(int j=0;j<=i;++j)
+							new_current_path.push_back(p[j]);
+						top_explore.current_path = new_current_path;
+						// top_explore.current_path.erase(p.begin()+i+1);
 						top_explore.current_path_index = i;
 						break;
 					}
 					SDL_Delay(500);
 				}
-
+				if(current_x== top_explore.current_goal[0] && current_y==top_explore.current_goal[1])
+				{
+					if(top_explore.current_goal[0] == top_explore.start_coordinates[0] && top_explore.current_goal[1] == top_explore.start_coordinates[1])
+					{
+						top_explore.current_start = {top_explore.start_coordinates[0],top_explore.start_coordinates[1]};
+						top_explore.current_goal = {top_explore.goal_coordinates[0],top_explore.goal_coordinates[1]};
+						std::reverse(top_explore.current_path.begin(),top_explore.current_path.end());
+					}
+					else
+					{
+						top_explore.current_start = {top_explore.goal_coordinates[0],top_explore.goal_coordinates[1]};
+						top_explore.current_goal = {top_explore.start_coordinates[0],top_explore.start_coordinates[1]};
+					}
+					std::vector<std::pair<int,int>> current_path_copy;
+					for(int i=0;i<top_explore.current_path.size();++i)
+					{
+						current_path_copy.push_back({top_explore.current_path[i].first,top_explore.current_path[i].second});
+					}
+					top_explore.traversed_paths.push_back(current_path_copy);
+					top_explore.current_path.clear();
+					top_explore.current_path_index = 0;
+				}
 
 			}
 			else
 			{
-				// Adopt  a frontier based exploration strategy
-				;
+				f_explore.findFrontiers(current_x, current_y);
+				
+				std::vector<std::pair<int, int>> path = f_explore.getPath(current_x, current_y, f_explore.frontiers[0].cells[0].first, f_explore.frontiers[0].cells[0].second);
+				grid[f_explore.frontiers[0].x][f_explore.frontiers[0].y] = 3;
+
+				std::cout << "Path size = " << path.size() << std::endl;
+				std::vector<std::pair<int,int>> new_current_path_copy;
+				for(int i =0;i<top_explore.current_path.size();++i)
+					new_current_path_copy.push_back(top_explore.current_path[i]);
+					
+				for (int i = 0; i < path.size(); ++i)
+				{	
+					new_current_path_copy.push_back(path[i]);
+					top_explore.current_path_index  = new_current_path_copy.size()-1;
+
+					grid[current_x][current_y] = 1;
+					current_x = path[i].first;
+					current_y = path[i].second;
+					grid[current_x][current_y] = 2;
+					sensor_model(current_x,current_y);
+					fw.render_screen(grid);
+					SDL_Delay(500);
+				}
+				top_explore.current_path = new_current_path_copy;
+				// current_x = path[path.size() - 1].first;
+				// current_y = path[path.size() - 1].second;
+				// sensor_model(current_x, current_y);
+				// fw.render_screen(grid);
+				f_explore.findFrontiers(current_x, current_y);
+					
 			}
 			t+=1;
 			epsilon = epsilon*pow(2.71828,-0.01*t);
