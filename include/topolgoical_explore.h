@@ -129,6 +129,7 @@ public:
         }
         Eigen::VectorXd partial_signature = Eigen::VectorXd::Zero(obstacles_ref.size());
         partial_signature = recompute_h_signature(current_path,current_path_index);
+        // std::cout<<"Partial signature: "<<partial_signature.transpose()<<std::endl;
 
     
         Eigen::VectorXcd obstacle_points = Eigen::VectorXcd::Zero(obstacles_ref.size());
@@ -224,11 +225,17 @@ public:
                 }
                 path.push_back({x,y});
                 std::reverse(path.begin(), path.end());
+                // std::cout<<"Current Path Coordinates ="<<std::endl;
+                // for(int i=0;i<path.size();++i)
+                // {
+                //     std::cout<<"("<<path[i].first<<","<<path[i].second<<") ";
+                // }
                 // current_path.clear();
                 for(int i=0;i<path.size();++i)
                 {
                     current_path.push_back({path[i].first,path[i].second});
                 }
+             
                 return;
 
                 // p.path = path;

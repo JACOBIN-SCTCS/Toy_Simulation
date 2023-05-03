@@ -212,9 +212,9 @@ class FrontierExplore
                     {
                         int g_new = sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
                         int f_new = curr->f  + 1;
-                        if((f_new+g_new) < distance[f_new][g_new])
+                        if((f_new+g_new) < distance[x_new][y_new])
                         {
-                            distance[f_new][g_new] = f_new + g_new;
+                            distance[x_new][y_new] = f_new + g_new;
                             DijkstraNode* new_node = new DijkstraNode();
                             new_node->x = x_new;
                             new_node->y = y_new;
@@ -232,9 +232,9 @@ class FrontierExplore
                     {
                         int g_new = sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
                         int f_new = curr->f  + 1;
-                        if((f_new+g_new) < distance[f_new][g_new])
+                        if((f_new+g_new) < distance[x_new][y_new]) //error here
                         {
-                            distance[f_new][g_new] = f_new+g_new;
+                            distance[x_new][y_new] = f_new+g_new;
                             DijkstraNode* new_node = new DijkstraNode();
                             new_node->x = x_new;
                             new_node->y = y_new;
