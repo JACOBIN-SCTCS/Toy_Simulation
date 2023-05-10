@@ -19,14 +19,14 @@ class FrontierExplore
             std::vector<std::pair<int,int>> cells;
         };
 
-        struct DijkstraNode
+        struct AstarNode
         {
             int x;
             int y;
             double f;
             double g;
             double cost;
-            struct DijkstraNode* parent;
+            struct AstarNode* parent;
         };
 
         FrontierExplore(std::vector<std::vector<int>> *grid, std::vector<std::vector<int>> *obs) : grid(grid), obstacles(obs)
@@ -81,11 +81,11 @@ class FrontierExplore
 
                     if(grid_ref[x_new][y_new]==0)
                         continue;
-                    for(int i=0;i<obstacles_ref.size();++i)
-                    {
-                        if(obstacles_ref[i][0] == x_new && obstacles_ref[i][1]==y_new)
-                            continue;
-                    }
+                    // for(int i=0;i<obstacles_ref.size();++i)
+                    // {
+                    //     if(obstacles_ref[i][0] == x_new && obstacles_ref[i][1]==y_new)
+                    //         continue;
+                    // }
                     if(grid_ref[x_new][y_new]==-1)
                     {
                         std::vector<std::pair<int,int>> cell_neighbours = getNeighbours(x_new,y_new,grid_ref.size(),grid_ref[0].size());
@@ -174,23 +174,23 @@ class FrontierExplore
 
 
             distance[start_x][start_y] = 0;
-    	    std::priority_queue<DijkstraNode*, std::vector<DijkstraNode*>, std::function<bool(DijkstraNode*, DijkstraNode*)>> pq([](DijkstraNode* a, DijkstraNode* b) {
-                // return  ((a->f + a->g) > (b->f + b->g));
-                return ((a->cost) > (b->cost));
+    	    std::priority_queue<AstarNode*, std::vector<AstarNode*>, std::function<bool(AstarNode*, AstarNode*)>> pq([](AstarNode* a, AstarNode* b) {
+                return  ((a->f + a->g) > (b->f + b->g));
+                // return ((a->cost) > (b->cost));
              });
 
-            DijkstraNode* start_node = new DijkstraNode();
+            AstarNode* start_node = new AstarNode();
             start_node->x = start_x;
             start_node->y = start_y;
             start_node->g = sqrt((end_x-start_x)*(end_x-start_x) + (end_y-start_y)*(end_y-start_y));
             start_node->f = 0;
-            start_node->cost = 0.0;
+            // start_node->cost = 0.0;
             start_node->parent = NULL;
             pq.push(start_node);
 
             while(!pq.empty())
             {
-                DijkstraNode* curr = pq.top();
+                AstarNode* curr = pq.top();
                 // std::cout<<"("<<curr->x<<","<<curr->y<<")"<<std::endl;
                 pq.pop();
                 int x = curr->x;
@@ -199,7 +199,7 @@ class FrontierExplore
                 {
                     // std::cout <<"Path found";
                     std::vector<std::pair<int,int>> path;
-                    DijkstraNode* ptr = curr;
+                    AstarNode* ptr = curr;
                     while(curr!=NULL)
                     {
                         // std::cout<<"("<<curr->x<<","<<curr->y<<")"<<std::endl;
@@ -218,18 +218,20 @@ class FrontierExplore
                     {
                         // int g_new = sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
                         // int f_new = curr->f  + 1;
-                        double cost_new = curr->cost +  sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y)) + 1;
+                        // double cost_new = curr->cost +  sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y)) + 1;
+                        double f_new = curr->f + 1;
+                        double g_new = sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
                         // if((f_new+g_new) < distance[x_new][y_new])
-                        if(cost_new < distance[x_new][y_new])
+                        if(f_new < distance[x_new][y_new])
                         {
                             // distance[x_new][y_new] = f_new + g_new;
-                            distance[x_new][y_new] = cost_new;
-                            DijkstraNode* new_node = new DijkstraNode();
+                            distance[x_new][y_new] = f_new;
+                            AstarNode* new_node = new AstarNode();
                             new_node->x = x_new;
                             new_node->y = y_new;
-                            // new_node->g = curr->g + sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
-                            // new_node->f = curr->f  + 1;
-                            new_node->cost = cost_new;
+                            new_node->g = g_new; //curr->g + sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
+                            new_node->f = f_new;
+                            // new_node->cost = cost_new;
                             new_node->parent = curr;
                             pq.push(new_node);
                             continue;
@@ -242,18 +244,20 @@ class FrontierExplore
                     {
                         // int g_new = sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
                         // int f_new = curr->f  + 1;
-                        double cost_new = curr->cost + sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y)) + 1;
+                        // double cost_new = curr->cost + sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y)) + 1;
+                        double f_new = curr->f + 1;
+                        double g_new = sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
                         // if((f_new+g_new) < distance[x_new][y_new]) //error here
-                        if(cost_new < distance[x_new][y_new])
+                        if(f_new < distance[x_new][y_new])
                         {
-                            // distance[x_new][y_new] = f_new+g_new;
-                            distance[x_new][y_new] = cost_new;
-                            DijkstraNode* new_node = new DijkstraNode();
+                            distance[x_new][y_new] = f_new;
+                            // distance[x_new][y_new] = cost_new;
+                            AstarNode* new_node = new AstarNode();
                             new_node->x = x_new;
                             new_node->y = y_new;
-                            // new_node->g = g_new;
-                            // new_node->f = f_new;
-                            new_node->cost = cost_new;
+                            new_node->g = g_new;
+                            new_node->f = f_new;
+                            // new_node->cost = cost_new;
                             new_node->parent = curr;
                             pq.push(new_node);
                         }

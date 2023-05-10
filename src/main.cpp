@@ -10,19 +10,32 @@ public:
 	Robot(int g_size, int w_size, double scale, int n_obstacles) : grid_size(g_size), fw(w_size, w_size, scale), num_obstacles(n_obstacles)
 	{
 		grid.resize(grid_size, std::vector<int>(grid_size, -1));
+		grid_original.resize(grid_size,std::vector<int>(grid_size,1));
+		obstacle_id_grid.resize(grid_size,std::vector<int>(grid_size,1));
+
 		for (int i = 0; i < num_obstacles; ++i)
 		{
 			int x = rand() % grid_size;
 			int y = rand() % grid_size;
+			for(int j=0;j<4;++j)
+			{
+				for(int k=0;k<4;++k)
+				{
+					if(x+j<grid_size && y+k<grid_size)
+					{
+						grid_original[x+j][y+k] = 0;
+						obstacle_id_grid[x+j][y+k] = i;
+					}
+				}
+			}
 			obstacles.push_back({x, y});
 		}
-		obstacles.push_back({21,21});
 		std::cout << "Size of the grid = " << grid_size << std::endl;
 	}
 
 	void sensor_model(int x, int y)
 	{
-		int num_rays = 45;
+		int num_rays = 90;
 		double angle = 0;
 		int range = 8;
 
@@ -35,28 +48,21 @@ public:
 			{
 				double new_x = floor(x + j*cos(angle));
 				double new_y = floor(y + j*sin(angle));
-				bool touched_any_obstacle = false;
 				int new_int_x = int(new_x);
 				int new_int_y = int(new_y);
 				if(new_int_x<0 || new_int_x >=grid_size || new_int_y<0 || new_int_y>=grid_size)
-					break;
-				for(int k=0;k < obstacles.size();++k)
+					break;	
+
+				if(grid_original[new_int_x][new_int_y]==0)
 				{
-					if(new_int_x == obstacles[k][0] && new_int_y == obstacles[k][1])
-					{
-						touched_any_obstacle = true;
-						touched_an_obstacle[k] = true;
-						break;
-					}	
-				}
-				if(touched_any_obstacle)
-				{
-					grid[new_int_x][new_int_y] = 0;
+					grid[new_int_x][new_int_y]=0;
+					touched_an_obstacle[obstacle_id_grid[new_int_x][new_int_y]] = true;
 					break;
 				}
 				else
 				{
 					grid[new_int_x][new_int_y] = 1;
+				
 				}
 			}
 			angle = angle + resolution;
@@ -85,17 +91,16 @@ public:
 
 	void start_exploring(int x, int y)
 	{
+		// fw.render_screen(grid_original);
 		int current_x = x ;
 		int current_y = y;
 
-		for (int i = 0; i < obstacles.size(); ++i)
+		if(obstacle_id_grid[current_x][current_y] == 0)
 		{
-			if (obstacles[i][0] == x && obstacles[i][1] == y)
-			{
-				std::cout << "Robot is in obstacle" << std::endl;
-				return;
-			}
+			std::cout << "Robot is in obstacle" << std::endl;
+			return;
 		}
+
 		sensor_model(current_x, current_y);
 
 		FrontierExplore f_explore(&grid,&obstacles_seen);
@@ -120,10 +125,6 @@ public:
 				if((i+1)<path.size() && grid[path[i+1].first][path[i+1].second]==0)
 					break;
 			}
-			// current_x = path[path.size() - 1].first;
-			// current_y = path[path.size() - 1].second;
-			// sensor_model(current_x, current_y);
-			// fw.render_screen(grid);
 			f_explore.findFrontiers(current_x, current_y);
 		}
 	}
@@ -262,8 +263,13 @@ public:
 private:
 	int grid_size;
 	std::vector<std::vector<int>> grid;
+	std::vector<std::vector<int>> grid_original;
+
+	std::vector<std::vector<int>> obstacle_id_grid;
 	std::vector<std::vector<int>> obstacles;
 	std::vector<std::vector<int>> obstacles_seen;
+	
+	
 	int num_obstacles;
 	int lidar_range = 4;
 	double scale = 10.0;
@@ -274,8 +280,8 @@ int main(int argc, char *argv[])
 	srand(time(NULL));
 
 	Robot robot(60, 600,10.0, 20);
-	// robot.start_exploring(10, 10);
-	robot.topological_explore_2({10,10},{59,59});
+	robot.start_exploring(10, 10);
+	// robot.topological_explore_2({10,10},{59,59});
 	// robot.setInitialRobotPose(5,5);
 
 	// robot.fw.draw_point(300,300);
