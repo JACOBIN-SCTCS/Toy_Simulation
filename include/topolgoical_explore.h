@@ -67,13 +67,6 @@ public:
         return neighbours;
     }
 
-   
- 
-    // struct NonHomologouspath
-    // {
-    //     std::vector<std::pair<int, int>> path;
-    // };
-
     void getNonHomologousPaths(int x, int y, std::vector<Eigen::VectorXd> visited_h_signatures)
     {
         // struct NonHomologouspath p;
@@ -152,7 +145,7 @@ public:
         };
 
         std::priority_queue<AstarNode *, std::vector<AstarNode *>, std::function<bool(AstarNode *, AstarNode *)>> pq([](AstarNode *a, AstarNode *b)
-                                                                                                               { return (a->cost) > (b->cost); });      //{ return (a->f + a->g) > (b->f + b->g); });
+                                                                                                               { return (a->f  +  a->g) > (b->f + b->g); });      //{ return (a->f + a->g) > (b->f + b->g); });
         std::unordered_map<std::string, double> distance_count;
         std::set<std::string> visited;
         std::stringstream ss;
@@ -160,7 +153,7 @@ public:
 
         ss << start_point << "-\n"
            << partial_signature;
-        distance_count[ss.str()] = std::abs(goal_point - start_point);
+        distance_count[ss.str()] = 0.0; //std::abs(goal_point - start_point);
 
         for (unsigned int i = 0; i < directions.size(); ++i)
         {
@@ -181,8 +174,8 @@ public:
             double c = f + g;
             std::vector<std::complex<double>> e = {start_point, new_point};
             
-            // AstarNode *node = new AstarNode(new_point, temp + partial_signature, f,g, NULL, e);
-            AstarNode *node = new AstarNode(new_point, temp + partial_signature, c, NULL, e);
+            AstarNode *node = new AstarNode(new_point, temp + partial_signature, f,g, NULL, e);
+            // AstarNode *node = new AstarNode(new_point, temp + partial_signature, c, NULL, e);
             pq.push(node);
         }
 
@@ -258,20 +251,23 @@ public:
                     double cell_cost = 1.0; // grid_ref[new_point.real()][new_point.imag()];
                     if (cell_cost == -1)
                         cell_cost = 1.0;
-                    double f = cell_cost;
+                    double f = cell_cost  + node->f;
+                    //double f = cell_cost;
                     double g = std::abs(new_point - goal_point);
-                    double c = node->cost + f + g;
+                    // double c = node->cost + f + g;
 
                     std::stringstream ss;
                     ss << new_point << "-\n"
                     << temp;
                     std::string key = ss.str();
-                    if (distance_count.find(key) == distance_count.end() || distance_count[key] > (f+g))
+                    // if (distance_count.find(key) == distance_count.end() || distance_count[key] > (f+g))
+                    if (distance_count.find(key) == distance_count.end() || distance_count[key] > f)
                     {
-                        distance_count[key] = f+g;
+                        // distance_count[key] = f+g;
+                        distance_count[key] = f;
                         std::vector<std::complex<double>> edge = {node->point, new_point};
-                        // AstarNode *new_node = new AstarNode(new_point, temp, f,g, node, edge);
-                        AstarNode *new_node = new AstarNode(new_point,temp,c,node,edge);
+                        AstarNode *new_node = new AstarNode(new_point, temp, f,g, node, edge);
+                        // AstarNode *new_node = new AstarNode(new_point,temp,c,node,edge);
                         pq.push(new_node);
                     }
                 }

@@ -146,14 +146,13 @@ public:
 		int current_y = start[1];
 		srand(time(NULL));
 
-		for (int i = 0; i < obstacles.size(); ++i)
+		// if ((obstacles[i][0] == current_x && obstacles[i][1] == current_y ) ||(obstacles[i][0] == goal[0] && obstacles[i][1] == goal[1] ) )
+		if(grid_original[current_x][current_y] ==0 || grid_original[goal[0]][goal[1]] ==0)
 		{
-			if ((obstacles[i][0] == current_x && obstacles[i][1] == current_y ) ||(obstacles[i][0] == goal[0] && obstacles[i][1] == goal[1] ) )
-			{
-				std::cout << "The starting and destination points cannot be in an obstacle" << std::endl;
-				return;
-			}
+			std::cout << "The starting and destination points cannot be in an obstacle" << std::endl;
+			return;
 		}
+		
 		int start_x = current_x , start_y = current_y;
 		sensor_model(current_x, current_y);
 		TopolgicalExplore top_explore(&grid, &obstacles_seen,start,goal);
@@ -174,6 +173,14 @@ public:
 				std::cout<<"Doing a topological exploration strategy"<<std::endl;
 				top_explore.getNonHomologousPaths(current_x,current_y,{});
 				std::vector<std::pair<int,int>> p = top_explore.current_path;
+				if(p.size() == 0)
+				{
+					std::cout<<"No Topological exploration path found"<<std::endl;
+					t+=1;
+					epsilon = epsilon*pow(2.71828,-0.01*t);
+					if(t>=1000)
+						break;
+				}
 				int start_idx = top_explore.current_path_index;
 				for(int i=start_idx;i<p.size();++i)
 				{
@@ -190,7 +197,7 @@ public:
 					grid[current_x][current_y] = 2;
 					sensor_model(current_x,current_y);
 					fw.render_screen(grid);
-					if((i+1)< p.size() && grid[p[i+1].first][p[i+1].second] ==0)
+					if((i+1)< p.size() && grid_original[p[i+1].first][p[i+1].second] ==0)
 					{
 						std::vector<std::pair<int,int>> new_current_path;
 						for(int j=0;j<=i;++j)
@@ -251,6 +258,9 @@ public:
 					sensor_model(current_x,current_y);
 					fw.render_screen(grid);
 					SDL_Delay(500);
+					// }
+					if(((i+1)<path.size() && grid_original[path[i+1].first][path[i+1].second]==0))
+						break;
 				}
 				top_explore.current_path = new_current_path_copy;
 				// current_x = path[path.size() - 1].first;
@@ -291,8 +301,8 @@ int main(int argc, char *argv[])
 	srand(time(NULL));
 
 	Robot robot(60, 600,10.0, 20);
-	robot.start_exploring(10, 10);
-	// robot.topological_explore_2({10,10},{59,59});
+	// robot.start_exploring(10, 10);
+	robot.topological_explore_2({10,10},{59,59});
 	// robot.setInitialRobotPose(5,5);
 
 	// robot.fw.draw_point(300,300);
