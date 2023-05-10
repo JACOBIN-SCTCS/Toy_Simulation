@@ -4,6 +4,8 @@
 #include "frontier_explore.h"
 #include "topolgoical_explore.h"
 
+const int SENSOR_RANGE = 8;
+
 class Robot
 {
 public:
@@ -35,9 +37,9 @@ public:
 
 	void sensor_model(int x, int y)
 	{
-		int num_rays = 90;
+		int num_rays = 360;
 		double angle = 0;
-		int range = 8;
+		int range = SENSOR_RANGE;
 
 		double resolution = (2*M_PI)/num_rays;
 		bool touched_an_obstacle[obstacles.size()] = {false};
@@ -122,7 +124,16 @@ public:
 				sensor_model(current_x,current_y);
 				fw.render_screen(grid);
 				SDL_Delay(500);
-				if((i+1)<path.size() && grid[path[i+1].first][path[i+1].second]==0)
+				bool towards_an_obstacle = false;
+				// for(int j=i+1;j<path.size();++j)
+				// {
+				// 	if(grid_original[path[j].first][path[j].second]==0  && sqrt((path[j].first-path[i].first)*(path[j].first-path[i].first)+(path[j].second-path[i].second)*(path[j].second-path[i].second))<=SENSOR_RANGE)
+				// 	{
+				// 		towards_an_obstacle = true;
+				// 		break;
+				// 	}    
+				// }
+				if(((i+1)<path.size() && grid_original[path[i+1].first][path[i+1].second]==0)  || towards_an_obstacle)
 					break;
 			}
 			f_explore.findFrontiers(current_x, current_y);
