@@ -48,7 +48,21 @@ public:
         traversed_paths.clear();
         current_path.clear();
         traversed_signatures.clear();
+        use_four_corner_points = false;
     }
+
+    TopolgicalExplore(std::vector<std::vector<int>> *g, std::vector<std::vector<int>> *o, std::vector<int> start, std::vector<std::vector<int>> goals) : grid(g), obstacles_seen(o), start_coordinates(start), goals(goals)
+    {
+        current_start = {start[0],start[1]};
+        current_goal  = {goals[0][0],goals[0][1]};
+        current_path_index = 0;
+        traversed_paths.clear();
+        current_path.clear();
+        traversed_signatures.clear();
+        use_four_corner_points = true;
+    }
+
+
 
     std::vector<std::pair<int, int>> getNeighbours(int x, int y, int max_x, int max_y)
     {
@@ -66,6 +80,59 @@ public:
         }
         return neighbours;
     }
+
+    std::vector<std::vector<std::pair<int,int>>> create_corner_points_paths(int grid_size)
+	{
+		//  std::cout<<"Reached here";
+		std::vector<std::vector<int>> goals = {{grid_size-1,grid_size-1},{0,0},{0,grid_size-1},{grid_size-1,0}};
+		std::vector<std::vector<std::pair<int,int>>> corner_points_paths;
+		
+		// The bottom right as the main destination point (grid_size-1,grid_size-1)
+		corner_points_paths.push_back({});
+		
+		// From  (grid_size-1,grid_size-1) to (0,0)
+		std::vector<std::pair<int,int>> path_to_top_left;
+		path_to_top_left.push_back(std::make_pair(goals[0][0],goals[0][1]));
+		for(int i=grid_size;i>=-1;i--)
+		{
+			path_to_top_left.push_back(std::make_pair(grid_size,i));
+		}
+		for(int i=grid_size;i>=-1;i--)
+		{
+			path_to_top_left.push_back(std::make_pair(i,-1));
+		}
+		path_to_top_left.push_back(std::make_pair(0,0));
+		corner_points_paths.push_back(path_to_top_left);
+
+		//From  (grid_size-1,grid_size-1) to (0,grid_size-1)
+		std::vector<std::pair<int,int>> path_to_top_right;
+		path_to_top_right.push_back(std::make_pair(goals[0][0],goals[0][1]));
+		for(int i=grid_size;i>=-1;i--)
+		{
+			path_to_top_right.push_back(std::make_pair(i,grid_size));
+		}
+		path_to_top_right.push_back(std::make_pair(0,grid_size-1));
+		corner_points_paths.push_back(path_to_top_right);
+
+
+		// From (grid_size-1,grid_size-1) to (0,grid_size-1)
+		std::vector<std::pair<int,int>> path_to_bottom_left;
+		for(int i=0;i<path_to_top_left.size()-1;++i)
+		{
+			path_to_bottom_left.push_back(path_to_top_left[i]);
+		}	
+
+		for(int i=-1;i<=grid_size;++i)
+		{
+			path_to_bottom_left.push_back(std::make_pair(i,-1));
+		}	
+		path_to_bottom_left.push_back(std::make_pair(grid_size-1,0));
+		corner_points_paths.push_back(path_to_bottom_left);
+
+		return corner_points_paths;
+	}
+
+
 
     void getNonHomologousPaths(int x, int y, std::vector<Eigen::VectorXd> visited_h_signatures)
     {
@@ -328,6 +395,9 @@ std::map<std::string, int> done_signatures;
 
 std::vector<int> start_coordinates;
 std::vector<int> goal_coordinates;
+std::vector<std::vector<int>> goals;
+bool use_four_corner_points = false;
+
 std::vector<int> current_start;
 std::vector<int> current_goal;
 
