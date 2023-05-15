@@ -15,7 +15,8 @@ public:
 		grid_original.resize(grid_size,std::vector<int>(grid_size,1));
 		obstacle_id_grid.resize(grid_size,std::vector<int>(grid_size,1));
 
-		for (int i = 0; i < num_obstacles; ++i)
+		int i=0;
+		while(i< num_obstacles)
 		{
 			int x = rand() % grid_size;
 			int y = rand() % grid_size;
@@ -23,14 +24,23 @@ public:
 			{
 				for(int k=0;k<4;++k)
 				{
-					if(x+j<grid_size && y+k<grid_size)
+					if(x+j == (grid_size-1) ||  x+j == 0 ||  y+k == (grid_size-1) ||  y+k == 0)
 					{
-						grid_original[x+j][y+k] = 0;
-						obstacle_id_grid[x+j][y+k] = i;
+						continue;
 					}
 				}
 			}
+			for(int j=0;j<4;++j)
+			{
+				for(int k=0;k<4;++k)
+				{
+					grid_original[x+j][y+k] = 0;
+					obstacle_id_grid[x+j][y+k] = i;
+				}
+			}
+
 			obstacles.push_back({x, y});
+			i+=1;
 		}
 		std::cout << "Size of the grid = " << grid_size << std::endl;
 	}
@@ -63,6 +73,9 @@ public:
 				}
 				else
 				{
+					if(grid[new_int_x][new_int_y]==-1 || grid[new_int_x][new_int_y]==3)
+						total_cells_mapped+=1;
+					
 					grid[new_int_x][new_int_y] = 1;
 				
 				}
@@ -112,7 +125,7 @@ public:
 		{
 			 std::cout << "Frontiers size = " << f_explore.frontiers.size() << std::endl;
 			std::vector<std::pair<int, int>> path = f_explore.getPath(current_x, current_y, f_explore.frontiers[0].x, f_explore.frontiers[0].y);
-			grid[f_explore.frontiers[0].x][f_explore.frontiers[0].y] = 3;
+			// grid[f_explore.frontiers[0].x][f_explore.frontiers[0].y] = 3;
 
 			std::cout << "Frontier exploration Path size = " << path.size() << std::endl;
 			for (int i = 0; i < path.size(); ++i)
@@ -122,8 +135,8 @@ public:
 				current_y = path[i].second;
 				grid[current_x][current_y] = 2;
 				sensor_model(current_x,current_y);
-				fw.render_screen(grid);
-				SDL_Delay(500);
+				// fw.render_screen(grid);
+				// SDL_Delay(500);
 				bool towards_an_obstacle = false;
 				// for(int j=i+1;j<path.size();++j)
 				// {
@@ -134,10 +147,14 @@ public:
 				// 	}    
 				// }
 				if(((i+1)<path.size() && grid_original[path[i+1].first][path[i+1].second]==0)  || towards_an_obstacle)
+				{
+					grid[path[i+1].first][path[i+1].second] = 0;
 					break;
+				}
 			}
 			f_explore.findFrontiers(current_x, current_y);
 		}
+		std::cout<<"Exploration complete"<<std::endl;
 	}
 
 	void topological_explore_2(std::vector<int> start, std::vector<int> goal)
@@ -182,11 +199,11 @@ public:
 						break;
 				}
 				int start_idx = top_explore.current_path_index;
-				for(int i=start_idx;i<p.size();++i)
-				{
-					grid[p[i].first][p[i].second] = 2;
+				// for(int i=start_idx;i<p.size();++i)
+				// {
+				// 	grid[p[i].first][p[i].second] = 2;
 					
-				}
+				// }
 				fw.render_screen(grid);
 				for(int i=start_idx;i < p.size();++i)
 				{
@@ -260,7 +277,10 @@ public:
 					SDL_Delay(500);
 					// }
 					if(((i+1)<path.size() && grid_original[path[i+1].first][path[i+1].second]==0))
+					{
+						grid[path[i+1].first][path[i+1].second] = 0;
 						break;
+					}
 				}
 				top_explore.current_path = new_current_path_copy;
 				// current_x = path[path.size() - 1].first;
@@ -292,6 +312,7 @@ private:
 	
 	
 	int num_obstacles;
+	int total_cells_mapped=0;
 	int lidar_range = 4;
 	double scale = 10.0;
 };
