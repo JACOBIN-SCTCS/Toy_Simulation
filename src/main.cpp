@@ -306,7 +306,7 @@ public:
 
 		// if ((obstacles[i][0] == current_x && obstacles[i][1] == current_y ) ||(obstacles[i][0] == goal[0] && obstacles[i][1] == goal[1] ) )
 		std::vector<std::vector<int>> goals = {{grid_size-1,grid_size-1},{0,0},{0,grid_size-1},{grid_size-1,0}};
-		if(grid_original[current_x][current_y] ==0 || grid_original[grid_size-1][0] ==0 || grid_original[grid_size-1][grid_size-1] ==0 || grid_original[0][grid_size-1] ==0)
+		if(grid_original[current_x][current_y] ==0 || grid_original[grid_size-1][0] ==0 || grid_original[grid_size-1][grid_size-1] ==0 || grid_original[0][grid_size-1] ==0 || grid_original[0][0] == 0)
 		{
 			std::cout << "The starting and destination points cannot be in an obstacle" << std::endl;
 			return;
@@ -374,12 +374,24 @@ public:
 					if(top_explore.current_goal[0] == top_explore.start_coordinates[0] && top_explore.current_goal[1] == top_explore.start_coordinates[1])
 					{
 						top_explore.current_start = {top_explore.start_coordinates[0],top_explore.start_coordinates[1]};
-						top_explore.current_goal = {top_explore.goal_coordinates[0],top_explore.goal_coordinates[1]};
+						if(!top_explore.use_four_corner_points)
+						{
+							top_explore.current_goal = {top_explore.goal_coordinates[0],top_explore.goal_coordinates[1]};
+						}
+						else
+						{
+							int corner_point_idx = rand()%4;
+							top_explore.current_goal = {top_explore.goals[corner_point_idx][0],top_explore.goals[corner_point_idx][1]};
+						}
 						std::reverse(top_explore.current_path.begin(),top_explore.current_path.end());
 					}
 					else
 					{
-						top_explore.current_start = {top_explore.goal_coordinates[0],top_explore.goal_coordinates[1]};
+						if(!top_explore.use_four_corner_points)
+							top_explore.current_start = {top_explore.goal_coordinates[0],top_explore.goal_coordinates[1]};
+						else
+							top_explore.current_start = {top_explore.current_goal[0],top_explore.current_goal[1]};
+
 						top_explore.current_goal = {top_explore.start_coordinates[0],top_explore.start_coordinates[1]};
 					}
 					std::vector<std::pair<int,int>> current_path_copy;
@@ -465,8 +477,9 @@ int main(int argc, char *argv[])
 
 	Robot robot(60, 600,10.0, 20);
 	// robot.start_exploring(10, 10);
-	// robot.topological_explore_2({10,10},{59,59});
-	// robot.create_corner_points_paths();
+	robot.topological_explore_2({10,10},{59,59});
+	// robot.topological_explore_3({10,10});
+	// robot.create_corner_points_paths(60);
 	// robot.setInitialRobotPose(5,5);
 
 	// robot.fw.draw_point(300,300);

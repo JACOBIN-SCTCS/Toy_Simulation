@@ -60,6 +60,7 @@ public:
         current_path.clear();
         traversed_signatures.clear();
         use_four_corner_points = true;
+        corner_point_paths = create_corner_points_paths(grid->size());
     }
 
 
@@ -83,7 +84,7 @@ public:
 
     std::vector<std::vector<std::pair<int,int>>> create_corner_points_paths(int grid_size)
 	{
-		//  std::cout<<"Reached here";
+		 std::cout<<"Reached here";
 		std::vector<std::vector<int>> goals = {{grid_size-1,grid_size-1},{0,0},{0,grid_size-1},{grid_size-1,0}};
 		std::vector<std::vector<std::pair<int,int>>> corner_points_paths;
 		
@@ -102,34 +103,37 @@ public:
 			path_to_top_left.push_back(std::make_pair(i,-1));
 		}
 		path_to_top_left.push_back(std::make_pair(0,0));
+        std::reverse(path_to_top_left.begin(),path_to_top_left.end());
 		corner_points_paths.push_back(path_to_top_left);
 
-		//From  (grid_size-1,grid_size-1) to (0,grid_size-1)
+		
+        //From  (grid_size-1,grid_size-1) to (0,grid_size-1)
 		std::vector<std::pair<int,int>> path_to_top_right;
 		path_to_top_right.push_back(std::make_pair(goals[0][0],goals[0][1]));
-		for(int i=grid_size;i>=-1;i--)
-		{
-			path_to_top_right.push_back(std::make_pair(i,grid_size));
-		}
-		path_to_top_right.push_back(std::make_pair(0,grid_size-1));
+		for(int i=0;i<path_to_top_left.size()-1;++i)
+        {
+            path_to_top_right.push_back(path_to_top_left[i]);
+        }
+        for(int i=-1;i<=grid_size;++i)
+        {
+            path_to_top_right.push_back(std::make_pair(-1,i));
+        }
+        path_to_top_right.push_back(std::make_pair(0,grid_size-1));
+        std::reverse(path_to_top_right.begin(),path_to_top_right.end());
 		corner_points_paths.push_back(path_to_top_right);
 
 
 		// From (grid_size-1,grid_size-1) to (0,grid_size-1)
 		std::vector<std::pair<int,int>> path_to_bottom_left;
-		for(int i=0;i<path_to_top_left.size()-1;++i)
-		{
-			path_to_bottom_left.push_back(path_to_top_left[i]);
-		}	
-
-		for(int i=-1;i<=grid_size;++i)
-		{
-			path_to_bottom_left.push_back(std::make_pair(i,-1));
-		}	
-		path_to_bottom_left.push_back(std::make_pair(grid_size-1,0));
-		corner_points_paths.push_back(path_to_bottom_left);
-
-		return corner_points_paths;
+		path_to_bottom_left.push_back(std::make_pair(goals[0][0],goals[0][1]));
+        for(int i=grid_size;i>=-1;i--)
+        {
+            path_to_bottom_left.push_back(std::make_pair(grid_size,i));
+        }
+        path_to_bottom_left.push_back(std::make_pair(grid_size-1,0));
+        std::reverse(path_to_bottom_left.begin(),path_to_bottom_left.end());
+		corner_points_paths.push_back(path_to_bottom_left);     
+        return corner_points_paths;
 	}
 
 
@@ -163,12 +167,21 @@ public:
             if(current_goal[0] == start_coordinates[0] && current_goal[1] == start_coordinates[1])
             {
                 current_start = {start_coordinates[0],start_coordinates[1]};
-                current_goal = {goal_coordinates[0],goal_coordinates[1]};
+                
+                if(!use_four_corner_points)
+                {
+                    current_goal = {goal_coordinates[0],goal_coordinates[1]};
+                }
+                else
+                {
+                    int goal_index = rand()%4;
+                    current_goal = {goals[goal_index][0],goals[goal_index][1]};
+                }
                 std::reverse(current_path.begin(),current_path.end());
             }
             else
             {
-                current_start = {goal_coordinates[0],goal_coordinates[1]};
+                current_start = {current_goal[0],current_goal[1]};
                 current_goal = {start_coordinates[0],start_coordinates[1]};
             }
             std::vector<std::pair<int,int>> current_path_copy;
@@ -182,11 +195,28 @@ public:
         }
 
         traversed_signatures.clear();
+        
+     
         for(int i=0;i<traversed_paths.size();++i)
         {
             Eigen::VectorXd prev_h_signature = recompute_h_signature(traversed_paths[i]);
+            Eigen::VectorXd augmented_path_signature = Eigen::VectorXd::Zero(obstacles_ref.size());
+            if(use_four_corner_points)
+            {
+                for(int j=0;j<goals.size();++j)
+                {
+                    auto path_goal_point = traversed_paths[i][traversed_paths[i].size()-1];
+                    if(path_goal_point.first==goals[j][0] && path_goal_point.second == goals[j][1])
+                    {
+                        augmented_path_signature = recompute_h_signature(corner_point_paths[j]);
+                    }
+                }
+            }
+            prev_h_signature =  prev_h_signature + augmented_path_signature;
             traversed_signatures.push_back(prev_h_signature);
         }
+
+
         Eigen::VectorXd partial_signature = Eigen::VectorXd::Zero(obstacles_ref.size());
         partial_signature = recompute_h_signature(current_path,current_path_index);
         // std::cout<<"Partial signature: "<<partial_signature.transpose()<<std::endl;
@@ -261,7 +291,39 @@ public:
                 if( current_goal[0] == start_coordinates[0] && current_goal[1] == start_coordinates[1])
                 {
                     corrected_signature = -node->h_signature;
+                    Eigen::VectorXd h_signature_correction = Eigen::VectorXd::Zero(obstacles_ref.size());
+                    if(use_four_corner_points)
+                    {
+                        for(int j=0;j<corner_point_paths.size();++j)
+                        {
+                            if(goals[j][0]== current_start[0] && goals[j][1] == current_start[1])
+                            {
+                                h_signature_correction = -recompute_h_signature(corner_point_paths[j]);
+                                break;
+                            }
+                        }
+                    }
+                    corrected_signature = corrected_signature + h_signature_correction;
                 }
+                else
+                {
+                    corrected_signature = node -> h_signature;
+                    Eigen::VectorXd h_signature_correction = Eigen::VectorXd::Zero(obstacles_ref.size());
+
+                    if(use_four_corner_points)
+                    {
+                        for(int j=0;j<corner_point_paths.size();++j)
+                        {
+                            if(goals[j][0]== current_goal[0] && goals[j][1] == current_goal[1])
+                            {
+                                h_signature_correction = recompute_h_signature(corner_point_paths[j]);
+                                break;
+                            }
+                        } 
+                    }
+                    corrected_signature = corrected_signature + h_signature_correction;
+                }
+
                 for (int i = 0; i < traversed_signatures.size(); ++i)
                 {
                     Eigen::VectorXd diff = traversed_signatures[i] - corrected_signature;
@@ -397,6 +459,8 @@ std::vector<int> start_coordinates;
 std::vector<int> goal_coordinates;
 std::vector<std::vector<int>> goals;
 bool use_four_corner_points = false;
+
+std::vector<std::vector<std::pair<int,int>>> corner_point_paths;
 
 std::vector<int> current_start;
 std::vector<int> current_goal;
