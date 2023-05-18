@@ -61,6 +61,11 @@ public:
         traversed_signatures.clear();
         use_four_corner_points = true;
         corner_point_paths = create_corner_points_paths(grid->size());
+        for(int i=0;i<4;++i)
+        {
+            n_times_chosen.push_back(0);
+        }
+        n_times_chosen[0] = 1;
     }
 
 
@@ -174,8 +179,36 @@ public:
                 }
                 else
                 {
-                    int goal_index = rand()%4;
-                    current_goal = {goals[goal_index][0],goals[goal_index][1]};
+                    int weight_sum = 0;
+                    for(int i=0;i<n_times_chosen.size();++i)
+                        weight_sum += n_times_chosen[i];
+                    
+                    std::vector<int> tmp_weights;
+                    for(int i=0;i<n_times_chosen.size();++i)
+                        tmp_weights.push_back(weight_sum - n_times_chosen[i]);
+                    
+                    
+                    weight_sum = 0;
+                    for(int i=0;i<tmp_weights.size();++i)
+                        weight_sum += tmp_weights[i];
+                    
+                    int drawn_number = rand()%weight_sum;
+
+                    int chosen_index = 0;
+                    for(int i=0;i<tmp_weights.size();++i)
+                    {
+                        drawn_number -= tmp_weights[i];
+                        if(drawn_number <=0)
+                        {
+                            chosen_index = i;
+                            break;
+                        }
+
+                    }
+                    n_times_chosen[chosen_index] += 1;
+                    std::cout<<"Goal point chosen = " << goals[chosen_index][0] << " " << goals[chosen_index][1] << std::endl;
+                   
+                    current_goal = {goals[chosen_index][0],goals[chosen_index][1]};
                 }
                 std::reverse(current_path.begin(),current_path.end());
             }
@@ -459,6 +492,8 @@ std::vector<int> start_coordinates;
 std::vector<int> goal_coordinates;
 std::vector<std::vector<int>> goals;
 bool use_four_corner_points = false;
+
+std::vector<int> n_times_chosen;
 
 std::vector<std::vector<std::pair<int,int>>> corner_point_paths;
 

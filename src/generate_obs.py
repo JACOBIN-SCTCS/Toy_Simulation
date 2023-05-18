@@ -13,18 +13,19 @@ for i in range(number_of_runs):
         x = random.randint(0,grid_size-1)
         y = random.randint(0,grid_size-1)
 
-        obs_collide = False
+        invalid_point = False
         for k in range(4):
             for l in range(4):
-                if(x+k == 10 and y+l==10):
-                    obs_collide = True
+                if(x+k <0 or x+k >= grid_size or y+l<0 or y+l>=grid_size):
+                    invalid_point = True
                     break
-            if obs_collide:
+            if invalid_point:
                 break
-        if obs_collide:
+        if invalid_point:
             continue
+        
         else:
-            content_to_write = str(x) + "," + str(y) +"\n"
+            content_to_write = str(x) + " " + str(y) +"\n"
             f.write(content_to_write)
             j+=1
 

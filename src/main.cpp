@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <time.h>
 #include "framework.h"
 #include "frontier_explore.h"
@@ -14,12 +15,17 @@ public:
 		grid.resize(grid_size, std::vector<int>(grid_size, -1));
 		grid_original.resize(grid_size,std::vector<int>(grid_size,1));
 		obstacle_id_grid.resize(grid_size,std::vector<int>(grid_size,1));
-
+		std::ifstream infile("obs0.txt");
 		int i=0;
-		while(i< num_obstacles)
-		{
-			int x = rand() % grid_size;
-			int y = rand() % grid_size;
+
+
+		while(i < num_obstacles)
+		{	
+			int tmp_x, tmp_y;
+			infile >> tmp_x >> tmp_y;
+			std::cout << tmp_x <<" "<< tmp_y <<std::endl;
+			int x =   tmp_x ; //rand() % grid_size;
+			int y =   tmp_y ;//rand() % grid_size;
 			for(int j=0;j<4;++j)
 			{
 				for(int k=0;k<4;++k)
@@ -42,6 +48,7 @@ public:
 			obstacles.push_back({x, y});
 			i+=1;
 		}
+		infile.close();
 		std::cout << "Size of the grid = " << grid_size << std::endl;
 	}
 
@@ -252,9 +259,15 @@ public:
 			}
 			else
 			{
+				frontier:
 				std::cout<<"Doing Frontier Based exploration"<<std::endl;
 				f_explore.findFrontiers(current_x, current_y);
-				
+				if(f_explore.frontiers.size() <=0)
+				{
+					t+=1000;
+					break;
+				}
+			
 				std::vector<std::pair<int, int>> path = f_explore.getPath(current_x, current_y, f_explore.frontiers[0].x, f_explore.frontiers[0].y);
 				grid[f_explore.frontiers[0].x][f_explore.frontiers[0].y] = 3;
 
@@ -337,9 +350,10 @@ public:
 				{
 					std::cout<<"No Topological exploration path found"<<std::endl;
 					t+=1;
-					epsilon = epsilon*pow(2.71828,-0.01*t);
-					if(t>=1000)
-						break;
+					epsilon = pow(2.71828,-0.01*t);
+					goto frontier;
+					// if(t>=1000)
+					// 	break;
 				}
 				int start_idx = top_explore.current_path_index;
 				// for(int i=start_idx;i<p.size();++i)
@@ -380,8 +394,38 @@ public:
 						}
 						else
 						{
-							int corner_point_idx = rand()%4;
-							top_explore.current_goal = {top_explore.goals[corner_point_idx][0],top_explore.goals[corner_point_idx][1]};
+							// times visited here
+							// int corner_point_idx = rand()%4;
+							int weight_sum = 0;
+							for(int i=0;i<top_explore.n_times_chosen.size();++i)
+								weight_sum += top_explore.n_times_chosen[i];
+							
+							std::vector<int> tmp_weights;
+							for(int i=0;i<top_explore.n_times_chosen.size();++i)
+								tmp_weights.push_back(weight_sum - top_explore.n_times_chosen[i]);
+							
+							
+							weight_sum = 0;
+							for(int i=0;i<tmp_weights.size();++i)
+								weight_sum += tmp_weights[i];
+							
+							int drawn_number = rand()%weight_sum;
+
+							int chosen_index = 0;
+							for(int i=0;i<tmp_weights.size();++i)
+							{
+								drawn_number -= tmp_weights[i];
+								if(drawn_number <=0)
+								{
+									chosen_index = i;
+									break;
+								}
+
+							}
+							top_explore.n_times_chosen[chosen_index] += 1;
+							std::cout<<"Goal point chosen = " << top_explore.goals[chosen_index][0] << " " << top_explore.goals[chosen_index][1] << std::endl;
+
+							top_explore.current_goal = {top_explore.goals[chosen_index][0],top_explore.goals[chosen_index][1]};
 						}
 						std::reverse(top_explore.current_path.begin(),top_explore.current_path.end());
 					}
@@ -407,8 +451,14 @@ public:
 			}
 			else
 			{
+				frontier:
 				std::cout<<"Doing Frontier Based exploration"<<std::endl;
 				f_explore.findFrontiers(current_x, current_y);
+				if(f_explore.frontiers.size() <=0)
+				{
+					t+=1000;
+					break;
+				}
 				
 				std::vector<std::pair<int, int>> path = f_explore.getPath(current_x, current_y, f_explore.frontiers[0].x, f_explore.frontiers[0].y);
 				grid[f_explore.frontiers[0].x][f_explore.frontiers[0].y] = 3;
@@ -446,7 +496,7 @@ public:
 					
 			}
 			t+=1;
-			epsilon = epsilon*pow(2.71828,-0.01*t);
+			epsilon = pow(2.71828,-0.01*t);
 			if(t>=1000)
 				break;
 		}
@@ -477,8 +527,8 @@ int main(int argc, char *argv[])
 
 	Robot robot(60, 600,10.0, 20);
 	// robot.start_exploring(10, 10);
-	robot.topological_explore_2({10,10},{59,59});
-	// robot.topological_explore_3({10,10});
+	// robot.topological_explore_2({10,10},{59,59});
+	robot.topological_explore_3({10,10});
 	// robot.create_corner_points_paths(60);
 	// robot.setInitialRobotPose(5,5);
 
