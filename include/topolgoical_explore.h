@@ -54,7 +54,8 @@ public:
     TopolgicalExplore(std::vector<std::vector<int>> *g, std::vector<std::vector<int>> *o, std::vector<int> start, std::vector<std::vector<int>> goals) : grid(g), obstacles_seen(o), start_coordinates(start), goals(goals)
     {
         current_start = {start[0],start[1]};
-        current_goal  = {goals[0][0],goals[0][1]};
+        int random_index = rand() % 4;
+        current_goal  = {goals[random_index][0],goals[random_index][1]};
         current_path_index = 0;
         traversed_paths.clear();
         current_path.clear();
@@ -65,7 +66,7 @@ public:
         {
             n_times_chosen.push_back(0);
         }
-        n_times_chosen[0] = 1;
+        n_times_chosen[random_index] = 1;
     }
 
 
@@ -360,7 +361,15 @@ public:
                 for (int i = 0; i < traversed_signatures.size(); ++i)
                 {
                     Eigen::VectorXd diff = traversed_signatures[i] - corrected_signature;
-                    if (diff.isZero(0.0001))
+                    if (diff.isZero(0.0001) || 
+                        diff.isApproxToConstant(2*M_PIf64, 0.0001) ||
+                        diff.isApproxToConstant(-2*M_PIf64, 0.0001) || 
+                        diff.isApproxToConstant(4*M_PIf64, 0.0001) ||
+                        diff.isApproxToConstant(-4*M_PIf64, 0.0001) || 
+                        diff.isApproxToConstant(6*M_PIf64, 0.0001) ||
+                        diff.isApproxToConstant(-6*M_PIf64, 0.0001)
+                      
+                        )
                     {
                         is_already_seen = true;
                         break;

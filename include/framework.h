@@ -5,6 +5,10 @@
 class Framework
 {
 	public:
+		Framework()
+		{
+			;
+		}
 		Framework(int h ,  int w , double s) : height(h), width(w) ,  scale(s)
 		{
 			SDL_Init(SDL_INIT_VIDEO);

@@ -10,11 +10,23 @@ const int SENSOR_RANGE = 8;
 class Robot
 {
 public:
-	Robot(int g_size, int w_size, double scale, int n_obstacles) : grid_size(g_size), fw(w_size, w_size, scale), num_obstacles(n_obstacles)
+	Robot(int g_size, int w_size, double scale, int n_obstacles, bool window = true , std::string filename = "results.txt") : grid_size(g_size), num_obstacles(n_obstacles)
 	{
+		use_window  = window;
+		output_file_name = filename;
 		grid.resize(grid_size, std::vector<int>(grid_size, -1));
 		grid_original.resize(grid_size,std::vector<int>(grid_size,1));
 		obstacle_id_grid.resize(grid_size,std::vector<int>(grid_size,1));
+		
+		if(use_window)
+		{
+			fw = Framework(grid_size, grid_size, scale);
+		}
+		else
+		{
+			fw = Framework();
+		}
+
 		std::ifstream infile("obs0.txt");
 		int i=0;
 
@@ -122,6 +134,10 @@ public:
 			std::cout << "Robot is in obstacle" << std::endl;
 			return;
 		}
+		
+		std::fstream f;
+    	f.open(output_file_name, std::ios::app);
+		f << "-\n";
 
 		sensor_model(current_x, current_y);
 
@@ -137,11 +153,18 @@ public:
 			std::cout << "Frontier exploration Path size = " << path.size() << std::endl;
 			for (int i = 0; i < path.size(); ++i)
 			{
+				timesteps_taken +=1;
 				grid[current_x][current_y] = 1;
 				current_x = path[i].first;
 				current_y = path[i].second;
 				grid[current_x][current_y] = 2;
 				sensor_model(current_x,current_y);
+				f << timesteps_taken << " " << ((double)total_cells_mapped/(grid_size*grid_size)) * 100<< "\n";
+				if(use_window)
+				{
+					fw.render_screen(grid);
+					SDL_Delay(100);
+				}
 				// fw.render_screen(grid);
 				// SDL_Delay(500);
 				bool towards_an_obstacle = false;
@@ -161,6 +184,7 @@ public:
 			}
 			f_explore.findFrontiers(current_x, current_y);
 		}
+		f.close();
 		std::cout<<"Exploration complete"<<std::endl;
 	}
 
@@ -177,6 +201,10 @@ public:
 			return;
 		}
 		
+		std::fstream f;
+    	f.open(output_file_name, std::ios::app);
+		f << "-\n";
+
 		int start_x = current_x , start_y = current_y;
 		sensor_model(current_x, current_y);
 		TopolgicalExplore top_explore(&grid, &obstacles_seen,start,goal);
@@ -211,16 +239,22 @@ public:
 				// 	grid[p[i].first][p[i].second] = 2;
 					
 				// }
-				fw.render_screen(grid);
+				if(use_window)
+					fw.render_screen(grid);
+				
 				for(int i=start_idx;i < p.size();++i)
 				{
-					
+
+					timesteps_taken += 1;
 					grid[current_x][current_y] = 1;
 					current_x = p[i].first;
 					current_y = p[i].second;
 					grid[current_x][current_y] = 2;
 					sensor_model(current_x,current_y);
-					fw.render_screen(grid);
+					f<< timesteps_taken << " " << ((double)total_cells_mapped/(grid_size*grid_size)) * 100<< "\n";
+					if (use_window)
+						fw.render_screen(grid);
+					
 					if((i+1)< p.size() && grid_original[p[i+1].first][p[i+1].second] ==0)
 					{
 						std::vector<std::pair<int,int>> new_current_path;
@@ -231,7 +265,8 @@ public:
 						top_explore.current_path_index = i;
 						break;
 					}
-					SDL_Delay(500);
+					if(use_window)
+						SDL_Delay(500);
 				}
 				if(current_x== top_explore.current_goal[0] && current_y==top_explore.current_goal[1])
 				{
@@ -277,7 +312,7 @@ public:
 					new_current_path_copy.push_back(top_explore.current_path[i]);
 					
 				for (int i = 0; i < path.size(); ++i)
-				{	
+				{	timesteps_taken+=1;
 					new_current_path_copy.push_back(path[i]);
 					top_explore.current_path_index  = new_current_path_copy.size()-1;
 
@@ -286,8 +321,12 @@ public:
 					current_y = path[i].second;
 					grid[current_x][current_y] = 2;
 					sensor_model(current_x,current_y);
-					fw.render_screen(grid);
-					SDL_Delay(500);
+					f<< timesteps_taken << " " << ((double)total_cells_mapped/(grid_size*grid_size)) * 100<< "\n";
+					if(use_window)
+					{
+						fw.render_screen(grid);
+						SDL_Delay(500);
+					}
 					// }
 					if(((i+1)<path.size() && grid_original[path[i+1].first][path[i+1].second]==0))
 					{
@@ -308,6 +347,7 @@ public:
 			if(t>=1000)
 				break;
 		}
+		f.close();
 
 	}
 
@@ -324,6 +364,10 @@ public:
 			std::cout << "The starting and destination points cannot be in an obstacle" << std::endl;
 			return;
 		}
+
+		std::fstream f;
+    	f.open(output_file_name, std::ios::app);
+		f << "-\n";
 		
 		int start_x = current_x , start_y = current_y;
 		sensor_model(current_x, current_y);
@@ -350,7 +394,7 @@ public:
 				{
 					std::cout<<"No Topological exploration path found"<<std::endl;
 					t+=1;
-					epsilon = pow(2.71828,-0.01*t);
+					epsilon = pow(2.71828,-0.02*t);
 					goto frontier;
 					// if(t>=1000)
 					// 	break;
@@ -361,16 +405,19 @@ public:
 				// 	grid[p[i].first][p[i].second] = 2;
 					
 				// }
-				fw.render_screen(grid);
+				if (use_window)
+					fw.render_screen(grid);
 				for(int i=start_idx;i < p.size();++i)
 				{
-					
+					timesteps_taken+=1;
 					grid[current_x][current_y] = 1;
 					current_x = p[i].first;
 					current_y = p[i].second;
 					grid[current_x][current_y] = 2;
 					sensor_model(current_x,current_y);
-					fw.render_screen(grid);
+					f<< timesteps_taken << " " << ((double)total_cells_mapped/(grid_size*grid_size)) * 100<< "\n";
+					if(use_window)
+						fw.render_screen(grid);
 					if((i+1)< p.size() && grid_original[p[i+1].first][p[i+1].second] ==0)
 					{
 						std::vector<std::pair<int,int>> new_current_path;
@@ -381,7 +428,8 @@ public:
 						top_explore.current_path_index = i;
 						break;
 					}
-					SDL_Delay(500);
+					if(use_window)
+						SDL_Delay(500);
 				}
 				if(current_x== top_explore.current_goal[0] && current_y==top_explore.current_goal[1])
 				{
@@ -469,7 +517,7 @@ public:
 					new_current_path_copy.push_back(top_explore.current_path[i]);
 					
 				for (int i = 0; i < path.size(); ++i)
-				{	
+				{	timesteps_taken+=1;
 					new_current_path_copy.push_back(path[i]);
 					top_explore.current_path_index  = new_current_path_copy.size()-1;
 
@@ -478,8 +526,12 @@ public:
 					current_y = path[i].second;
 					grid[current_x][current_y] = 2;
 					sensor_model(current_x,current_y);
-					fw.render_screen(grid);
-					SDL_Delay(500);
+					f<< timesteps_taken << " " << ((double)total_cells_mapped/(grid_size*grid_size)) * 100<< "\n";
+					if(use_window)
+					{
+						fw.render_screen(grid);
+						SDL_Delay(500);
+					}
 					// }
 					if(((i+1)<path.size() && grid_original[path[i+1].first][path[i+1].second]==0))
 					{
@@ -496,10 +548,11 @@ public:
 					
 			}
 			t+=1;
-			epsilon = pow(2.71828,-0.01*t);
+			epsilon = pow(2.71828,-0.02*t);
 			if(t>=1000)
 				break;
 		}
+		std::cout<<"Done Exploration"<<std::endl;
 	}
 	
 
@@ -519,27 +572,38 @@ private:
 	int total_cells_mapped=0;
 	int lidar_range = 4;
 	double scale = 10.0;
+	bool use_window = true;
+	std::string output_file_name;
+	int timesteps_taken = 0;
 };
 
 int main(int argc, char *argv[])
 {
 	srand(time(NULL));
+	bool use_window = false;
 
-	Robot robot(60, 600,10.0, 20);
-	// robot.start_exploring(10, 10);
+	Robot robot(60, 600,10.0, 20,use_window,"result0.txt");
+	robot.start_exploring(10, 10);
 	// robot.topological_explore_2({10,10},{59,59});
-	robot.topological_explore_3({10,10});
+	for(int i=0;i<10;++i)
+	{
+		robot = Robot(60, 600,10.0, 20,use_window,"result0.txt");
+		robot.topological_explore_3({10,10});
+	}
 	// robot.create_corner_points_paths(60);
 	// robot.setInitialRobotPose(5,5);
 
 	// robot.fw.draw_point(300,300);
 	// robot.fw.draw_point(400,400);
 	// robot.setInitialRobotPose(300,300);
-	SDL_Event event;
-	while (!(event.type == SDL_QUIT))
+	if(use_window)
 	{
-		SDL_Delay(10);
-		SDL_PollEvent(&event);
+		SDL_Event event;
+		while (!(event.type == SDL_QUIT))
+		{
+			SDL_Delay(10);
+			SDL_PollEvent(&event);
+		}	
 	}
 	return 0;
 }
