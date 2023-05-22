@@ -377,6 +377,38 @@ public:
                 }
                 if (is_already_seen)
                     continue;
+                
+                // // Added Portion checking maximum difference
+                // int max_difference = obstacles_ref.size();
+                // for (int i = 0; i < traversed_signatures.size(); ++i)
+                // {
+                //     Eigen::VectorXd diff = traversed_signatures[i] - corrected_signature;
+                //     std::cout<<"Difference = " << diff<<std::endl;
+                //     int current_similarities = 0;
+                //     for(int j=0;j<obstacles_ref.size();++j)
+                //     {
+                //         Eigen::VectorXd one_element_vector(1);
+                //         one_element_vector << diff(j);
+
+                //         if(
+                //             one_element_vector.isZero(0.0001)
+                           
+                //         )
+                //         {
+                //             current_similarities++;
+                //         }
+                //     }
+                //     if((obstacles_ref.size() - current_similarities) < max_difference)
+                //     {
+                //         max_difference = obstacles_ref.size() - current_similarities;
+                //     }
+                // }
+                // std::cout << "Max Difference = " << max_difference << std::endl;
+                // if(!(max_difference >= (obstacles_ref.size()/2)))
+                //     continue;
+
+                // The added portion ends here.
+
                 std::cout<<"H signature = "<< corrected_signature << std::endl;
                 // visited_h_signatures.push_back(node->h_signature);
                 std::vector<std::pair<int, int>> path;
@@ -483,7 +515,7 @@ public:
             Eigen::VectorXcd s_vec = Eigen::VectorXcd::Constant(obstacle_points.size(), std::complex<double>(path[i-1].first, path[i-1].second)) - obstacle_points;
             Eigen::VectorXcd e_vec = Eigen::VectorXcd::Constant(obstacle_points.size(), std::complex<double>(path[i].first, path[i].second)) - obstacle_points;
             Eigen::VectorXd t = s_vec.array().binaryExpr(e_vec.array(), customOp);
-              Eigen::VectorXd temp = t;
+            Eigen::VectorXd temp = t;
             sum += temp;
         }
         current_h_signature = sum;

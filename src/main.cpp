@@ -596,12 +596,12 @@ private:
 int main(int argc, char *argv[])
 {
 	srand(time(NULL));
-	bool use_window = false;
+	bool use_window = true;
 
 	Robot robot(60, 600,10.0, 20,use_window,"result0.txt");
 	robot.topological_explore_3({10,10});
 	// robot.start_exploring(10, 10);
-	// robot.topological_explore_2({10,10},{59,59});
+	// // robot.topological_explore_2({10,10},{59,59});
 	// for(int i=0;i<10;++i)
 	// {
 	// 	robot = Robot(60, 600,10.0, 20,use_window,"result0.txt");
