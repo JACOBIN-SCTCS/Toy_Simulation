@@ -10,7 +10,7 @@ const int SENSOR_RANGE = 8;
 class Robot
 {
 public:
-	Robot(int g_size, int w_size, double scale, int n_obstacles, bool window = true , std::string filename = "results.txt") : grid_size(g_size), num_obstacles(n_obstacles)
+	Robot(int g_size, int w_size, double scale, int n_obstacles, bool window = true , std::string filename = "results.txt") : grid_size(g_size),  fw(w_size,w_size,scale), num_obstacles(n_obstacles)
 	{
 		use_window  = window;
 		output_file_name = filename;
@@ -18,14 +18,14 @@ public:
 		grid_original.resize(grid_size,std::vector<int>(grid_size,1));
 		obstacle_id_grid.resize(grid_size,std::vector<int>(grid_size,1));
 		
-		if(use_window)
-		{
-			fw = Framework(grid_size, grid_size, scale);
-		}
-		else
-		{
-			fw = Framework();
-		}
+		// if(use_window)
+		// {
+		// 	fw = Framework(grid_size, grid_size, scale);
+		// }
+		// else
+		// {
+		// 	fw = Framework();
+		// }
 
 		std::ifstream infile("obs0.txt");
 		int i=0;
@@ -134,10 +134,14 @@ public:
 			std::cout << "Robot is in obstacle" << std::endl;
 			return;
 		}
-		
 		std::fstream f;
-    	f.open(output_file_name, std::ios::app);
-		f << "-\n";
+
+		if(!use_window)
+		{
+			
+			f.open(output_file_name, std::ios::app);
+			f << "-\n";
+		}
 
 		sensor_model(current_x, current_y);
 
@@ -159,11 +163,12 @@ public:
 				current_y = path[i].second;
 				grid[current_x][current_y] = 2;
 				sensor_model(current_x,current_y);
-				f << timesteps_taken << " " << ((double)total_cells_mapped/(grid_size*grid_size)) * 100<< "\n";
+				if(!use_window)
+					f << timesteps_taken << " " << ((double)total_cells_mapped/(grid_size*grid_size)) * 100<< "\n";
 				if(use_window)
 				{
 					fw.render_screen(grid);
-					SDL_Delay(100);
+					SDL_Delay(1000);
 				}
 				// fw.render_screen(grid);
 				// SDL_Delay(500);
@@ -202,8 +207,11 @@ public:
 		}
 		
 		std::fstream f;
-    	f.open(output_file_name, std::ios::app);
-		f << "-\n";
+		if(!use_window)
+		{
+			f.open(output_file_name, std::ios::app);
+		 	f<< "-\n";
+		}
 
 		int start_x = current_x , start_y = current_y;
 		sensor_model(current_x, current_y);
@@ -251,7 +259,8 @@ public:
 					current_y = p[i].second;
 					grid[current_x][current_y] = 2;
 					sensor_model(current_x,current_y);
-					f<< timesteps_taken << " " << ((double)total_cells_mapped/(grid_size*grid_size)) * 100<< "\n";
+					if(!use_window)
+						f<< timesteps_taken << " " << ((double)total_cells_mapped/(grid_size*grid_size)) * 100<< "\n";
 					if (use_window)
 						fw.render_screen(grid);
 					
@@ -321,7 +330,8 @@ public:
 					current_y = path[i].second;
 					grid[current_x][current_y] = 2;
 					sensor_model(current_x,current_y);
-					f<< timesteps_taken << " " << ((double)total_cells_mapped/(grid_size*grid_size)) * 100<< "\n";
+					if(!use_window)
+						f<< timesteps_taken << " " << ((double)total_cells_mapped/(grid_size*grid_size)) * 100<< "\n";
 					if(use_window)
 					{
 						fw.render_screen(grid);
@@ -366,8 +376,12 @@ public:
 		}
 
 		std::fstream f;
-    	f.open(output_file_name, std::ios::app);
-		f << "-\n";
+		if(!use_window)
+		{
+			f.open(output_file_name, std::ios::app);
+			f << "-\n";
+		}
+    	
 		
 		int start_x = current_x , start_y = current_y;
 		sensor_model(current_x, current_y);
@@ -415,7 +429,8 @@ public:
 					current_y = p[i].second;
 					grid[current_x][current_y] = 2;
 					sensor_model(current_x,current_y);
-					f<< timesteps_taken << " " << ((double)total_cells_mapped/(grid_size*grid_size)) * 100<< "\n";
+					if(!use_window)
+						f<< timesteps_taken << " " << ((double)total_cells_mapped/(grid_size*grid_size)) * 100<< "\n";
 					if(use_window)
 						fw.render_screen(grid);
 					if((i+1)< p.size() && grid_original[p[i+1].first][p[i+1].second] ==0)
@@ -526,7 +541,8 @@ public:
 					current_y = path[i].second;
 					grid[current_x][current_y] = 2;
 					sensor_model(current_x,current_y);
-					f<< timesteps_taken << " " << ((double)total_cells_mapped/(grid_size*grid_size)) * 100<< "\n";
+					if(!use_window)
+						f<< timesteps_taken << " " << ((double)total_cells_mapped/(grid_size*grid_size)) * 100<< "\n";
 					if(use_window)
 					{
 						fw.render_screen(grid);
@@ -583,13 +599,14 @@ int main(int argc, char *argv[])
 	bool use_window = false;
 
 	Robot robot(60, 600,10.0, 20,use_window,"result0.txt");
-	robot.start_exploring(10, 10);
+	robot.topological_explore_3({10,10});
+	// robot.start_exploring(10, 10);
 	// robot.topological_explore_2({10,10},{59,59});
-	for(int i=0;i<10;++i)
-	{
-		robot = Robot(60, 600,10.0, 20,use_window,"result0.txt");
-		robot.topological_explore_3({10,10});
-	}
+	// for(int i=0;i<10;++i)
+	// {
+	// 	robot = Robot(60, 600,10.0, 20,use_window,"result0.txt");
+	// 	robot.topological_explore_3({10,10});
+	// }
 	// robot.create_corner_points_paths(60);
 	// robot.setInitialRobotPose(5,5);
 
