@@ -35,8 +35,32 @@ public:
         struct AstarNode *parent;
         std::vector<std::complex<double>> edge;
 
+        bool operator==(const AstarNode &node) const
+        {
+           auto difference_h = h_signature - node.h_signature;
+           bool difference_result = false;
+           if(difference_h.isZero(0.001))
+           {
+               difference_result = true;
+           }
+           return (point.real() == node.point.real()) && (point.imag() == node.point.imag()) && difference_result;
+        }
+
         AstarNode(std::complex<double> p, Eigen::VectorXd h, double f_,double g_,struct AstarNode *pa, std::vector<std::complex<double>> e) : point(p), h_signature(h), f(f_),g(g_), parent(pa), edge(e) {}
         AstarNode(std::complex<double> p, Eigen::VectorXd h, double c_,struct AstarNode *pa, std::vector<std::complex<double>> e) : point(p), h_signature(h), cost(c_), parent(pa), edge(e) {}
+    };
+
+    struct AstarKeyHash
+    {
+        std::size_t operator()(const AstarNode &node) const
+        {
+            std::size_t h_hash = 0;
+            for(unsigned int i=0;i<node.h_signature.size();++i)
+            {
+                h_hash = h_hash ^ std::hash<double>()(node.h_signature(i));
+            }
+            return std::hash<double>()(node.point.real()) ^ std::hash<double>()(node.point.imag()) ^ h_hash;
+        }
     };
 
 
@@ -276,39 +300,43 @@ public:
         };
 
         std::priority_queue<AstarNode *, std::vector<AstarNode *>, std::function<bool(AstarNode *, AstarNode *)>> pq([](AstarNode *a, AstarNode *b)
-                                                                                                               { return (a->f  +  a->g) > (b->f + b->g); });      //{ return (a->f + a->g) > (b->f + b->g); });
+                                                                                                                       { return (a->f  +  a->g) > (b->f + b->g); });      //{ return (a->f + a->g) > (b->f + b->g); });
         std::unordered_map<std::string, double> distance_count;
-        std::set<std::string> visited;
-        std::stringstream ss;
-        Eigen::VectorXd zeros = Eigen::VectorXd::Zero(obstacles_ref.size());
+        // std::unordered_map<AstarNode*,double> distance_count;
 
+        
+        Eigen::VectorXd zeros = Eigen::VectorXd::Zero(obstacles_ref.size());
+        AstarNode* start_node_pq = new AstarNode(start_point,partial_signature,0.0,std::abs(goal_point-start_point),NULL,{});
+        std::stringstream ss;
         ss << start_point << "-\n"
            << partial_signature;
-        distance_count[ss.str()] = 0.0; //std::abs(goal_point - start_point);
+        // distance_count[start_node_pq] = 0.0; //std::abs(goal_point - start_point);
+        distance_count[ss.str()] = 0.0;
+        pq.push(start_node_pq);
 
-        for (unsigned int i = 0; i < directions.size(); ++i)
-        {
-            std::complex<double> new_point = start_point + directions[i];
-            if (int(real(new_point)) < 0 || int(real(new_point)) >= grid_ref.size() || int(imag(new_point)) < 0 || int(imag(new_point)) >= grid_ref[0].size() || grid_ref[int(new_point.real())][int(new_point.imag())] == 0)
-                continue;
+        // for (unsigned int i = 0; i < directions.size(); ++i)
+        // {
+        //     std::complex<double> new_point = start_point + directions[i];
+        //     if (int(real(new_point)) < 0 || int(real(new_point)) >= grid_ref.size() || int(imag(new_point)) < 0 || int(imag(new_point)) >= grid_ref[0].size() || grid_ref[int(new_point.real())][int(new_point.imag())] == 0)
+        //         continue;
 
-            Eigen::VectorXcd s_vec = Eigen::VectorXcd::Constant(obstacle_points.size(), start_point) - obstacle_points;
-            Eigen::VectorXcd e_vec = Eigen::VectorXcd::Constant(obstacle_points.size(), new_point) - obstacle_points;
-            Eigen::VectorXd temp = s_vec.array().binaryExpr(e_vec.array(), customOp);
+        //     Eigen::VectorXcd s_vec = Eigen::VectorXcd::Constant(obstacle_points.size(), start_point) - obstacle_points;
+        //     Eigen::VectorXcd e_vec = Eigen::VectorXcd::Constant(obstacle_points.size(), new_point) - obstacle_points;
+        //     Eigen::VectorXd temp = s_vec.array().binaryExpr(e_vec.array(), customOp);
 
-            double cell_cost = 1.0; // grid_ref[new_point.real()][new_point.imag()];
-            if (cell_cost == -1)
-                cell_cost = 1.0;
+        //     double cell_cost = 1.0; // grid_ref[new_point.real()][new_point.imag()];
+        //     if (cell_cost == -1)
+        //         cell_cost = 1.0;
             
-            double f = cell_cost;
-            double g = std::abs(new_point - goal_point);
-            double c = f + g;
-            std::vector<std::complex<double>> e = {start_point, new_point};
+        //     double f = cell_cost;
+        //     double g = std::abs(new_point - goal_point);
+        //     double c = f + g;
+        //     std::vector<std::complex<double>> e = {start_point, new_point};
             
-            AstarNode *node = new AstarNode(new_point, temp + partial_signature, f,g, NULL, e);
-            // AstarNode *node = new AstarNode(new_point, temp + partial_signature, c, NULL, e);
-            pq.push(node);
-        }
+        //     AstarNode *node = new AstarNode(new_point, temp + partial_signature, f,g, NULL, e);
+        //     // AstarNode *node = new AstarNode(new_point, temp + partial_signature, c, NULL, e);
+        //     pq.push(node);
+        // }
 
         while (!pq.empty())
         {
@@ -458,18 +486,21 @@ public:
                     //double f = cell_cost;
                     double g = std::abs(new_point - goal_point);
                     // double c = node->cost + f + g;
+                    std::vector<std::complex<double>> edge = {node->point, new_point};
 
+                    AstarNode *new_node = new AstarNode(new_point, temp, f,g, node, edge);
                     std::stringstream ss;
                     ss << new_point << "-\n"
                     << temp;
                     std::string key = ss.str();
-                    // if (distance_count.find(key) == distance_count.end() || distance_count[key] > (f+g))
-                    if (distance_count.find(key) == distance_count.end() || distance_count[key] > f)
+                    if (distance_count.find(key) == distance_count.end() || distance_count[key] > (f+g))
+                    // if (distance_count.find(new_node) == distance_count.end() || distance_count[new_node] > f)
                     {
                         // distance_count[key] = f+g;
                         distance_count[key] = f;
-                        std::vector<std::complex<double>> edge = {node->point, new_point};
-                        AstarNode *new_node = new AstarNode(new_point, temp, f,g, node, edge);
+                        // distance_count[new_node] = f;
+                        // std::vector<std::complex<double>> edge = {node->point, new_point};
+                        // AstarNode *new_node = new AstarNode(new_point, temp, f,g, node, edge);
                         // AstarNode *new_node = new AstarNode(new_point,temp,c,node,edge);
                         pq.push(new_node);
                     }
