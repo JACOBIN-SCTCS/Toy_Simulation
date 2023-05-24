@@ -16,7 +16,7 @@ for i in range(number_of_runs):
         invalid_point = False
         for k in range(4):
             for l in range(4):
-                if(x+k <0 or x+k >= grid_size or y+l<0 or y+l>=grid_size):
+                if(x+k <=0 or x+k >= (grid_size-1) or y+l<=0 or y+l>=(grid_size-1)):
                     invalid_point = True
                     break
             if invalid_point:
