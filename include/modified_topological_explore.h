@@ -202,7 +202,7 @@ class ModifiedTopolgicalExplore
             return neighbours;
         }
 
-    void getNonHomologousPaths(int x, int y, std::vector<Eigen::VectorXd> visited_h_signatures)
+    bool getNonHomologousPaths(int x, int y, std::vector<Eigen::VectorXd> visited_h_signatures)
     {
         // struct NonHomologouspath p;
 
@@ -440,7 +440,7 @@ class ModifiedTopolgicalExplore
                 {
                     current_path.push_back({path[i].first,path[i].second});
                 }
-                return;
+                return true;
             }
             else
             {
@@ -481,6 +481,7 @@ class ModifiedTopolgicalExplore
                 }
             }
         }
+        return false;
     }
     
     

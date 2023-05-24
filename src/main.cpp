@@ -398,21 +398,24 @@ public:
 		while(true)
 		{
 			double drawn_number = ((double)rand()/(double)RAND_MAX);
+			std::cout <<"Drawn number  = "  <<drawn_number <<std::endl;
+			std::cout <<"Epsilon = "  <<epsilon <<std::endl;
 			if(drawn_number <= epsilon)
 			{
 				// Adopt a topolgical exploration strategy
 				// auto current_path = top_explore.getNonHomologousPaths(current_x,current_y,{});
 				std::cout<<"Doing a topological exploration strategy"<<std::endl;
-				top_explore.getNonHomologousPaths(current_x,current_y,{});
+				bool status = top_explore.getNonHomologousPaths(current_x,current_y,{});
 				std::vector<std::pair<int,int>> p = top_explore.current_path;
-				if(p.size() == 0)
+				if(!status)
 				{
 					std::cout<<"No Topological exploration path found"<<std::endl;
 					t+=1;
-					epsilon = pow(2.71828,-0.02*t);
+					epsilon = 1.0 - ((double)total_cells_mapped/(grid_size*grid_size) + pow(2.71828,0.01*t)/(grid_size*grid_size)); //pow(2.71828,-0.02*t);
+					// std::cout<<"Epsilon = "<< epsilon << std::endl;
 					goto frontier;
-					// if(t>=1000)
-					// 	break;
+					if(t>=1000)
+						break;
 				}
 				int start_idx = top_explore.current_path_index;
 				// for(int i=start_idx;i<p.size();++i)
@@ -565,7 +568,8 @@ public:
 					
 			}
 			t+=1;
-			epsilon = pow(2.71828,-0.02*t);
+			epsilon = 1.0 - ((double)total_cells_mapped / (grid_size*grid_size) + pow(2.71828,0.01*t)/(grid_size*grid_size)); //pow(2.71828,-0.02*t);
+			// std::cout<<"Epsilon = "<< epsilon << std::endl;
 			if(t>=1000)
 				break;
 		}
@@ -783,7 +787,7 @@ int main(int argc, char *argv[])
 
 	Robot robot(60, 600,10.0, 20,use_window,"result0.txt");
 	// robot.topological_explore_3({10,10});
-	robot.topological_explore_4({0,0});
+	robot.topological_explore_3({10,10});
 	// robot.start_exploring(10, 10);
 	// // robot.topological_explore_2({10,10},{59,59});
 	// for(int i=0;i<10;++i)
