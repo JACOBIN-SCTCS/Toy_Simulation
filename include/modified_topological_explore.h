@@ -333,6 +333,7 @@ class ModifiedTopolgicalExplore
                 }
             }           
             prev_h_signature =  prev_h_signature + augmented_path_signature_start + augmented_path_signature_goal;
+            prev_h_signature = (prev_h_signature.array().abs() < 0.001).select(0, prev_h_signature);
             traversed_signatures.push_back(prev_h_signature);
         }
 
@@ -431,6 +432,7 @@ class ModifiedTopolgicalExplore
                 }
 
                 corrected_signature = corrected_signature + augmented_start_signature + augmented_goal_signature;
+                corrected_signature  = (corrected_signature.array().abs() < 0.001).select(0, corrected_signature);
 
                 for (int i = 0; i < traversed_signatures.size(); ++i)
                 {

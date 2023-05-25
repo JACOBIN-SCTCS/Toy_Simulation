@@ -271,6 +271,7 @@ public:
                 }
             }
             prev_h_signature =  prev_h_signature + augmented_path_signature;
+            prev_h_signature = (prev_h_signature.array().abs() < 0.001).select(0, prev_h_signature);
             traversed_signatures.push_back(prev_h_signature);
         }
 
@@ -385,7 +386,7 @@ public:
                     }
                     corrected_signature = corrected_signature + h_signature_correction;
                 }
-
+                corrected_signature  = (corrected_signature.array().abs() < 0.001).select(0, corrected_signature);
                 for (int i = 0; i < traversed_signatures.size(); ++i)
                 {
                     Eigen::VectorXd diff = traversed_signatures[i] - corrected_signature;
