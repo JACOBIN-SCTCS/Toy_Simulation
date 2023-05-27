@@ -64,7 +64,7 @@ public:
     };
 
 
-    TopolgicalExplore(std::vector<std::vector<int>> *g, std::vector<std::vector<int>> *o, std::vector<int> start, std::vector<int> goal) : grid(g), obstacles_seen(o), start_coordinates(start), goal_coordinates(goal)
+    TopolgicalExplore(std::vector<std::vector<int>> *g, std::vector<std::vector<int>> *o, std::vector<int> start, std::vector<int> goal,std::vector<std::vector<int>> *g_original) : grid(g), obstacles_seen(o), start_coordinates(start), goal_coordinates(goal) , grid_original(g_original)
     {
         current_start = {start[0],start[1]};
         current_goal  = {goal[0],goal[1]};
@@ -75,7 +75,7 @@ public:
         use_four_corner_points = false;
     }
 
-    TopolgicalExplore(std::vector<std::vector<int>> *g, std::vector<std::vector<int>> *o, std::vector<int> start, std::vector<std::vector<int>> goals) : grid(g), obstacles_seen(o), start_coordinates(start), goals(goals)
+    TopolgicalExplore(std::vector<std::vector<int>> *g, std::vector<std::vector<int>> *o, std::vector<int> start, std::vector<std::vector<int>> goals,std::vector<std::vector<int>> *g_original) : grid(g), obstacles_seen(o), start_coordinates(start), goals(goals), grid_original(g_original)
     {
         current_start = {start[0],start[1]};
         int random_index = rand() % 4;
@@ -191,6 +191,73 @@ public:
         
         std::vector<std::vector<int>> &obstacles_ref = *obstacles_seen;
         std::vector<std::vector<int>> &grid_ref = *grid;
+        std::vector<std::vector<int>> obstacles_to_use;
+
+        if(remove_explored_obstacles)
+        {
+            std::vector<std::vector<int>> &grid_ref = *grid;
+            std::vector<std::vector<int>> &grid_ref_original = *grid_original;
+
+
+            for(int  i = 0; i< obstacles_ref.size();++i)
+            {
+                int current_obstacle_x = obstacles_ref[i][0];
+                int current_obstacle_y = obstacles_ref[i][1];
+                int unmapped_cell_count = 0;
+                
+                if(current_obstacle_y-1 >= 0)
+                {
+                    for(int i=current_obstacle_x-1;i<current_obstacle_x + 5;++i)
+                    {
+                        if(i<0 || i>= grid_ref.size())
+                            continue;
+                        if(grid_ref[i][current_obstacle_y-1] == -1 && grid_ref_original[i][current_obstacle_y-1] != 0)
+                            unmapped_cell_count+=1;
+                    
+                    }  
+                }
+                if(current_obstacle_y + 4 < grid_ref[0].size())
+                {
+                    for(int i=current_obstacle_x-1;i<current_obstacle_x + 5;++i)
+                    {
+                        if(i<0 || i>= grid_ref.size())
+                            continue;
+                        if(grid_ref[i][current_obstacle_y+4] == -1 && grid_ref_original[i][current_obstacle_y+4] != 0)
+                            unmapped_cell_count+=1;
+                    }  
+                }
+
+                if(current_obstacle_x-1 >= 0)
+                {
+                    for(int i=current_obstacle_y-1;i<current_obstacle_y + 5;++i)
+                    {
+                        if(i<0 || i>= grid_ref[0].size())
+                            continue;
+                        if(grid_ref[current_obstacle_x-1][i] == -1 && grid_ref_original[current_obstacle_x-1][i] != 0)
+                            unmapped_cell_count+=1;
+                    }  
+                }
+                
+                if(current_obstacle_x + 4 < grid_ref.size())
+                {
+                    for(int i=current_obstacle_y-1;i<current_obstacle_y + 5;++i)
+                    {
+                        if(i<0 || i>= grid_ref[0].size())
+                            continue;
+                        if(grid_ref[current_obstacle_x+4][i] == -1 && grid_ref_original[current_obstacle_x+4][i] != 0)
+                            unmapped_cell_count+=1;
+                    }  
+                }
+
+                if(unmapped_cell_count > 0)
+                    obstacles_to_use.push_back(obstacles_ref[i]);
+            }
+        }
+        else
+        {
+            obstacles_to_use = obstacles_ref;
+        }
+    
 
         if(x== current_goal[0] && y==current_goal[1])
         {
@@ -258,7 +325,7 @@ public:
         for(int i=0;i<traversed_paths.size();++i)
         {
             Eigen::VectorXd prev_h_signature = recompute_h_signature(traversed_paths[i]);
-            Eigen::VectorXd augmented_path_signature = Eigen::VectorXd::Zero(obstacles_ref.size());
+            Eigen::VectorXd augmented_path_signature = Eigen::VectorXd::Zero(obstacles_to_use.size());
             if(use_four_corner_points)
             {
                 for(int j=0;j<goals.size();++j)
@@ -276,14 +343,13 @@ public:
         }
 
 
-        Eigen::VectorXd partial_signature = Eigen::VectorXd::Zero(obstacles_ref.size());
+        Eigen::VectorXd partial_signature = Eigen::VectorXd::Zero(obstacles_to_use.size());
         partial_signature = recompute_h_signature(current_path,current_path_index);
         // std::cout<<"Partial signature: "<<partial_signature.transpose()<<std::endl;
-
-    
-        Eigen::VectorXcd obstacle_points = Eigen::VectorXcd::Zero(obstacles_ref.size());
-        for (unsigned int i = 0; i < obstacles_ref.size(); ++i)
-            obstacle_points(i) = std::complex<double>(obstacles_ref[i][0], obstacles_ref[i][1]);
+   
+        Eigen::VectorXcd obstacle_points = Eigen::VectorXcd::Zero(obstacles_to_use.size());
+        for (unsigned int i = 0; i < obstacles_to_use.size(); ++i)
+            obstacle_points(i) = std::complex<double>(obstacles_to_use[i][0], obstacles_to_use[i][1]);
 
         std::complex<double> start_point(x, y);
         std::vector<int> goal_coords = current_goal;
@@ -306,7 +372,7 @@ public:
         // std::unordered_map<AstarNode*,double> distance_count;
 
         
-        Eigen::VectorXd zeros = Eigen::VectorXd::Zero(obstacles_ref.size());
+        Eigen::VectorXd zeros = Eigen::VectorXd::Zero(obstacles_to_use.size());
         AstarNode* start_node_pq = new AstarNode(start_point,partial_signature,0.0,std::abs(goal_point-start_point),NULL,{});
         std::stringstream ss;
         ss << start_point << "-\n"
@@ -354,7 +420,7 @@ public:
                 if( current_goal[0] == start_coordinates[0] && current_goal[1] == start_coordinates[1])
                 {
                     corrected_signature = -node->h_signature;
-                    Eigen::VectorXd h_signature_correction = Eigen::VectorXd::Zero(obstacles_ref.size());
+                    Eigen::VectorXd h_signature_correction = Eigen::VectorXd::Zero(obstacles_to_use.size());
                     if(use_four_corner_points)
                     {
                         for(int j=0;j<corner_point_paths.size();++j)
@@ -371,7 +437,7 @@ public:
                 else
                 {
                     corrected_signature = node -> h_signature;
-                    Eigen::VectorXd h_signature_correction = Eigen::VectorXd::Zero(obstacles_ref.size());
+                    Eigen::VectorXd h_signature_correction = Eigen::VectorXd::Zero(obstacles_to_use.size());
 
                     if(use_four_corner_points)
                     {
@@ -536,11 +602,80 @@ public:
 
         // std::vector<Eigen::VectorXd> h_signatures;
         std::vector<std::vector<int>> &obstacles_ref = *obstacles_seen;
-        Eigen::VectorXd current_h_signature = Eigen::VectorXd::Zero(obstacles_ref.size());
+
+        std::vector<std::vector<int>> obstacles_to_use;
+
+        if(remove_explored_obstacles)
+        {
+            std::vector<std::vector<int>> &grid_ref = *grid;
+            std::vector<std::vector<int>> &grid_ref_original = *grid_original;
+
+
+            for(int  i = 0; i< obstacles_ref.size();++i)
+            {
+                int current_obstacle_x = obstacles_ref[i][0];
+                int current_obstacle_y = obstacles_ref[i][1];
+                int unmapped_cell_count = 0;
+                
+                if(current_obstacle_y-1 >= 0)
+                {
+                    for(int i=current_obstacle_x-1;i<current_obstacle_x + 5;++i)
+                    {
+                        if(i<0 || i>= grid_ref.size())
+                            continue;
+                        if(grid_ref[i][current_obstacle_y-1] == -1 && grid_ref_original[i][current_obstacle_y-1] != 0)
+                            unmapped_cell_count+=1;
+                    
+                    }  
+                }
+                if(current_obstacle_y + 4 < grid_ref[0].size())
+                {
+                    for(int i=current_obstacle_x-1;i<current_obstacle_x + 5;++i)
+                    {
+                        if(i<0 || i>= grid_ref.size())
+                            continue;
+                        if(grid_ref[i][current_obstacle_y+4] == -1 && grid_ref_original[i][current_obstacle_y+4] != 0)
+                            unmapped_cell_count+=1;
+                    }  
+                }
+
+                if(current_obstacle_x-1 >= 0)
+                {
+                    for(int i=current_obstacle_y-1;i<current_obstacle_y + 5;++i)
+                    {
+                        if(i<0 || i>= grid_ref[0].size())
+                            continue;
+                        if(grid_ref[current_obstacle_x-1][i] == -1 && grid_ref_original[current_obstacle_x-1][i] != 0)
+                            unmapped_cell_count+=1;
+                    }  
+                }
+                
+                if(current_obstacle_x + 4 < grid_ref.size())
+                {
+                    for(int i=current_obstacle_y-1;i<current_obstacle_y + 5;++i)
+                    {
+                        if(i<0 || i>= grid_ref[0].size())
+                            continue;
+                        if(grid_ref[current_obstacle_x+4][i] == -1 && grid_ref_original[current_obstacle_x+4][i] != 0)
+                            unmapped_cell_count+=1;
+                    }  
+                }
+
+                if(unmapped_cell_count > 0)
+                    obstacles_to_use.push_back(obstacles_ref[i]);
+            }
+        }
+        else
+        {
+            obstacles_to_use = obstacles_ref;
+        }
         
-        Eigen::VectorXcd obstacle_points = Eigen::VectorXcd::Zero(obstacles_ref.size());
-        for (unsigned int i = 0; i < obstacles_ref.size(); ++i)
-            obstacle_points(i) = std::complex<double>(obstacles_ref[i][0], obstacles_ref[i][1]);
+
+        Eigen::VectorXd current_h_signature = Eigen::VectorXd::Zero(obstacles_to_use.size());
+        
+        Eigen::VectorXcd obstacle_points = Eigen::VectorXcd::Zero(obstacles_to_use.size());
+        for (unsigned int i = 0; i < obstacles_to_use.size(); ++i)
+            obstacle_points(i) = std::complex<double>(obstacles_to_use[i][0], obstacles_to_use[i][1]);
         
         Eigen::VectorXd sum = Eigen::VectorXd::Zero(obstacle_points.size());
         for(int i=1;i<=n;++i)
@@ -558,6 +693,8 @@ public:
 
 
 std::vector<std::vector<int>> *grid;
+std::vector<std::vector<int>> *grid_original;
+
 std::vector<std::vector<int>> *obstacles_seen;
 std::vector<Frontier> frontiers;
 std::map<std::string, int> done_signatures;
@@ -578,4 +715,6 @@ std::vector<std::vector<std::pair<int,int>>> traversed_paths;
 std::vector<std::pair<int,int>> current_path;
 int current_path_index;
 std::vector<Eigen::VectorXd> traversed_signatures;
+
+bool remove_explored_obstacles = true;
 };
