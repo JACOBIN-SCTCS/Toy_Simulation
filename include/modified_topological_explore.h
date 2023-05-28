@@ -389,6 +389,8 @@ class ModifiedTopolgicalExplore
 
                 for(int j = 0 ; j < boundary_points_path[start_quadrants[i]].size() ; ++j)
                 {
+                    std::cout << "Start quadrant index = " << start_quadrants[i] << std::endl;
+                    std::cout << "Traversed path" << traversed_paths[i][0].first << ", " << traversed_paths[i][0].second << std::endl;
                     if(boundary_points_path[start_quadrants[i]][j][0].first == traversed_paths[i][0].first && boundary_points_path[start_quadrants[i]][j][0].second == traversed_paths[i][0].second)
                     {
                         std::vector<std::pair<int,int>> current_path_tmp;

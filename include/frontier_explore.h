@@ -124,7 +124,7 @@ class FrontierExplore
                                         {
                                             int x_prime_prime_new = frontier_cell_neighbours[k].first;
                                             int y_prime_prime_new = frontier_cell_neighbours[k].second;
-                                            if(grid_ref[x_prime_prime_new][y_prime_prime_new]==1)
+                                            if(grid_ref[x_prime_prime_new][y_prime_prime_new]==1)  // some bug here
                                             {
                                                 frontier_tag[x_prime_new][y_prime_new] = true;
                                                 break;

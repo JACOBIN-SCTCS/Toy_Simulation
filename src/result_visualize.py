@@ -21,7 +21,7 @@ while (x != str('-\n')):
 
 topo_plot = []
 
-trajectories_size = 10
+trajectories_size = 9
 max_len = 0
 for i in range(trajectories_size):
     new_top_list = []

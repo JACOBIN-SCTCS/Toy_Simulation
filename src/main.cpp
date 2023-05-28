@@ -19,7 +19,7 @@ public:
 		grid_original.resize(grid_size,std::vector<int>(grid_size,1));
 		obstacle_id_grid.resize(grid_size,std::vector<int>(grid_size,1));
 		
-		std::ifstream infile("obs0.txt");
+		std::ifstream infile("grid_1.txt");
 		int i=0;
 		while(i < num_obstacles)
 		{	
@@ -162,7 +162,7 @@ public:
 				if(use_window)
 				{
 					fw.render_screen(grid);
-					SDL_Delay(1000);
+					SDL_Delay(500);
 				}
 				// fw.render_screen(grid);
 				// SDL_Delay(500);
@@ -601,6 +601,18 @@ public:
 				// Adopt a topolgical exploration strategy
 				// auto current_path = top_explore.getNonHomologousPaths(current_x,current_y,{});
 				std::cout<<"Doing a topological exploration strategy"<<std::endl;
+				if(grid[top_explore.current_goal[0]][top_explore.current_goal[1]]!=-1)
+				{
+					std::default_random_engine generator;
+            		std::vector<int> quadrant_weights = top_explore.get_quadrant_vector();
+            		std::discrete_distribution<int> distribution(quadrant_weights.begin(),quadrant_weights.end());
+            		int quadrant_select_index = distribution(generator);//rand() % 4;
+					int next_quadrant_index = quadrant_select_index;
+            		std::vector<std::pair<int,int>> dest_points = top_explore.get_destination_point(quadrant_select_index);
+            		int random_index = rand() % dest_points.size();
+            		top_explore.current_goal = {dest_points[random_index].first,dest_points[random_index].second};
+					top_explore.current_goal_quadrant  = next_quadrant_index;
+				}
 				bool status = top_explore.getNonHomologousPaths(current_x,current_y,{});
 				std::vector<std::pair<int,int>> p = top_explore.current_path;
 				if(!status)
@@ -778,13 +790,13 @@ int main(int argc, char *argv[])
 	srand(time(NULL));
 	bool use_window = true;
 
-	Robot robot(60, 600,10.0, 20,use_window,"result0.txt");
+	Robot robot(60, 600,10.0, 100,use_window,"result0.txt");
 	// robot.topological_explore_3({10,10});
 
-	robot.topological_explore_4({0,0});
-	// robot.topological_explore_3({10,10});
 	// robot.topological_explore_4({0,0});
-	// robot.start_exploring(10, 10);
+	// robot.topological_explore_3({10,10});
+	robot.topological_explore_4({0,0});
+	// robot.start_exploring(0, 0);
 	// // robot.topological_explore_2({10,10},{59,59});
 	// robot = Robot(60, 600,10.0, 20,use_window,"result0.txt");
 	// robot.topological_explore_4({0,0});
@@ -792,7 +804,7 @@ int main(int argc, char *argv[])
 	// for(int i=0;i<10;++i)
 	// {
 	// 	robot = Robot(60, 600,10.0, 20,use_window,"result0.txt");
-	// 	robot.topological_explore_3({10,10});
+	// 	robot.topological_explore_4({0,0});
 	// 	SDL_Delay(1000);
 	// }
 	// robot.create_corner_points_paths(60);
