@@ -19,36 +19,30 @@ public:
 		grid_original.resize(grid_size,std::vector<int>(grid_size,1));
 		obstacle_id_grid.resize(grid_size,std::vector<int>(grid_size,1));
 		
-		// if(use_window)
-		// {
-		// 	fw = Framework(grid_size, grid_size, scale);
-		// }
-		// else
-		// {
-		// 	fw = Framework();
-		// }
-
 		std::ifstream infile("obs0.txt");
 		int i=0;
-
-
 		while(i < num_obstacles)
 		{	
 			int tmp_x, tmp_y;
 			infile >> tmp_x >> tmp_y;
 			std::cout << tmp_x <<" "<< tmp_y <<std::endl;
-			int x =   tmp_x ; //rand() % grid_size;
-			int y =   tmp_y ;//rand() % grid_size;
+			int x =   tmp_x ; 
+			int y =   tmp_y ;
+			bool obstacle_invalid = false;
 			for(int j=0;j<4;++j)
 			{
 				for(int k=0;k<4;++k)
 				{
-					if(x+j == (grid_size-1) ||  x+j == 0 ||  y+k == (grid_size-1) ||  y+k == 0)
+					if(x+j >= (grid_size-1) ||  x+j < 0 ||  y+k >= (grid_size-1) ||  y+k < 0)
 					{
-						continue;
+						obstacle_invalid = true;
+						break;
 					}
 				}
+				if(obstacle_invalid)
+					break;
 			}
+
 			for(int j=0;j<4;++j)
 			{
 				for(int k=0;k<4;++k)
@@ -57,7 +51,6 @@ public:
 					obstacle_id_grid[x+j][y+k] = i;
 				}
 			}
-
 			obstacles.push_back({x, y});
 			i+=1;
 		}
@@ -593,7 +586,7 @@ public:
 		int start_x = current_x , start_y = current_y;
 		sensor_model(current_x, current_y);
 		
-		ModifiedTopolgicalExplore top_explore(&grid,&obstacles_seen,start);
+		ModifiedTopolgicalExplore top_explore(&grid,&obstacles_seen,start,&grid_original);
 		FrontierExplore f_explore(&grid,&obstacles_seen);
 		
 		std::vector<std::vector<std::pair<int,int>>> already_traversed_paths;
@@ -788,7 +781,7 @@ int main(int argc, char *argv[])
 	Robot robot(60, 600,10.0, 20,use_window,"result0.txt");
 	// robot.topological_explore_3({10,10});
 
-	robot.topological_explore_3({10,10});
+	robot.topological_explore_4({0,0});
 	// robot.topological_explore_3({10,10});
 	// robot.topological_explore_4({0,0});
 	// robot.start_exploring(10, 10);

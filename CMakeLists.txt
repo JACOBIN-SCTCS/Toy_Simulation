@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(mapping_cpp)
 
+set(CMAKE_BUILD_TYPE Debug)
 set(CMAKE_PREFIX_PATH "/home/depressedcoder/eigen-3.4.0")
 find_package(Eigen3 REQUIRED NO_MODULE)
 
