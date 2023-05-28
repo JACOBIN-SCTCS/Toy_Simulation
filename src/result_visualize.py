@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-f = open("../build/result0.txt", "r")
+f = open("../build/result4.txt", "r")
 x =f.readline()
 print(x)
 

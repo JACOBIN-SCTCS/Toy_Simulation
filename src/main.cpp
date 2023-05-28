@@ -6,12 +6,11 @@
 #include "topolgoical_explore.h"
 #include "modified_topological_explore.h"
 
-const int SENSOR_RANGE = 8;
 
 class Robot
 {
 public:
-	Robot(int g_size, int w_size, double scale, int n_obstacles, bool window = true , std::string filename = "results.txt") : grid_size(g_size),  fw(w_size,w_size,scale), num_obstacles(n_obstacles)
+	Robot(int g_size, int w_size, double scale, int n_obstacles, bool window = true , std::string filename = "results.txt", std::string obs_filename="obs0.txt",int sensor_range=8) : grid_size(g_size),  fw(w_size,w_size,scale), num_obstacles(n_obstacles), SENSOR_RANGE(sensor_range)
 	{
 		use_window  = window;
 		output_file_name = filename;
@@ -19,7 +18,7 @@ public:
 		grid_original.resize(grid_size,std::vector<int>(grid_size,1));
 		obstacle_id_grid.resize(grid_size,std::vector<int>(grid_size,1));
 		
-		std::ifstream infile("grid_1.txt");
+		std::ifstream infile(obs_filename);
 		int i=0;
 		while(i < num_obstacles)
 		{	
@@ -783,36 +782,49 @@ private:
 	bool use_window = true;
 	std::string output_file_name;
 	int timesteps_taken = 0;
+	int SENSOR_RANGE = 8;
 };
 
 int main(int argc, char *argv[])
 {
-	srand(time(NULL));
-	bool use_window = true;
+	int choice = 1;
+	bool use_window = false;
+	if(choice==0)
+	{
+		srand(time(NULL));
 
-	Robot robot(60, 600,10.0, 100,use_window,"result0.txt");
-	// robot.topological_explore_3({10,10});
+		Robot robot(60, 600,10.0, 100,use_window,"result4.txt","obs4.txt");
+		robot.start_exploring(0, 0);
 
-	// robot.topological_explore_4({0,0});
-	// robot.topological_explore_3({10,10});
-	robot.topological_explore_4({0,0});
-	// robot.start_exploring(0, 0);
-	// // robot.topological_explore_2({10,10},{59,59});
-	// robot = Robot(60, 600,10.0, 20,use_window,"result0.txt");
-	// robot.topological_explore_4({0,0});
+		for(int i=0;i<10;++i)
+		{
+			robot = Robot(60, 600,10.0, 100,use_window,"result4.txt","obs4.txt");
+			robot.topological_explore_4({0,0});
+			SDL_Delay(1000);
+		}
 
-	// for(int i=0;i<10;++i)
-	// {
-	// 	robot = Robot(60, 600,10.0, 20,use_window,"result0.txt");
-	// 	robot.topological_explore_4({0,0});
-	// 	SDL_Delay(1000);
-	// }
-	// robot.create_corner_points_paths(60);
-	// robot.setInitialRobotPose(5,5);
-
-	// robot.fw.draw_point(300,300);
-	// robot.fw.draw_point(400,400);
-	// robot.setInitialRobotPose(300,300);
+	}
+	else if(choice == 1)
+	{
+		srand(time(NULL));
+		std::vector<int> sensor_ranges = {4,8,12,16,32};
+		for(int i=0;i<sensor_ranges.size();++i)
+		{
+			for(int j=0;j<=10;++j)
+			{
+				std::string obstacle_file_name = "obs" + std::to_string(j) + ".txt"; 
+				Robot robot(60, 600,10.0, 100,use_window,"result_frontiers.txt",obstacle_file_name,sensor_ranges[i]);
+				robot.start_exploring(0,0);
+				//robot.start_exploring({0,0});
+				SDL_Delay(1000);
+			}
+		}
+	}
+	else
+	{
+		;
+	}
+		
 	if(use_window)
 	{
 		SDL_Event event;

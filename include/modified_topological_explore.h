@@ -386,10 +386,17 @@ class ModifiedTopolgicalExplore
                 Eigen::VectorXd prev_h_signature = recompute_h_signature(traversed_paths[i]);
                 Eigen::VectorXd augmented_path_signature_start = Eigen::VectorXd::Zero(obstacles_to_use.size());
                 Eigen::VectorXd augmented_path_signature_goal = Eigen::VectorXd::Zero(obstacles_to_use.size());
+                std::cout <<"Traversed paths size = "<< traversed_paths.size()<<std::endl;
+                std::cout << "Previous H signature = " << prev_h_signature.transpose() << std::endl;
+                std::cout << "Traversed_path size = " << traversed_paths[i].size() << std::endl;
+                std::cout << "Current index= " << i <<std::endl;
+                std::cout << "Start quadrant index = " << start_quadrants[i] << std::endl;
+                std::cout << "Destination quadrant index = " << goal_quadrants[i] << std::endl;
+                std::cout << "Current start = " << current_start[0] << "," << current_start[1] << std::endl;    
+                std::cout << "Current goal = " << current_goal[0] << "," << current_goal[1] << std::endl;
 
                 for(int j = 0 ; j < boundary_points_path[start_quadrants[i]].size() ; ++j)
                 {
-                    std::cout << "Start quadrant index = " << start_quadrants[i] << std::endl;
                     std::cout << "Traversed path" << traversed_paths[i][0].first << ", " << traversed_paths[i][0].second << std::endl;
                     if(boundary_points_path[start_quadrants[i]][j][0].first == traversed_paths[i][0].first && boundary_points_path[start_quadrants[i]][j][0].second == traversed_paths[i][0].second)
                     {
@@ -764,7 +771,8 @@ class ModifiedTopolgicalExplore
                 }
                 if(destination_points.size() ==0)
                 {
-                    destination_points.push_back({0,0});
+                    int random_index = rand() % (grid->size() - 1);
+                    destination_points.push_back({0,random_index});
                 }
             }
             else if(quadrant_index==1)
@@ -776,7 +784,8 @@ class ModifiedTopolgicalExplore
                 }
                 if(destination_points.size() == 0 )
                 {
-                    destination_points.push_back({0,grid_ref[0].size()-1});
+                    int random_index = rand() % (grid->size() - 1);
+                    destination_points.push_back({random_index , (int)grid->size()-1});
                 }
             }
             else if(quadrant_index == 2)
@@ -788,7 +797,8 @@ class ModifiedTopolgicalExplore
                 }
                 if (destination_points.size() == 0)
                 {
-                    destination_points.push_back({grid_ref.size()-1,grid_ref[0].size()-1});
+                    int random_index = rand() % (grid->size() - 1)+1;
+                    destination_points.push_back({(int)grid->size()-1, random_index});
                 }
             }
             else
@@ -800,7 +810,8 @@ class ModifiedTopolgicalExplore
                 }
                 if(destination_points.size() == 0)
                 {
-                    destination_points.push_back({grid_ref.size()-1,0});
+                    int random_index = rand() % (grid->size() - 1) + 1;
+                    destination_points.push_back({random_index,0});
                 }
             }
             return destination_points;
