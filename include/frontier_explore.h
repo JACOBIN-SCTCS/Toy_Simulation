@@ -120,7 +120,7 @@ class FrontierExplore
                                     if(grid_ref[x_prime_new][y_prime_new]==-1)
                                     {
                                         std::vector<std::pair<int,int>> frontier_cell_neighbours = getNeighbours(x_prime_new,y_prime_new,grid_ref.size(),grid_ref[0].size());  
-                                        for(int k=0;k<4;++k)
+                                        for(int k=0;k<frontier_cell_neighbours.size();++k)
                                         {
                                             int x_prime_prime_new = frontier_cell_neighbours[k].first;
                                             int y_prime_prime_new = frontier_cell_neighbours[k].second;
