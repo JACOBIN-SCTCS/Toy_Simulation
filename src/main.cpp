@@ -54,6 +54,16 @@ public:
 			i+=1;
 		}
 		infile.close();
+
+		for(int i=0;i<grid_size;++i)
+		{
+			for(int j=0;j<grid_size;++j)
+			{
+				if(grid_original[i][j] == 1)
+					total_free_space +=1;
+			}
+		}
+
 		std::cout << "Size of the grid = " << grid_size << std::endl;
 	}
 
@@ -157,7 +167,7 @@ public:
 				grid[current_x][current_y] = 2;
 				sensor_model(current_x,current_y);
 				if(!use_window)
-					f << timesteps_taken << " " << ((double)total_cells_mapped/(grid_size*grid_size)) * 100<< "\n";
+					f << timesteps_taken << " " << ((double)total_cells_mapped/(total_free_space)) * 100<< "\n";
 				if(use_window)
 				{
 					fw.render_screen(grid);
@@ -253,7 +263,7 @@ public:
 					grid[current_x][current_y] = 2;
 					sensor_model(current_x,current_y);
 					if(!use_window)
-						f<< timesteps_taken << " " << ((double)total_cells_mapped/(grid_size*grid_size)) * 100<< "\n";
+						f<< timesteps_taken << " " << ((double)total_cells_mapped/(total_free_space)) * 100<< "\n";
 					if (use_window)
 						fw.render_screen(grid);
 					
@@ -324,7 +334,7 @@ public:
 					grid[current_x][current_y] = 2;
 					sensor_model(current_x,current_y);
 					if(!use_window)
-						f<< timesteps_taken << " " << ((double)total_cells_mapped/(grid_size*grid_size)) * 100<< "\n";
+						f<< timesteps_taken << " " << ((double)total_cells_mapped/(total_free_space)) * 100<< "\n";
 					if(use_window)
 					{
 						fw.render_screen(grid);
@@ -403,7 +413,7 @@ public:
 				{
 					std::cout<<"No Topological exploration path found"<<std::endl;
 					t+=1;
-					epsilon = 1.0 - ((double)total_cells_mapped/(grid_size*grid_size) + pow(2.71828,0.01*t)/(grid_size*grid_size)); //pow(2.71828,-0.02*t);
+					epsilon = 1.0 - ((double)total_cells_mapped/(total_free_space) + pow(2.71828,0.01*t)/(total_free_space)); //pow(2.71828,-0.02*t);
 					// std::cout<<"Epsilon = "<< epsilon << std::endl;
 					goto frontier;
 					if(t>=1000)
@@ -426,7 +436,7 @@ public:
 					grid[current_x][current_y] = 2;
 					sensor_model(current_x,current_y);
 					if(!use_window)
-						f<< timesteps_taken << " " << ((double)total_cells_mapped/(grid_size*grid_size)) * 100<< "\n";
+						f<< timesteps_taken << " " << ((double)total_cells_mapped/(total_free_space)) * 100<< "\n";
 					if(use_window)
 						fw.render_screen(grid);
 					if((i+1)< p.size() && grid_original[p[i+1].first][p[i+1].second] ==0)
@@ -538,7 +548,7 @@ public:
 					grid[current_x][current_y] = 2;
 					sensor_model(current_x,current_y);
 					if(!use_window)
-						f<< timesteps_taken << " " << ((double)total_cells_mapped/(grid_size*grid_size)) * 100<< "\n";
+						f<< timesteps_taken << " " << ((double)total_cells_mapped/(total_free_space)) * 100<< "\n";
 					if(use_window)
 					{
 						fw.render_screen(grid);
@@ -560,7 +570,7 @@ public:
 					
 			}
 			t+=1;
-			epsilon = 1.0 - ((double)total_cells_mapped / (grid_size*grid_size) + pow(2.71828,0.01*t)/(grid_size*grid_size)); //pow(2.71828,-0.02*t);
+			epsilon = 1.0 - ((double)total_cells_mapped / (total_free_space) + pow(2.71828,0.01*t)/(total_free_space)); //pow(2.71828,-0.02*t);
 			// std::cout<<"Epsilon = "<< epsilon << std::endl;
 			if(t>=1000)
 				break;
@@ -618,7 +628,7 @@ public:
 				{
 					std::cout<<"No Topological exploration path found"<<std::endl;
 					t+=1;
-					epsilon = 1.0 - ((double)total_cells_mapped/(grid_size*grid_size) + pow(2.71828,0.01*t)/(grid_size*grid_size));//pow(2.71828,-0.02*t);
+					epsilon = 1.0 - ((double)total_cells_mapped/(total_free_space) + pow(2.71828,0.01*t)/(total_free_space));//pow(2.71828,-0.02*t);
 					goto frontier;
 					// if(t>=1000)
 					// 	break;
@@ -640,7 +650,7 @@ public:
 					grid[current_x][current_y] = 2;
 					sensor_model(current_x,current_y);
 					if(!use_window)
-						f<< timesteps_taken << " " << ((double)total_cells_mapped/(grid_size*grid_size)) * 100<< "\n";
+						f<< timesteps_taken << " " << ((double)total_cells_mapped/(total_free_space)) * 100<< "\n";
 					if(use_window)
 						fw.render_screen(grid);
 					if((i+1)< p.size() && grid_original[p[i+1].first][p[i+1].second] ==0)
@@ -733,7 +743,7 @@ public:
 					grid[current_x][current_y] = 2;
 					sensor_model(current_x,current_y);
 					if(!use_window)
-						f<< timesteps_taken << " " << ((double)total_cells_mapped/(grid_size*grid_size)) * 100<< "\n";
+						f<< timesteps_taken << " " << ((double)total_cells_mapped/(total_free_space)) * 100<< "\n";
 					if(use_window)
 					{
 						fw.render_screen(grid);
@@ -755,7 +765,7 @@ public:
 					
 			}
 			t+=1;
-			epsilon = 1.0 - ((double)total_cells_mapped/(grid_size*grid_size) + pow(2.71828,0.01*t)/(grid_size*grid_size)); //pow(2.71828,-0.02*t);
+			epsilon = 1.0 - ((double)total_cells_mapped/(total_free_space) + pow(2.71828,0.01*t)/(total_free_space)); //pow(2.71828,-0.02*t);
 			if(t>=1000)
 				break;
 		}
@@ -783,6 +793,8 @@ private:
 	std::string output_file_name;
 	int timesteps_taken = 0;
 	int SENSOR_RANGE = 8;
+	int total_free_space = 0;
+
 };
 
 int main(int argc, char *argv[])
@@ -793,12 +805,12 @@ int main(int argc, char *argv[])
 	{
 		srand(time(NULL));
 
-		Robot robot(60, 600,10.0, 100,use_window,"result4.txt","obs4.txt");
+		Robot robot(60, 600,10.0, 20,use_window,"result4.txt","obs4.txt");
 		robot.start_exploring(0, 0);
 
 		for(int i=0;i<10;++i)
 		{
-			robot = Robot(60, 600,10.0, 100,use_window,"result4.txt","obs4.txt");
+			robot = Robot(60, 600,10.0, 20,use_window,"result4.txt","obs4.txt");
 			robot.topological_explore_4({0,0});
 			SDL_Delay(1000);
 		}
@@ -810,7 +822,7 @@ int main(int argc, char *argv[])
 		std::vector<int> sensor_ranges = {4,8,12,16,32};
 		for(int i=0;i<sensor_ranges.size();++i)
 		{
-			for(int j=0;j<=10;++j)
+			for(int j=0;j<10;++j)
 			{
 				std::string obstacle_file_name = "obs" + std::to_string(j) + ".txt"; 
 				Robot robot(60, 600,10.0, 100,use_window,"result_frontiers.txt",obstacle_file_name,sensor_ranges[i]);

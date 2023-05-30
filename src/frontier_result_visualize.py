@@ -6,7 +6,7 @@ f = open("../build/result_frontiers.txt", "r")
 x = f.readline()
 
 num_scans = 5
-scenario_count = 11
+scenario_count = 10
 
 
 for i in range(num_scans):

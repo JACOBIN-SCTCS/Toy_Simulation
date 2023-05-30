@@ -36,6 +36,6 @@ def generate_grid_1():
             f.write(content_to_write)
     f.close()
 
-generate_grid_1()
+generate_random_obstacles()
 
 
