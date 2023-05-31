@@ -799,7 +799,7 @@ private:
 
 int main(int argc, char *argv[])
 {
-	int choice = 1;
+	int choice = 2;
 	bool use_window = false;
 	if(choice==0)
 	{
@@ -825,9 +825,24 @@ int main(int argc, char *argv[])
 			for(int j=0;j<10;++j)
 			{
 				std::string obstacle_file_name = "obs" + std::to_string(j) + ".txt"; 
-				Robot robot(60, 600,10.0, 100,use_window,"result_frontiers.txt",obstacle_file_name,sensor_ranges[i]);
+				Robot robot(60, 600,10.0, 20,use_window,"result_frontiers.txt",obstacle_file_name,sensor_ranges[i]);
 				robot.start_exploring(0,0);
 				//robot.start_exploring({0,0});
+				SDL_Delay(1000);
+			}
+		}
+	}
+	else if(choice == 2)
+	{
+		srand(time(NULL));
+		std::vector<int> sensor_ranges = {4,8,12,16,32};
+		for(int i=0;i<sensor_ranges.size();++i)
+		{
+			for(int j=0;j<10;++j)
+			{
+				std::string obstacle_file_name = "obs" + std::to_string(j) + ".txt"; 
+				Robot robot(60, 600,10.0, 20,use_window,"result_topology.txt",obstacle_file_name,sensor_ranges[i]);
+				robot.topological_explore_4({0,0});
 				SDL_Delay(1000);
 			}
 		}
