@@ -274,44 +274,44 @@ class ModifiedTopolgicalExplore
                     
                     if(current_obstacle_y-1 >= 0)
                     {
-                        for(int i=current_obstacle_x-1;i<current_obstacle_x + 5;++i)
+                        for(int j=current_obstacle_x-1;j<current_obstacle_x + 5;++j)
                         {
-                            if(i<0 || i>= grid_ref.size())
+                            if(j<0 || j>= grid_ref.size())
                                 continue;
-                            if(grid_ref[i][current_obstacle_y-1] == -1 && grid_ref_original[i][current_obstacle_y-1] != 0)
+                            if(grid_ref[j][current_obstacle_y-1] == -1 && grid_ref_original[j][current_obstacle_y-1] != 0)
                                 unmapped_cell_count+=1;
                         
                         }  
                     }
                     if(current_obstacle_y + 4 < grid_ref[0].size())
                     {
-                        for(int i=current_obstacle_x-1;i<current_obstacle_x + 5;++i)
+                        for(int j=current_obstacle_x-1;j<current_obstacle_x + 5;++j)
                         {
-                            if(i<0 || i>= grid_ref.size())
+                            if(j<0 || j>= grid_ref.size())
                                 continue;
-                            if(grid_ref[i][current_obstacle_y+4] == -1 && grid_ref_original[i][current_obstacle_y+4] != 0)
+                            if(grid_ref[j][current_obstacle_y+4] == -1 && grid_ref_original[j][current_obstacle_y+4] != 0)
                                 unmapped_cell_count+=1;
                         }  
                     }
 
                     if(current_obstacle_x-1 >= 0)
                     {
-                        for(int i=current_obstacle_y-1;i<current_obstacle_y + 5;++i)
+                        for(int j=current_obstacle_y-1;j<current_obstacle_y + 5;++j)
                         {
-                            if(i<0 || i>= grid_ref[0].size())
+                            if(j<0 || j>= grid_ref[0].size())
                                 continue;
-                            if(grid_ref[current_obstacle_x-1][i] == -1 && grid_ref_original[current_obstacle_x-1][i] != 0)
+                            if(grid_ref[current_obstacle_x-1][j] == -1 && grid_ref_original[current_obstacle_x-1][j] != 0)
                                 unmapped_cell_count+=1;
                         }  
                     }
                     
                     if(current_obstacle_x + 4 < grid_ref.size())
                     {
-                        for(int i=current_obstacle_y-1;i<current_obstacle_y + 5;++i)
+                        for(int j=current_obstacle_y-1;j<current_obstacle_y + 5;++j)
                         {
-                            if(i<0 || i>= grid_ref[0].size())
+                            if(j<0 || j>= grid_ref[0].size())
                                 continue;
-                            if(grid_ref[current_obstacle_x+4][i] == -1 && grid_ref_original[current_obstacle_x+4][i] != 0)
+                            if(grid_ref[current_obstacle_x+4][j] == -1 && grid_ref_original[current_obstacle_x+4][j] != 0)
                                 unmapped_cell_count+=1;
                         }  
                     }
@@ -647,44 +647,44 @@ class ModifiedTopolgicalExplore
                     
                     if(current_obstacle_y-1 >= 0)
                     {
-                        for(int i=current_obstacle_x-1;i<current_obstacle_x + 5;++i)
+                        for(int j=current_obstacle_x-1;j<current_obstacle_x + 5;++j)
                         {
-                            if(i<0 || i>= grid_ref.size())
+                            if(j<0 || j>= grid_ref.size())
                                 continue;
-                            if(grid_ref[i][current_obstacle_y-1] == -1 && grid_ref_original[i][current_obstacle_y-1] != 0)
+                            if(grid_ref[j][current_obstacle_y-1] == -1 && grid_ref_original[j][current_obstacle_y-1] != 0)
                                 unmapped_cell_count+=1;
                         
                         }  
                     }
                     if(current_obstacle_y + 4 < grid_ref[0].size())
                     {
-                        for(int i=current_obstacle_x-1;i<current_obstacle_x + 5;++i)
+                        for(int j=current_obstacle_x-1;j<current_obstacle_x + 5;++j)
                         {
-                            if(i<0 || i>= grid_ref.size())
+                            if(j<0 || j>= grid_ref.size())
                                 continue;
-                            if(grid_ref[i][current_obstacle_y+4] == -1 && grid_ref_original[i][current_obstacle_y+4] != 0)
+                            if(grid_ref[j][current_obstacle_y+4] == -1 && grid_ref_original[j][current_obstacle_y+4] != 0)
                                 unmapped_cell_count+=1;
                         }  
                     }
 
                     if(current_obstacle_x-1 >= 0)
                     {
-                        for(int i=current_obstacle_y-1;i<current_obstacle_y + 5;++i)
+                        for(int j=current_obstacle_y-1;j<current_obstacle_y + 5;++j)
                         {
-                            if(i<0 || i>= grid_ref[0].size())
+                            if(j<0 || j>= grid_ref[0].size())
                                 continue;
-                            if(grid_ref[current_obstacle_x-1][i] == -1 && grid_ref_original[current_obstacle_x-1][i] != 0)
+                            if(grid_ref[current_obstacle_x-1][j] == -1 && grid_ref_original[current_obstacle_x-1][j] != 0)
                                 unmapped_cell_count+=1;
                         }  
                     }
                     
                     if(current_obstacle_x + 4 < grid_ref.size())
                     {
-                        for(int i=current_obstacle_y-1;i<current_obstacle_y + 5;++i)
+                        for(int j=current_obstacle_y-1;j<current_obstacle_y + 5;++j)
                         {
-                            if(i<0 || i>= grid_ref[0].size())
+                            if(j<0 || j>= grid_ref[0].size())
                                 continue;
-                            if(grid_ref[current_obstacle_x+4][i] == -1 && grid_ref_original[current_obstacle_x+4][i] != 0)
+                            if(grid_ref[current_obstacle_x+4][j] == -1 && grid_ref_original[current_obstacle_x+4][j] != 0)
                                 unmapped_cell_count+=1;
                         }  
                     }
