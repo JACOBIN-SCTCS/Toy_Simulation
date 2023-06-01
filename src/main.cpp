@@ -598,7 +598,7 @@ public:
 		int start_x = current_x , start_y = current_y;
 		sensor_model(current_x, current_y);
 		
-		ModifiedTopolgicalExplore top_explore(&grid,&obstacles_seen,start,&grid_original);
+		ModifiedTopolgicalExplore top_explore(&grid,&obstacles_seen,start,&grid_original,true);
 		FrontierExplore f_explore(&grid,&obstacles_seen);
 		
 		std::vector<std::vector<std::pair<int,int>>> already_traversed_paths;
@@ -613,18 +613,18 @@ public:
 				// Adopt a topolgical exploration strategy
 				// auto current_path = top_explore.getNonHomologousPaths(current_x,current_y,{});
 				std::cout<<"Doing a topological exploration strategy"<<std::endl;
-				if(grid[top_explore.current_goal[0]][top_explore.current_goal[1]]!=-1)
-				{
-					std::default_random_engine generator;
-            		std::vector<int> quadrant_weights = top_explore.get_quadrant_vector();
-            		std::discrete_distribution<int> distribution(quadrant_weights.begin(),quadrant_weights.end());
-            		int quadrant_select_index = distribution(generator);//rand() % 4;
-					int next_quadrant_index = quadrant_select_index;
-            		std::vector<std::pair<int,int>> dest_points = top_explore.get_destination_point(quadrant_select_index);
-            		int random_index = rand() % dest_points.size();
-            		top_explore.current_goal = {dest_points[random_index].first,dest_points[random_index].second};
-					top_explore.current_goal_quadrant  = next_quadrant_index;
-				}
+				// if(grid[top_explore.current_goal[0]][top_explore.current_goal[1]]!=-1)
+				// {
+				// 	std::default_random_engine generator;
+            	// 	std::vector<int> quadrant_weights = top_explore.get_quadrant_vector();
+            	// 	std::discrete_distribution<int> distribution(quadrant_weights.begin(),quadrant_weights.end());
+            	// 	int quadrant_select_index = distribution(generator);//rand() % 4;
+				// 	int next_quadrant_index = quadrant_select_index;
+            	// 	std::vector<std::pair<int,int>> dest_points = top_explore.get_destination_point(quadrant_select_index);
+            	// 	int random_index = rand() % dest_points.size();
+            	// 	top_explore.current_goal = {dest_points[random_index].first,dest_points[random_index].second};
+				// 	top_explore.current_goal_quadrant  = next_quadrant_index;
+				// }
 				bool status = top_explore.getNonHomologousPaths(current_x,current_y,{});
 				std::vector<std::pair<int,int>> p = top_explore.current_path;
 				if(!status)
@@ -677,32 +677,14 @@ public:
             		top_explore.current_start = {top_explore.current_goal[0],top_explore.current_goal[1]};
             		top_explore.current_start_quadrant = top_explore.current_goal_quadrant;
             
-
-					int next_quadrant_index = rand() % 4;
-					int random_index = -1;
-					switch (next_quadrant_index)
-					{
-						case 0:
-							random_index = rand() % (top_explore.grid->size() - 1);
-							top_explore.current_goal = {0,random_index};
-							break;
-						case 1:
-							random_index = rand() % (top_explore.grid->size() - 1);
-							top_explore.current_goal = {random_index , (int)top_explore.grid->size()-1};
-							break;
-						case 2:
-							random_index = rand() % (top_explore.grid->size() - 1) + 1;
-							top_explore.current_goal = {(int)top_explore.grid->size()-1, random_index};
-							break;
-						case 3 : 
-							random_index = rand() % (top_explore.grid->size() - 1) + 1;
-							top_explore.current_goal = {random_index , 0};
-							break;
-						default:
-							random_index = rand() % (top_explore.grid->size() - 1) + 1;
-							top_explore.current_goal = {random_index , 0};
-							break;
-					}
+					std::default_random_engine generator;
+            		std::vector<int> quadrant_weights = top_explore.get_quadrant_vector();
+            		std::discrete_distribution<int> distribution(quadrant_weights.begin(),quadrant_weights.end());
+            		int quadrant_select_index = distribution(generator);//rand() % 4;
+					int next_quadrant_index = quadrant_select_index;
+            		std::vector<std::pair<int,int>> dest_points = top_explore.get_destination_point(quadrant_select_index);
+            		int random_index = rand() % dest_points.size();
+            		top_explore.current_goal = {dest_points[random_index].first,dest_points[random_index].second};
 					top_explore.current_goal_quadrant  = next_quadrant_index;
 					
 					std::vector<std::pair<int,int>> current_path_copy;
@@ -810,12 +792,12 @@ int main(int argc, char *argv[])
 	{
 		srand(time(NULL));
 
-		Robot robot(60, 600,10.0, 100,use_window,"result_grid.txt","grid_1.txt",32);
+		Robot robot(60, 600,10.0, 100,use_window,"result_grid3.txt","grid_1.txt",32);
 		robot.start_exploring(0, 0);
 
 		for(int i=0;i<10;++i)
 		{
-			robot = Robot(60, 600,10.0, 100,use_window,"result_grid.txt","grid_1.txt",32);
+			robot = Robot(60, 600,10.0, 100,use_window,"result_grid3.txt","grid_1.txt",32);
 			robot.topological_explore_4({0,0});
 			SDL_Delay(1000);
 		}
@@ -858,9 +840,9 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
-		Robot robot(60, 600,10.0, 25,use_window,"result4.txt","obs5.txt",32);
-		// robot.topological_explore_4({0,0});
-		robot.start_exploring(0,0);
+		Robot robot(60, 600,10.0, 25,use_window,"result4.txt","obs5.txt",16);
+		robot.topological_explore_4({0,0});
+		// robot.start_exploring(0,0);
 		;
 	}
 		
