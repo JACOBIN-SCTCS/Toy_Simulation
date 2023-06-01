@@ -394,7 +394,9 @@ class ModifiedTopolgicalExplore
                 std::cout << "Destination quadrant index = " << goal_quadrants[i] << std::endl;
                 std::cout << "Current start = " << current_start[0] << "," << current_start[1] << std::endl;    
                 std::cout << "Current goal = " << current_goal[0] << "," << current_goal[1] << std::endl;
-
+                if(traversed_paths[i].size() == 0)
+                    continue;
+                
                 for(int j = 0 ; j < boundary_points_path[start_quadrants[i]].size() ; ++j)
                 {
                     std::cout << "Traversed path" << traversed_paths[i][0].first << ", " << traversed_paths[i][0].second << std::endl;

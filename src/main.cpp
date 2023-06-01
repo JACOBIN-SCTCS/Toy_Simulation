@@ -841,9 +841,13 @@ int main(int argc, char *argv[])
 			for(int j=0;j<10;++j)
 			{
 				std::string obstacle_file_name = "obs" + std::to_string(j) + ".txt"; 
-				Robot robot(60, 600,10.0, 20,use_window,"result_topology.txt",obstacle_file_name,sensor_ranges[i]);
-				robot.topological_explore_4({0,0});
-				SDL_Delay(1000);
+				for(int k =0; k < 10; ++k)
+				{
+					Robot robot(60, 600,10.0, 20,use_window,"result_topology.txt",obstacle_file_name,sensor_ranges[i]);
+					robot.topological_explore_4({0,0});
+					SDL_Delay(1000);
+				}
+			
 			}
 		}
 	}
