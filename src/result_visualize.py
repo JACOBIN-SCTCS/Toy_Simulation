@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 def individual_result():
-    f = open("../build/result4.txt", "r")
+    f = open("../build/result_grid.txt", "r")
     x =f.readline()
     print(x)
 
@@ -56,7 +56,7 @@ def individual_result():
     # plt.plot(topo_x, topo_y, 'b')
     plt.show()
 
-def frontier_result():
+def frontier_result(return_results = False):
     results = []
     f = open("../build/result_frontiers.txt", "r")
     x = f.readline()
@@ -105,14 +105,16 @@ def frontier_result():
         mean_results.append(np.mean(new_results[i],axis=0))
         std_results.append(np.std(new_results[i],axis=0))
 
+    if(return_results):
+        return mean_results,std_results
+    else:
+        colors = ['b','g','r','c','m','y','k','w']
+        for i in range(num_scans):
+            plt.plot(mean_results[i][:,0],mean_results[i][:,1],colors[i],label=str(i+1)+" scans")
+            plt.fill_between(mean_results[i][:,0],mean_results[i][:,1]-std_results[i][:,1],mean_results[i][:,1]+std_results[i][:,1],color=colors[i],alpha=0.2)
+        plt.show()
 
-    colors = ['b','g','r','c','m','y','k','w']
-    for i in range(num_scans):
-        plt.plot(mean_results[i][:,0],mean_results[i][:,1],colors[i],label=str(i+1)+" scans")
-        plt.fill_between(mean_results[i][:,0],mean_results[i][:,1]-std_results[i][:,1],mean_results[i][:,1]+std_results[i][:,1],color=colors[i],alpha=0.2)
-    plt.show()
-
-def topology_result_visualize():
+def topology_result_visualize(return_results = False):
     results = []
     f = open("../build/result_topology.txt", "r")
     x = f.readline()
@@ -177,11 +179,25 @@ def topology_result_visualize():
         mean_results.append(np.mean(new_results[i],axis=0))
         std_results.append(np.std(new_results[i],axis=0))
 
+    if(return_results):
+        return mean_results,std_results
+    else:
+        colors = ['b','g','r','c','m','y','k','w']
+        for i in range(num_scans):
+            plt.plot(mean_results[i][:,0],mean_results[i][:,1],colors[i],label=str(i+1)+" scans")
+            plt.fill_between(mean_results[i][:,0],mean_results[i][:,1]-std_results[i][:,1],mean_results[i][:,1]+std_results[i][:,1],color=colors[i],alpha=0.2)
+        plt.show()
 
+def show_frontier_topology():
+    frontier_mean, frontier_std = frontier_result(return_results=True)
+    topology_mean, topology_std = topology_result_visualize(return_results=True)
     colors = ['b','g','r','c','m','y','k','w']
-    for i in range(num_scans):
-        plt.plot(mean_results[i][:,0],mean_results[i][:,1],colors[i],label=str(i+1)+" scans")
-        plt.fill_between(mean_results[i][:,0],mean_results[i][:,1]-std_results[i][:,1],mean_results[i][:,1]+std_results[i][:,1],color=colors[i],alpha=0.2)
+    for i in range(len(frontier_mean)-1,len(frontier_mean)):
+        plt.plot(frontier_mean[i][:,0],frontier_mean[i][:,1],colors[i],label=str(i+1)+" scans")
+        plt.fill_between(frontier_mean[i][:,0],frontier_mean[i][:,1]-frontier_std[i][:,1],frontier_mean[i][:,1]+frontier_std[i][:,1],color=colors[i],alpha=0.1)
+    for i in range(len(frontier_mean)-1,len(topology_mean)):
+        plt.plot(topology_mean[i][:,0],topology_mean[i][:,1],colors[i]+'--',label=str(i+1)+" scans")
+        plt.fill_between(topology_mean[i][:,0],topology_mean[i][:,1]-topology_std[i][:,1],topology_mean[i][:,1]+topology_std[i][:,1],color=colors[i],alpha=0.4)
     plt.show()
 
 individual_result()

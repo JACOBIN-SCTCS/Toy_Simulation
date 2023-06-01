@@ -34,20 +34,38 @@ class FrontierExplore
             ;
         }
 
-        std::vector<std::pair<int,int>> getNeighbours(int x ,  int y , int max_x , int max_y)
+        std::vector<std::pair<int,int>> getNeighbours(int x ,  int y , int max_x , int max_y,bool get_four_neighbours = false)
         {
             std::vector<std::pair<int,int>> neighbours;
-            int x_dir[] = {0,0,1,-1,1,1,-1,-1};
-            int y_dir[] = {1,-1,0,0,1,-1,1,-1};
-            for(int i=0;i<8;++i)
+            if(!get_four_neighbours)
             {
-                int x_new = x + x_dir[i];
-                int y_new = y + y_dir[i];
-                if(x_new < 0 || x_new >= max_x || y_new < 0 || y_new >= max_y)
-                    continue;
-                else
-                    neighbours.push_back({x_new,y_new});
+                int x_dir[] = {0,0,1,-1,1,1,-1,-1};
+                int y_dir[] = {1,-1,0,0,1,-1,1,-1};
+                for(int i=0;i<8;++i)
+                {
+                    int x_new = x + x_dir[i];
+                    int y_new = y + y_dir[i];
+                    if(x_new < 0 || x_new >= max_x || y_new < 0 || y_new >= max_y)
+                        continue;
+                    else
+                        neighbours.push_back({x_new,y_new});
 
+                }
+            }
+            else
+            {
+                int x_dir[] = {0,0,1,-1};
+                int y_dir[] = {1,-1,0,0};
+                for(int i=0;i<4;++i)
+                {
+                    int x_new = x + x_dir[i];
+                    int y_new = y + y_dir[i];
+                    if(x_new < 0 || x_new >= max_x || y_new < 0 || y_new >= max_y)
+                        continue;
+                    else
+                        neighbours.push_back({x_new,y_new});
+
+                }
             }
             return neighbours;
         }
@@ -88,8 +106,8 @@ class FrontierExplore
                     // }
                     if(grid_ref[x_new][y_new]==-1)
                     {
-                        std::vector<std::pair<int,int>> cell_neighbours = getNeighbours(x_new,y_new,grid_ref.size(),grid_ref[0].size());
-                        for(int j =0;j<4;++j)
+                        std::vector<std::pair<int,int>> cell_neighbours = getNeighbours(x_new,y_new,grid_ref.size(),grid_ref[0].size(),true);
+                        for(int j =0;j<cell_neighbours.size();++j)
                         {
                             int x_prime_new = cell_neighbours[j].first;
                             int y_prime_new = cell_neighbours[j].second;
@@ -119,7 +137,7 @@ class FrontierExplore
                                 
                                     if(grid_ref[x_prime_new][y_prime_new]==-1)
                                     {
-                                        std::vector<std::pair<int,int>> frontier_cell_neighbours = getNeighbours(x_prime_new,y_prime_new,grid_ref.size(),grid_ref[0].size());  
+                                        std::vector<std::pair<int,int>> frontier_cell_neighbours = getNeighbours(x_prime_new,y_prime_new,grid_ref.size(),grid_ref[0].size(),true);  
                                         for(int k=0;k<frontier_cell_neighbours.size();++k)
                                         {
                                             int x_prime_prime_new = frontier_cell_neighbours[k].first;

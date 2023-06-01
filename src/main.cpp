@@ -184,6 +184,9 @@ public:
 				// 		break;
 				// 	}    
 				// }
+				if(grid[path[path.size()-1].first][path[path.size()-1].second] != -1 && grid[path[path.size()-1].first][path[path.size()-1].second] != 3)
+					break;
+				
 				if(((i+1)<path.size() && grid_original[path[i+1].first][path[i+1].second]==0)  || towards_an_obstacle)
 				{
 					grid[path[i+1].first][path[i+1].second] = 0;
@@ -749,6 +752,8 @@ public:
 						fw.render_screen(grid);
 						SDL_Delay(500);
 					}
+					if(grid[path[path.size()-1].first][path[path.size()-1].second] != -1 && grid[path[path.size()-1].first][path[path.size()-1].second] != 3)
+						break;
 					// }
 					if(((i+1)<path.size() && grid_original[path[i+1].first][path[i+1].second]==0))
 					{
@@ -799,18 +804,18 @@ private:
 
 int main(int argc, char *argv[])
 {
-	int choice = 2;
+	int choice = 0;
 	bool use_window = false;
 	if(choice==0)
 	{
 		srand(time(NULL));
 
-		Robot robot(60, 600,10.0, 20,use_window,"result4.txt","obs4.txt");
+		Robot robot(60, 600,10.0, 100,use_window,"result_grid.txt","grid_1.txt",32);
 		robot.start_exploring(0, 0);
 
 		for(int i=0;i<10;++i)
 		{
-			robot = Robot(60, 600,10.0, 20,use_window,"result4.txt","obs4.txt");
+			robot = Robot(60, 600,10.0, 100,use_window,"result_grid.txt","grid_1.txt",32);
 			robot.topological_explore_4({0,0});
 			SDL_Delay(1000);
 		}
@@ -853,6 +858,9 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
+		Robot robot(60, 600,10.0, 25,use_window,"result4.txt","obs5.txt",32);
+		// robot.topological_explore_4({0,0});
+		robot.start_exploring(0,0);
 		;
 	}
 		
