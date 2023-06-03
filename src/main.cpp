@@ -80,8 +80,8 @@ public:
 		{
 			for(int j=0;j<range;++j)
 			{
-				double new_x = floor(x + j*cos(angle));
-				double new_y = floor(y + j*sin(angle));
+				double new_x = ceil(x + j*cos(angle));
+				double new_y = ceil(y + j*sin(angle));
 				int new_int_x = int(new_x);
 				int new_int_y = int(new_y);
 				if(new_int_x<0 || new_int_x >=grid_size || new_int_y<0 || new_int_y>=grid_size)
@@ -602,7 +602,6 @@ public:
 		FrontierExplore f_explore(&grid,&obstacles_seen);
 		
 		std::vector<std::vector<std::pair<int,int>>> already_traversed_paths;
-		std::vector<Eigen::VectorXd> visited_h_signatures;
 		double epsilon = 1.0;
 		int t = 0;
 		while(true)
@@ -658,6 +657,7 @@ public:
 						fw.render_screen(grid);
 					if((i+1)< p.size() && grid_original[p[i+1].first][p[i+1].second] ==0)
 					{
+						grid[p[i+1].first][p[i+1].second] = 0;
 						std::vector<std::pair<int,int>> new_current_path;
 						for(int j=0;j<=i;++j)
 							new_current_path.push_back(p[j]);
@@ -714,7 +714,7 @@ public:
 
 				std::cout << "Frontier ExplorationPath size = " << path.size() << std::endl;
 				std::vector<std::pair<int,int>> new_current_path_copy;
-				for(int i =0;i<top_explore.current_path.size();++i)
+				for(int i =0;i<top_explore.current_path_index;++i)
 					new_current_path_copy.push_back(top_explore.current_path[i]);
 					
 				for (int i = 0; i < path.size(); ++i)
@@ -786,18 +786,18 @@ private:
 
 int main(int argc, char *argv[])
 {
-	int choice = 0;
-	bool use_window = false;
+	int choice = 3;
+	bool use_window = true;
 	if(choice==0)
 	{
 		srand(time(NULL));
 
-		Robot robot(60, 600,10.0, 100,use_window,"result_grid3.txt","grid_1.txt",32);
+		Robot robot(200, 600,3.0, 100,use_window,"result_grid_modif_3.txt","obs_200_9.txt",64);
 		robot.start_exploring(0, 0);
 
 		for(int i=0;i<10;++i)
 		{
-			robot = Robot(60, 600,10.0, 100,use_window,"result_grid3.txt","grid_1.txt",32);
+			robot = Robot(200, 600,3.0,100,use_window,"result_grid_modif_3.txt","obs_200_9.txt",64);
 			robot.topological_explore_4({0,0});
 			SDL_Delay(1000);
 		}
@@ -840,7 +840,7 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
-		Robot robot(60, 600,10.0, 25,use_window,"result4.txt","obs5.txt",16);
+		Robot robot(60, 600,10.0, 25,use_window,"result4.txt","obs0.txt",64);
 		robot.topological_explore_4({0,0});
 		// robot.start_exploring(0,0);
 		;

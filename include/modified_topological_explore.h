@@ -461,13 +461,23 @@ class ModifiedTopolgicalExplore
             std::unordered_map<std::string, double> distance_count;
             std::set<std::string> visited;
             
-            AstarNode *node = new AstarNode(start_point, partial_signature, 0.0 ,std::abs(goal_point - start_point), NULL, {});
+            double f=0.0;
+            // Can comment out below for loop
+            for(int i=0;i<obstacles_ref.size();++i)
+            {
+                int current_obstacle_x = obstacles_ref[i][0];
+                int current_obstacle_y = obstacles_ref[i][1];
+                std::complex<double> obs_point(current_obstacle_x,current_obstacle_y);
+                f = f + std::abs(start_point - obs_point);
+            }
+
+            AstarNode *node = new AstarNode(start_point, partial_signature, f ,std::abs(goal_point - start_point), NULL, {});
     
             std::stringstream ss;
             Eigen::VectorXd zeros = Eigen::VectorXd::Zero(obstacles_to_use.size());
             ss << start_point << "-\n"
             << partial_signature;
-            distance_count[ss.str()] = 0.0; //std::abs(goal_point - start_point);
+            distance_count[ss.str()] = f; //std::abs(goal_point - start_point);
             pq.push(node);
 
             // for (unsigned int i = 0; i < directions.size(); ++i)
@@ -580,9 +590,19 @@ class ModifiedTopolgicalExplore
                         Eigen::VectorXd filtered = (1.0 / (2 * M_PIf64)) * temp;
                         if ((filtered.array() > 1.0).any() || (filtered.array() < -1.0).any())
                             continue;
-                        double cell_cost = 1.0; // grid_ref[new_point.real()][new_point.imag()];
-                        if (cell_cost == -1)
-                            cell_cost = 1.0;
+                        // double cell_cost = 1.0; // grid_ref[new_point.real()][new_point.imag()];
+                        // if (cell_cost == -1)
+                        //     cell_cost = 1.0;
+
+                        double cell_cost=0.0;
+                        // can comment out below for loop
+                        for(int i=0;i<obstacles_ref.size();++i)
+                        {
+                            int c_x = obstacles_ref[i][0];
+                            int c_y = obstacles_ref[i][1];
+                            std::complex<double> obs_point(c_x,c_y);
+                            cell_cost = cell_cost + std::abs(new_point - obs_point);
+                        }
                         double f = cell_cost  + node->f;
                         //double f = cell_cost;
                         double g = std::abs(new_point - goal_point);
