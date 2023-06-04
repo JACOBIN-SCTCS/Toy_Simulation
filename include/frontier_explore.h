@@ -8,6 +8,7 @@
 #include <climits>
 #include <algorithm>
 #include<math.h>
+#include<complex>
 
 class FrontierExplore
 {
@@ -197,11 +198,23 @@ class FrontierExplore
                 // return ((a->cost) > (b->cost));
              });
 
+            double cell_cost = 0.0;
+            
+            std::vector<std::vector<int>>& obstacles_ref = *obstacles;
+            
+            // // Can comment out the for loop
+            // for(int i=0;i<obstacles_ref.size();++i)
+            // {
+            //     std::complex<double> map_point(start_x,start_y);
+            //     std::complex<double> obs_point(obstacles_ref[i][0],obstacles_ref[i][1]);
+            //     cell_cost = cell_cost + std::abs(map_point - obs_point);
+            // }
+
             AstarNode* start_node = new AstarNode();
             start_node->x = start_x;
             start_node->y = start_y;
             start_node->g = sqrt((end_x-start_x)*(end_x-start_x) + (end_y-start_y)*(end_y-start_y));
-            start_node->f = 0;
+            start_node->f = cell_cost;
             // start_node->cost = 0.0;
             start_node->parent = NULL;
             pq.push(start_node);
@@ -237,7 +250,17 @@ class FrontierExplore
                         // int g_new = sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
                         // int f_new = curr->f  + 1;
                         // double cost_new = curr->cost +  sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y)) + 1;
-                        double f_new = curr->f + 1;
+                        double new_cell_cost = 1.0;
+                        // for(int i=0;i<obstacles_ref.size();++i)
+                        // {
+                        //     std::complex<double> map_point(start_x,start_y);
+                        //     std::complex<double> obs_point(obstacles_ref[i][0],obstacles_ref[i][1]);
+                        //     new_cell_cost = cell_cost + std::abs(map_point - obs_point);
+                        // }
+                        
+                        double f_new = curr->f +  new_cell_cost ;
+                        
+                        
                         double g_new = sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
                         // if((f_new+g_new) < distance[x_new][y_new])
                         if(f_new < distance[x_new][y_new])
@@ -263,7 +286,15 @@ class FrontierExplore
                         // int g_new = sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
                         // int f_new = curr->f  + 1;
                         // double cost_new = curr->cost + sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y)) + 1;
-                        double f_new = curr->f + 1;
+                        double new_cell_cost = 1.0;
+                        // for(int i=0;i<obstacles_ref.size();++i)
+                        // {
+                        //     std::complex<double> map_point(start_x,start_y);
+                        //     std::complex<double> obs_point(obstacles_ref[i][0],obstacles_ref[i][1]);
+                        //     new_cell_cost = cell_cost + std::abs(map_point - obs_point);
+                        // }
+                        
+                        double f_new = curr->f +  new_cell_cost;
                         double g_new = sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
                         // if((f_new+g_new) < distance[x_new][y_new]) //error here
                         if(f_new < distance[x_new][y_new])

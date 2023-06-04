@@ -238,7 +238,7 @@ class ModifiedTopolgicalExplore
         bool getNonHomologousPaths(int x, int y, std::vector<Eigen::VectorXd> visited_h_signatures)
         {
             // struct NonHomologouspath p;
-
+            std::cout << "Reached inside"<<std::endl;
             auto customOp = [](const std::complex<double> &a, const std::complex<double> &b) -> double
             {
                 double minimum_phase_difference = std::arg(b) - std::arg(a);
@@ -456,21 +456,36 @@ class ModifiedTopolgicalExplore
                 std::complex<double>(-1.0, -1.0),
             };
 
+            double cell_costs[grid_ref.size()][grid_ref[0].size()];
+            // for(int i=0;i<grid_ref.size();++i)
+            // {
+            //     for(int j=0;j<grid_ref[0].size();++j)
+            //     {
+            //         if(grid_ref[i][j]!=0)
+            //         {
+            //             double cell_cost = 0.0;
+            //             for(int k = 0; k< obstacles_ref.size();++k)
+            //             {
+            //                 int c_x = obstacles_ref[k][0];
+            //                 int c_y = obstacles_ref[k][1];
+            //                 std::complex<double> obs_point(c_x,c_y);
+            //                 std::complex<double> current_point(i,j);
+            //                 cell_cost = cell_cost + std::abs(current_point - obs_point);
+            //             }
+            //             cell_costs[i][j] = cell_cost;
+            //         }
+            //     }
+            // }
+
             std::priority_queue<AstarNode *, std::vector<AstarNode *>, std::function<bool(AstarNode *, AstarNode *)>> pq([](AstarNode *a, AstarNode *b)
                                                                                                                 { return (a->f  +  a->g) > (b->f + b->g); });      //{ return (a->f + a->g) > (b->f + b->g); });
             std::unordered_map<std::string, double> distance_count;
             std::set<std::string> visited;
             
-            double f=0.0;
+            double f = 1.0;
+            // double f=cell_costs[x][y];
             // Can comment out below for loop
-            for(int i=0;i<obstacles_ref.size();++i)
-            {
-                int current_obstacle_x = obstacles_ref[i][0];
-                int current_obstacle_y = obstacles_ref[i][1];
-                std::complex<double> obs_point(current_obstacle_x,current_obstacle_y);
-                f = f + std::abs(start_point - obs_point);
-            }
-
+        
             AstarNode *node = new AstarNode(start_point, partial_signature, f ,std::abs(goal_point - start_point), NULL, {});
     
             std::stringstream ss;
@@ -590,19 +605,11 @@ class ModifiedTopolgicalExplore
                         Eigen::VectorXd filtered = (1.0 / (2 * M_PIf64)) * temp;
                         if ((filtered.array() > 1.0).any() || (filtered.array() < -1.0).any())
                             continue;
-                        // double cell_cost = 1.0; // grid_ref[new_point.real()][new_point.imag()];
-                        // if (cell_cost == -1)
-                        //     cell_cost = 1.0;
+                        double cell_cost = 1.0; // grid_ref[new_point.real()][new_point.imag()];
+                        if (cell_cost == -1)
+                            cell_cost = 1.0;
 
-                        double cell_cost=0.0;
-                        // can comment out below for loop
-                        for(int i=0;i<obstacles_ref.size();++i)
-                        {
-                            int c_x = obstacles_ref[i][0];
-                            int c_y = obstacles_ref[i][1];
-                            std::complex<double> obs_point(c_x,c_y);
-                            cell_cost = cell_cost + std::abs(new_point - obs_point);
-                        }
+                        // double cell_cost=  cell_costs[int(real(new_point))][int(imag(new_point))];
                         double f = cell_cost  + node->f;
                         //double f = cell_cost;
                         double g = std::abs(new_point - goal_point);
