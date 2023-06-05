@@ -757,6 +757,7 @@ public:
 				break;
 		}
 		std::cout<<"Done Exploration"<<std::endl;
+		f.close();
 
 	}
 
