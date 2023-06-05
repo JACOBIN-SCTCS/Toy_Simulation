@@ -174,7 +174,7 @@ class ModifiedTopolgicalExplore
                         {
                             current_path.push_back({k,grid_size});
                         }
-                        for(int k = grid_size-1; k>=-1;k--)
+                        for(int k = grid_size; k>=-1;k--)
                         {
                             current_path.push_back({-1,k});
                         }
@@ -203,7 +203,7 @@ class ModifiedTopolgicalExplore
                         {
                             current_path.push_back({k,grid_size});
                         }
-                        for(int k = grid_size-1; k>=-1;k--)
+                        for(int k = grid_size; k>=-1;k--)
                         {
                             current_path.push_back({-1,k});
                         }
@@ -800,7 +800,7 @@ class ModifiedTopolgicalExplore
                 }
                 if(destination_points.size() ==0)
                 {
-                    int random_index = rand() % (grid->size() - 1);
+                    int random_index = rand() % (grid_ref[0].size() - 1);
                     destination_points.push_back({0,random_index});
                 }
             }
@@ -813,8 +813,8 @@ class ModifiedTopolgicalExplore
                 }
                 if(destination_points.size() == 0 )
                 {
-                    int random_index = rand() % (grid->size() - 1);
-                    destination_points.push_back({random_index , (int)grid->size()-1});
+                    int random_index = rand() % (grid_ref.size() - 1);
+                    destination_points.push_back({random_index , (int)grid_ref[0].size()-1});
                 }
             }
             else if(quadrant_index == 2)
@@ -826,8 +826,8 @@ class ModifiedTopolgicalExplore
                 }
                 if (destination_points.size() == 0)
                 {
-                    int random_index = rand() % (grid->size() - 1)+1;
-                    destination_points.push_back({(int)grid->size()-1, random_index});
+                    int random_index = rand() % (grid_ref[0].size() - 1)+1;
+                    destination_points.push_back({(int)grid_ref.size()-1, random_index});
                 }
             }
             else
@@ -839,7 +839,7 @@ class ModifiedTopolgicalExplore
                 }
                 if(destination_points.size() == 0)
                 {
-                    int random_index = rand() % (grid->size() - 1) + 1;
+                    int random_index = rand() % (grid_ref.size() - 1) + 1;
                     destination_points.push_back({random_index,0});
                 }
             }
