@@ -604,6 +604,7 @@ public:
 		std::vector<std::vector<std::pair<int,int>>> already_traversed_paths;
 		double epsilon = 1.0;
 		int t = 0;
+		int previously_chosen = 0;
 		while(true)
 		{
 			double drawn_number = ((double)rand()/(double)RAND_MAX);
@@ -611,19 +612,32 @@ public:
 			{
 				// Adopt a topolgical exploration strategy
 				// auto current_path = top_explore.getNonHomologousPaths(current_x,current_y,{});
-				std::cout<<"Doing a topological exploration strategy"<<std::endl;
-				// if(grid[top_explore.current_goal[0]][top_explore.current_goal[1]]!=-1)
+				// if(previously_chosen==1)
 				// {
 				// 	std::default_random_engine generator;
             	// 	std::vector<int> quadrant_weights = top_explore.get_quadrant_vector();
             	// 	std::discrete_distribution<int> distribution(quadrant_weights.begin(),quadrant_weights.end());
             	// 	int quadrant_select_index = distribution(generator);//rand() % 4;
-				// 	int next_quadrant_index = quadrant_select_index;
+
             	// 	std::vector<std::pair<int,int>> dest_points = top_explore.get_destination_point(quadrant_select_index);
             	// 	int random_index = rand() % dest_points.size();
             	// 	top_explore.current_goal = {dest_points[random_index].first,dest_points[random_index].second};
-				// 	top_explore.current_goal_quadrant  = next_quadrant_index;
+            	// 	top_explore.current_goal_quadrant = quadrant_select_index;
 				// }
+				std::cout<<"Doing a topological exploration strategy"<<std::endl;
+				if(grid[top_explore.current_goal[0]][top_explore.current_goal[1]]!=-1)
+				{
+					std::default_random_engine generator;
+            		std::vector<int> quadrant_weights = top_explore.get_quadrant_vector();
+            		std::discrete_distribution<int> distribution(quadrant_weights.begin(),quadrant_weights.end());
+            		int quadrant_select_index = distribution(generator);//rand() % 4;
+					int next_quadrant_index = quadrant_select_index;
+            		std::vector<std::pair<int,int>> dest_points = top_explore.get_destination_point(quadrant_select_index);
+            		int random_index = rand() % dest_points.size();
+            		top_explore.current_goal = {dest_points[random_index].first,dest_points[random_index].second};
+					top_explore.current_goal_quadrant  = next_quadrant_index;
+				}
+
 				bool status = top_explore.getNonHomologousPaths(current_x,current_y,{});
 				std::vector<std::pair<int,int>> p = top_explore.current_path;
 				if(!status)
@@ -696,6 +710,7 @@ public:
 					top_explore.current_path.clear();
 					top_explore.current_path_index = 0;
 				}
+				previously_chosen = 0;
 
 			}
 			else
@@ -749,7 +764,7 @@ public:
 				// sensor_model(current_x, current_y);
 				// fw.render_screen(grid);
 				// f_explore.findFrontiers(current_x, current_y);
-					
+				previously_chosen = 1;	
 			}
 			t+=1;
 			epsilon = 1.0 - ((double)total_cells_mapped/(total_free_space) + pow(2.71828,0.01*t)/(total_free_space)); //pow(2.71828,-0.02*t);
@@ -841,7 +856,7 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
-		Robot robot(60, 600,10.0, 25,use_window,"result4.txt","obs0.txt",64);
+		Robot robot(60, 600,10.0, 25,use_window,"result4.txt","obs0.txt",4);
 		robot.topological_explore_4({0,0});
 		// robot.start_exploring(0,0);
 		;
