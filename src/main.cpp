@@ -10,12 +10,13 @@
 class Robot
 {
 public:
-	Robot(int g_size, int w_size, double scale, int n_obstacles, bool window = true , std::string filename = "results.txt", std::string obs_filename="obs0.txt",int sensor_range=8) : grid_size(g_size),  fw(w_size,w_size,scale), num_obstacles(n_obstacles), SENSOR_RANGE(sensor_range)
+	Robot(int g_size, int w_size, double scale, int n_obstacles, bool window = true , std::string filename = "results.txt", std::string obs_filename="obs0.txt",int sensor_range=8,bool d_result = false) : grid_size(g_size),  fw(w_size,w_size,scale), num_obstacles(n_obstacles), SENSOR_RANGE(sensor_range) , depth_result(d_result)
 	{
 		use_window  = window;
 		output_file_name = filename;
 		grid.resize(grid_size, std::vector<int>(grid_size, -1));
 		grid_original.resize(grid_size,std::vector<int>(grid_size,1));
+		grid_original_only_boundary.resize(grid_size,std::vector<int>(grid_size,1));
 		obstacle_id_grid.resize(grid_size,std::vector<int>(grid_size,1));
 		
 		std::ifstream infile(obs_filename);
@@ -47,6 +48,8 @@ public:
 				for(int k=0;k<4;++k)
 				{
 					grid_original[x+j][y+k] = 0;
+					if(j == 0 || j == 3 || k == 0 || k == 3)
+						grid_original_only_boundary[x+j][y+k] = 0;
 					obstacle_id_grid[x+j][y+k] = i;
 				}
 			}
@@ -65,6 +68,7 @@ public:
 		}
 
 		std::cout << "Size of the grid = " << grid_size << std::endl;
+		create_ground_truth_resolutions(g_size);
 	}
 
 	void sensor_model(int x, int y)
@@ -776,17 +780,106 @@ public:
 
 	}
 
+	void create_ground_truth_resolutions(int g_size)
+	{
+		for(int i=0;i<depths.size();++i)
+		{
+			std::vector<std::vector<int>> current_depth_ground_truth;
+			int current_depth = depths[i];
+			current_depth_ground_truth.resize(current_depth,std::vector<int>(current_depth,0));
+
+			int x_increment = (int) g_size/current_depth;
+			int y_increment = (int) g_size/current_depth;
+
+			for(int j=0;j<current_depth;++j)
+			{
+				for(int k=0;k<current_depth;++k)
+				{
+					int x = j*x_increment;
+					int y = k*y_increment;
+					for(int l=x ; l < (j+1)*x_increment; ++l)
+					{
+						for(int m=y ; m < (k+1)*y_increment; ++m)
+						{
+							if(grid_original_only_boundary[l][m] == 0)
+							{
+								current_depth_ground_truth[j][k] = 1;
+								break;
+							}
+						}
+						if (current_depth_ground_truth[j][k]==1)
+						{
+							break;
+						}	
+					}
+					
+				}
+			}
+			ground_truth_depth_result.push_back(current_depth_ground_truth);
+		}
+	}
+	std::vector<int> getError()
+	{
+		std::vector<int> error;
+		for(int i=0;i<depths.size();++i)
+		{
+			int current_depth = depths[i];
+			int x_increment = (int) grid_size/current_depth;
+			int y_increment = (int) grid_size/current_depth;
+			
+			int error_count = 0;
+			for(int j=0;j<current_depth;++j)
+			{
+				for(int k=0;k<current_depth;++k)
+				{
+					int x = j*x_increment;
+					int y = k*y_increment;
+					
+					if(ground_truth_depth_result[i][j][k] == 0)
+						continue;
+					
+					bool obstacle_there = false;
+					for(int l=x ; l < (j+1)*x_increment; ++l)
+					{
+						for(int m=y ; m < (k+1)*y_increment; ++m)
+						{
+							if(grid[l][m] == 0)
+							{
+								obstacle_there = true;
+								break;
+							}
+						}
+						if (obstacle_there)
+						{
+							break;
+						}	
+					}
+					if (!obstacle_there)
+					{
+						error_count+=1;
+					}
+				}
+			}
+			error.push_back(error_count);
+		}
+		return error;
+	}
+
 	Framework fw;
 
 private:
 	int grid_size;
 	std::vector<std::vector<int>> grid;
 	std::vector<std::vector<int>> grid_original;
+	std::vector<std::vector<int>> grid_original_only_boundary;
 
 	std::vector<std::vector<int>> obstacle_id_grid;
 	std::vector<std::vector<int>> obstacles;
 	std::vector<std::vector<int>> obstacles_seen;
-	
+
+
+	std::vector<std::vector<std::vector<int>>> ground_truth_depth_result;
+	std::vector<int> depths = {2,4,10,15,30};
 	
 	int num_obstacles;
 	int total_cells_mapped=0;
@@ -797,12 +890,13 @@ private:
 	int timesteps_taken = 0;
 	int SENSOR_RANGE = 8;
 	int total_free_space = 0;
+	bool depth_result = false;
 
 };
 
 int main(int argc, char *argv[])
 {
-	int choice = 3;
+	int choice = 4;
 	bool use_window = true;
 	if(choice==0)
 	{
@@ -854,12 +948,16 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
-	else
+	else if(choice==3)
 	{
 		Robot robot(60, 600,10.0, 25,use_window,"result4.txt","obs0.txt",4);
 		robot.topological_explore_4({0,0});
 		// robot.start_exploring(0,0);
 		;
+	}
+	else
+	{
+		Robot robot(60, 600,10.0, 25,use_window,"result4.txt","obs0.txt",4);
 	}
 		
 	if(use_window)
