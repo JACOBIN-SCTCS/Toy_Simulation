@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 def individual_result():
-    f = open("../build/result_grid.txt", "r")
+    f = open("../build/result_obs0.txt", "r")
     x =f.readline()
     print(x)
 
@@ -55,6 +55,74 @@ def individual_result():
     plt.fill_between(mean_plot[:,0], mean_plot[:,1]-std[:,1], mean_plot[:,1]+std[:,1], color='b', alpha=.1)
     # plt.plot(topo_x, topo_y, 'b')
     plt.show()
+
+def individual_result_error():
+    f = open("../build/result_obs0.txt", "r")
+    x =f.readline()
+
+    frontier_result = []
+    x = f.readline()
+    while (x != str('-\n')):
+        if x=='-':
+            break
+        x_split = x.strip().split()
+        # print(x_split)
+        x_split_float = [ float(ele) for ele in x_split]
+        frontier_result.append(x_split_float)
+        x = f.readline()
+    frontier_result_np = np.array(frontier_result)
+
+    topo_plot = []
+    trajectories_size = 10
+    max_len = 0
+    # print(frontier_result_np.shape)
+    for i in range(trajectories_size):
+        new_top_list = []
+        
+        while (x != str('-\n') or x!=''):
+            x = f.readline()
+
+            if (x == '-\n' or x == ''):
+                break
+            x_split = x.strip().split()
+            x_split_float = [float(ele) for ele in x_split]
+            new_top_list.append(x_split_float)
+       
+        # print(len(new_top_list))
+        # print(len(new_top_list[0]))
+        max_len = max(max_len, len(new_top_list))
+        topo_plot.append(new_top_list)
+    # topo_plot_np = np.array(topo_plot)
+    # print(topo_plot_np.shape)
+    # print(topo_plot_np[0])
+    # print(topo_plot_np.shape)
+
+    map_np = np.zeros((trajectories_size,max_len,frontier_result_np.shape[1]))
+    for i in range(trajectories_size):
+        j  = 0
+        while j  < len(topo_plot[i]):
+            for k in range(frontier_result_np.shape[1]):
+                map_np[i][j][k] = topo_plot[i][j][k]
+            j+=1
+        while(j<max_len):
+            for k in range(frontier_result_np.shape[1]):
+                map_np[i][j][k] = topo_plot[i][len(topo_plot[i])-1][k]
+            # map_np[i][j][0] = topo_plot[i][len(topo_plot[i])-1][0]
+            # map_np[i][j][1] = topo_plot[i][len(topo_plot[i])-1][1]
+            j+=1
+
+
+    index_to_plot = 4
+    mean_plot = np.mean(map_np, axis=0)
+    # print(mean_plot.shape)
+    std = np.std(map_np, axis=0)
+    # print(std.shape)
+    plt.plot(frontier_result_np[:,0], frontier_result_np[:,index_to_plot], 'r')
+    plt.plot(mean_plot[:,0],mean_plot[ : , index_to_plot],'b')
+    plt.fill_between(mean_plot[:,0], mean_plot[:,index_to_plot]-std[:,index_to_plot], mean_plot[:,index_to_plot]+std[:,index_to_plot], color='b', alpha=.1)
+    # plt.plot(topo_x, topo_y, 'b')
+    plt.show()
+
 
 def frontier_result(return_results = False):
     results = []
@@ -200,4 +268,4 @@ def show_frontier_topology():
         plt.fill_between(topology_mean[i][:,0],topology_mean[i][:,1]-topology_std[i][:,1],topology_mean[i][:,1]+topology_std[i][:,1],color=colors[i],alpha=0.4)
     plt.show()
 
-individual_result()
+individual_result_error()

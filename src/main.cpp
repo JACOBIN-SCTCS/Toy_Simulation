@@ -171,7 +171,22 @@ public:
 				grid[current_x][current_y] = 2;
 				sensor_model(current_x,current_y);
 				if(!use_window)
-					f << timesteps_taken << " " << ((double)total_cells_mapped/(total_free_space)) * 100<< "\n";
+				{
+					if(depth_result)
+					{
+						std::vector<int> error_result = getError();
+						std::stringstream ss_error;
+						for(int k=0;k<error_result.size();++k)
+						{
+							ss_error << error_result[k] << " ";
+						}
+						f << timesteps_taken << " "<< ((double)total_cells_mapped/(total_free_space)) * 100<<" "<<ss_error.str()<<"\n";
+					}
+					else
+					{
+						f << timesteps_taken << " " << ((double)total_cells_mapped/(total_free_space)) * 100<<"\n";
+					}
+				}
 				if(use_window)
 				{
 					fw.render_screen(grid);
@@ -670,7 +685,22 @@ public:
 					grid[current_x][current_y] = 2;
 					sensor_model(current_x,current_y);
 					if(!use_window)
-						f<< timesteps_taken << " " << ((double)total_cells_mapped/(total_free_space)) * 100<< "\n";
+					{
+						if(depth_result)
+						{
+							std::vector<int> error_result = getError();
+							std::stringstream ss_error;
+							for(int k=0;k<error_result.size();++k)
+							{
+								ss_error << error_result[k] << " ";
+							}
+							f << timesteps_taken << " " << ((double)total_cells_mapped/(total_free_space)) * 100<<" "<<ss_error.str()<<"\n";
+						}
+						else
+						{
+							f << timesteps_taken << " " << ((double)total_cells_mapped/(total_free_space)) * 100<<"\n";
+						}
+					}
 					if(use_window)
 						fw.render_screen(grid);
 					if((i+1)< p.size() && grid_original[p[i+1].first][p[i+1].second] ==0)
@@ -747,7 +777,22 @@ public:
 					grid[current_x][current_y] = 2;
 					sensor_model(current_x,current_y);
 					if(!use_window)
-						f<< timesteps_taken << " " << ((double)total_cells_mapped/(total_free_space)) * 100<< "\n";
+					{
+						if(depth_result)
+						{
+							std::vector<int> error_result = getError();
+							std::stringstream ss_error;
+							for(int k=0;k<error_result.size();++k)
+							{
+								ss_error << error_result[k] << " ";
+							}
+							f << timesteps_taken << " " << ((double)total_cells_mapped/(total_free_space)) * 100<<" "<<ss_error.str()<<"\n";
+						}
+						else
+						{
+							f << timesteps_taken << " " << ((double)total_cells_mapped/(total_free_space)) * 100<<"\n";
+						}
+					}
 					if(use_window)
 					{
 						fw.render_screen(grid);
@@ -896,22 +941,21 @@ private:
 
 int main(int argc, char *argv[])
 {
-	int choice = 4;
-	bool use_window = true;
+	int choice = 0;
+	bool use_window = false;
 	if(choice==0)
 	{
 		srand(time(NULL));
 
-		Robot robot(200, 600,3.0, 100,use_window,"result_grid_modif_3.txt","obs_200_9.txt",64);
+		Robot robot(60, 600,10.0, 25,use_window,"result_obs0.txt","obs1.txt",32,true);
 		robot.start_exploring(0, 0);
 
 		for(int i=0;i<10;++i)
 		{
-			robot = Robot(200, 600,3.0,100,use_window,"result_grid_modif_3.txt","obs_200_9.txt",64);
+			robot = Robot(60, 600,10.0,25,use_window,"result_obs0.txt","obs1.txt",32,true);
 			robot.topological_explore_4({0,0});
 			SDL_Delay(1000);
 		}
-
 	}
 	else if(choice == 1)
 	{
