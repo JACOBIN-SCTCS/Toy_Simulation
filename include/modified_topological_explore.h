@@ -399,7 +399,7 @@ class ModifiedTopolgicalExplore
                 
                 for(int j = 0 ; j < boundary_points_path[start_quadrants[i]].size() ; ++j)
                 {
-                    std::cout << "Traversed path" << traversed_paths[i][0].first << ", " << traversed_paths[i][0].second << std::endl;
+                    // std::cout << "Traversed path" << traversed_paths[i][0].first << ", " << traversed_paths[i][0].second << std::endl;
                     if(boundary_points_path[start_quadrants[i]][j][0].first == traversed_paths[i][0].first && boundary_points_path[start_quadrants[i]][j][0].second == traversed_paths[i][0].second)
                     {
                         std::vector<std::pair<int,int>> current_path_tmp;
@@ -407,8 +407,8 @@ class ModifiedTopolgicalExplore
                         {
                             current_path_tmp.push_back({boundary_points_path[start_quadrants[i]][j][k].first,boundary_points_path[start_quadrants[i]][j][k].second});
                         }
-                        std::reverse(current_path_tmp.begin(),current_path_tmp.end());
-                        augmented_path_signature_start = recompute_h_signature(current_path_tmp);
+                        // std::reverse(current_path_tmp.begin(),current_path_tmp.end());
+                        augmented_path_signature_start = -recompute_h_signature(current_path_tmp);
                     }
                 }
 
@@ -482,7 +482,7 @@ class ModifiedTopolgicalExplore
             std::unordered_map<std::string, double> distance_count;
             std::set<std::string> visited;
             
-            double f = 1.0;
+            double f = 0.0;
             // double f=cell_costs[x][y];
             // Can comment out below for loop
         
@@ -582,12 +582,22 @@ class ModifiedTopolgicalExplore
                         path.push_back(std::pair<int, int>(current_point_x, current_point_y));
                         temp = temp->parent;
                     }
-                    path.push_back({x,y});
+
+                    // path.push_back({x,y});
                     std::reverse(path.begin(), path.end());
-                
-                    for(int i=0;i<path.size();++i)
+                    if(current_path.size()==0)
                     {
-                        current_path.push_back({path[i].first,path[i].second});
+                        for(int i=0;i<path.size();++i)
+                        {
+                            current_path.push_back({path[i].first,path[i].second});
+                        }
+                    }
+                    else
+                    {
+                        for(int i=1;i<path.size();++i)
+                        {
+                            current_path.push_back({path[i].first,path[i].second});
+                        }
                     }
                     return true;
                 }

@@ -924,7 +924,7 @@ private:
 
 
 	std::vector<std::vector<std::vector<int>>> ground_truth_depth_result;
-	std::vector<int> depths = {2,4,10,15,30};
+	std::vector<int> depths = {2,4,10,15,30,60};
 	
 	int num_obstacles;
 	int total_cells_mapped=0;
@@ -947,12 +947,12 @@ int main(int argc, char *argv[])
 	{
 		srand(time(NULL));
 
-		Robot robot(60, 600,10.0, 25,use_window,"result_obs0.txt","obs1.txt",32,true);
+		Robot robot(60, 600,10.0, 25,use_window,"result_grid1.txt","grid_1.txt",16,true);
 		robot.start_exploring(0, 0);
 
 		for(int i=0;i<10;++i)
 		{
-			robot = Robot(60, 600,10.0,25,use_window,"result_obs0.txt","obs1.txt",32,true);
+			robot = Robot(60, 600,10.0,25,use_window,"result_grid1.txt","grid_1.txt",16,true);
 			robot.topological_explore_4({0,0});
 			SDL_Delay(1000);
 		}

@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 def individual_result():
-    f = open("../build/result_obs0.txt", "r")
+    f = open("../build/result_grid_1.txt", "r")
     x =f.readline()
     print(x)
 
@@ -57,7 +57,7 @@ def individual_result():
     plt.show()
 
 def individual_result_error():
-    f = open("../build/result_obs0.txt", "r")
+    f = open("../build/result_grid1.txt", "r")
     x =f.readline()
 
     frontier_result = []
@@ -112,7 +112,7 @@ def individual_result_error():
             j+=1
 
 
-    index_to_plot = 4
+    index_to_plot = 7
     mean_plot = np.mean(map_np, axis=0)
     # print(mean_plot.shape)
     std = np.std(map_np, axis=0)
