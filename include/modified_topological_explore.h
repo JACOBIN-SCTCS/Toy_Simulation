@@ -615,10 +615,10 @@ class ModifiedTopolgicalExplore
                         Eigen::VectorXd filtered = (1.0 / (2 * M_PIf64)) * temp;
                         if ((filtered.array() > 1.0).any() || (filtered.array() < -1.0).any())
                             continue;
-                        double cell_cost = 1.0; // grid_ref[new_point.real()][new_point.imag()];
-                        if (cell_cost == -1)
-                            cell_cost = 1.0;
-
+                        // double cell_cost = 1.0; // grid_ref[new_point.real()][new_point.imag()];
+                        // if (cell_cost == -1)
+                        //     cell_cost = 1.0;
+                        double cell_cost = std::abs(new_point-node->point);
                         // double cell_cost=  cell_costs[int(real(new_point))][int(imag(new_point))];
                         double f = cell_cost  + node->f;
                         //double f = cell_cost;
@@ -765,7 +765,8 @@ class ModifiedTopolgicalExplore
                 if(grid_ref[0][j]==-1)
                     count+=1; 
             }
-            ret.push_back(1+count);
+            ret.push_back(count);
+            // ret.push_back(1+count);
 
             count = 0 ;   
             for(int j=0;j<grid_ref.size()-1; ++ j)
@@ -774,7 +775,8 @@ class ModifiedTopolgicalExplore
                     count+=1;
                        
             }
-            ret.push_back(1+count);
+            ret.push_back(count);
+            // ret.push_back(1+count);
     
             count = 0;
             for(int j=1;j<grid_ref[0].size(); ++ j)
@@ -783,7 +785,8 @@ class ModifiedTopolgicalExplore
                     count+=1;
             
             }
-            ret.push_back(1+count);
+            ret.push_back(count);
+            // ret.push_back(1+count);
 
                 
             count = 0;  
@@ -792,7 +795,8 @@ class ModifiedTopolgicalExplore
                 if(grid_ref[j][0]==-1)
                     count+=1;
             }
-            ret.push_back(1+count);
+            ret.push_back(count);
+            // ret.push_back(1+count);
 
             return ret;
         }

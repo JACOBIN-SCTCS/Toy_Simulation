@@ -57,7 +57,10 @@ def individual_result():
     plt.show()
 
 def individual_result_error():
-    f = open("../build/result_grid1.txt", "r")
+    f = open("../build/result_obs2.txt", "r")
+    index_to_plot = 5
+    trajectories_size = 20
+
     x =f.readline()
 
     frontier_result = []
@@ -73,7 +76,7 @@ def individual_result_error():
     frontier_result_np = np.array(frontier_result)
 
     topo_plot = []
-    trajectories_size = 10
+ 
     max_len = 0
     # print(frontier_result_np.shape)
     for i in range(trajectories_size):
@@ -112,7 +115,7 @@ def individual_result_error():
             j+=1
 
 
-    index_to_plot = 7
+
     mean_plot = np.mean(map_np, axis=0)
     # print(mean_plot.shape)
     std = np.std(map_np, axis=0)

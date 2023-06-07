@@ -863,6 +863,7 @@ public:
 			ground_truth_depth_result.push_back(current_depth_ground_truth);
 		}
 	}
+	
 	std::vector<int> getError()
 	{
 		std::vector<int> error;
@@ -947,12 +948,12 @@ int main(int argc, char *argv[])
 	{
 		srand(time(NULL));
 
-		Robot robot(60, 600,10.0, 25,use_window,"result_grid1.txt","grid_1.txt",16,true);
+		Robot robot(60, 600,10.0, 25,use_window,"result_obs2.txt","obs2.txt",16,true);
 		robot.start_exploring(0, 0);
 
-		for(int i=0;i<10;++i)
+		for(int i=0;i<20;++i)
 		{
-			robot = Robot(60, 600,10.0,25,use_window,"result_grid1.txt","grid_1.txt",16,true);
+			robot = Robot(60, 600,10.0,25,use_window,"result_obs2.txt","obs2.txt",16,true);
 			robot.topological_explore_4({0,0});
 			SDL_Delay(1000);
 		}
@@ -995,13 +996,13 @@ int main(int argc, char *argv[])
 	else if(choice==3)
 	{
 		Robot robot(60, 600,10.0, 25,use_window,"result4.txt","obs0.txt",4);
-		robot.topological_explore_4({0,0});
-		// robot.start_exploring(0,0);
+		// robot.topological_explore_4({0,0});
+		robot.start_exploring(0,0);
 		;
 	}
 	else
 	{
-		Robot robot(60, 600,10.0, 25,use_window,"result4.txt","obs0.txt",4);
+		Robot robot(60, 600,10.0, 25,use_window,"result4.txt","obs0.txt",16);
 	}
 		
 	if(use_window)
