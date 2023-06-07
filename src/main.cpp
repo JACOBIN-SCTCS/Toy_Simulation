@@ -10,7 +10,8 @@
 class Robot
 {
 public:
-	Robot(int g_size, int w_size, double scale, int n_obstacles, bool window = true , std::string filename = "results.txt", std::string obs_filename="obs0.txt",int sensor_range=8,bool d_result = false) : grid_size(g_size),  fw(w_size,w_size,scale), num_obstacles(n_obstacles), SENSOR_RANGE(sensor_range) , depth_result(d_result)
+	Robot(int g_size, int w_size, double scale, int n_obstacles, bool window = true , std::string filename = "results.txt", std::string obs_filename="obs0.txt",int sensor_range=8,bool d_result = false,bool d_result_visualize=false, int d_result_visualize_timestep=200,std::string depth_file_prefix="obs0_") 
+	: grid_size(g_size),  fw(w_size,w_size,scale), num_obstacles(n_obstacles), SENSOR_RANGE(sensor_range) , depth_result(d_result) , depth_result_visualize(d_result_visualize), depth_result_visualize_timestep(d_result_visualize_timestep), depth_result_file_prefix(depth_file_prefix)
 	{
 		use_window  = window;
 		output_file_name = filename;
@@ -181,6 +182,13 @@ public:
 							ss_error << error_result[k] << " ";
 						}
 						f << timesteps_taken << " "<< ((double)total_cells_mapped/(total_free_space)) * 100<<" "<<ss_error.str()<<"\n";
+						if(depth_result_visualize)
+						{
+							if(timesteps_taken%depth_result_visualize_timestep ==0)
+							{
+								;
+							}
+						}
 					}
 					else
 					{
@@ -911,6 +919,65 @@ public:
 		return error;
 	}
 
+	std::vector<std::vector<int>> get_current_depth_result(int depth_index)
+	{
+		std::vector<std::vector<int>> ret_result(grid_size,std::vector<int>(grid_size,-1));
+
+		int current_depth = depths[depth_index];
+		int x_increment = (int) grid_size/current_depth;
+		int y_increment = (int) grid_size/current_depth;
+		
+		for(int i=0;i<current_depth;++i)
+		{
+			for(int j=0;j<current_depth;++j)
+			{
+				int x = i*x_increment;
+				int y = j*y_increment;
+						
+				bool obstacle_there = false;
+				bool free_space_there = false;
+				bool unknown_space_only = true;
+				for(int l=x ; l < (i+1)*x_increment; ++l)
+				{
+					for(int m=y ; m < (j+1)*y_increment; ++m)
+					{
+						if(grid[l][m]==-1)
+							continue;
+						if(grid[l][m] == 0)
+						{
+							unknown_space_only = false;
+							obstacle_there = true;
+							break;
+						}
+						else if(grid[l][i]==1)
+						{
+							unknown_space_only = false;
+							free_space_there = true;
+						}
+					}
+					if(obstacle_there)
+						break;
+				}
+
+				for(int l=x ; l < (i+1)*x_increment; ++l)
+				{
+					for(int m=y ; m < (j+1)*y_increment; ++m)
+					{
+						if(unknown_space_only)
+							ret_result[l][m] = -1;
+						else if(obstacle_there)
+							ret_result[l][m] = 0;
+						else
+							ret_result[l][m] = 1;
+					}
+				}
+			}
+		}
+
+		return ret_result;
+	}
+
+
 	Framework fw;
 
 private:
@@ -925,7 +992,7 @@ private:
 
 
 	std::vector<std::vector<std::vector<int>>> ground_truth_depth_result;
-	std::vector<int> depths = {2,4,10,15,30,60};
+	std::vector<int> depths = {2,4,8,16,32};
 	
 	int num_obstacles;
 	int total_cells_mapped=0;
@@ -937,6 +1004,9 @@ private:
 	int SENSOR_RANGE = 8;
 	int total_free_space = 0;
 	bool depth_result = false;
+	bool depth_result_visualize = false;
+	int  depth_result_visualize_timestep = 200;
+	std::string depth_result_file_prefix = "obs0";
 
 };
 
@@ -948,12 +1018,12 @@ int main(int argc, char *argv[])
 	{
 		srand(time(NULL));
 
-		Robot robot(60, 600,10.0, 25,use_window,"result_obs2.txt","obs2.txt",16,true);
+		Robot robot(256, 768,3.0, 128,use_window,"result_obs_256_0.txt","obs_256_0.txt",64,true);
 		robot.start_exploring(0, 0);
 
-		for(int i=0;i<20;++i)
+		for(int i=0;i<6;++i)
 		{
-			robot = Robot(60, 600,10.0,25,use_window,"result_obs2.txt","obs2.txt",16,true);
+			robot = Robot(256, 768,3.0,128,use_window,"result_obs_256_0.txt","obs_256_0.txt",64,true);
 			robot.topological_explore_4({0,0});
 			SDL_Delay(1000);
 		}
@@ -995,12 +1065,16 @@ int main(int argc, char *argv[])
 	}
 	else if(choice==3)
 	{
-		Robot robot(60, 600,10.0, 25,use_window,"result4.txt","obs0.txt",4);
+		Robot robot(256, 768 ,3.0, 128,use_window,"result_256_0.txt","obs_256_0.txt",64);
 		// robot.topological_explore_4({0,0});
 		robot.start_exploring(0,0);
+		// ;
+	}
+	else if(choice == 4)
+	{
 		;
 	}
-	else
+	else 
 	{
 		Robot robot(60, 600,10.0, 25,use_window,"result4.txt","obs0.txt",16);
 	}
