@@ -49,8 +49,8 @@ public:
 				for(int k=0;k<4;++k)
 				{
 					grid_original[x+j][y+k] = 0;
-					if(j == 0 || j == 3 || k == 0 || k == 3)
-						grid_original_only_boundary[x+j][y+k] = 0;
+					// if(j == 0 || j == 3 || k == 0 || k == 3)
+					// 	grid_original_only_boundary[x+j][y+k] = 0;
 					obstacle_id_grid[x+j][y+k] = i;
 				}
 			}
@@ -143,12 +143,18 @@ public:
 			return;
 		}
 		std::fstream f;
+		std::fstream depth_file;
 
 		if(!use_window)
 		{
 			
 			f.open(output_file_name, std::ios::app);
 			f << "-\n";
+		}
+		if(depth_result_visualize)
+		{
+			depth_file.open(depth_result_file_prefix,std::ios::app);
+			depth_file<<"-\n";
 		}
 
 		sensor_model(current_x, current_y);
@@ -186,7 +192,20 @@ public:
 						{
 							if(timesteps_taken%depth_result_visualize_timestep ==0)
 							{
-								;
+								for(int j=0;j<depths.size();++j)
+								{
+									std::vector<std::vector<int>> current_depth_result = get_current_depth_result(j);
+									std::stringstream depth_ss;
+									for(int k=0;k<current_depth_result.size();++k)
+									{
+										for(int l=0;l<current_depth_result[0].size();++l)
+										{
+											depth_ss << current_depth_result[k][l] <<",";
+										}
+									}
+									depth_ss<<"\n";
+									depth_file<<depth_ss.str();
+								}
 							}
 						}
 					}
@@ -223,6 +242,7 @@ public:
 			f_explore.findFrontiers(current_x, current_y);
 		}
 		f.close();
+		depth_file.close();
 		std::cout<<"Exploration complete"<<std::endl;
 	}
 
@@ -854,7 +874,8 @@ public:
 					{
 						for(int m=y ; m < (k+1)*y_increment; ++m)
 						{
-							if(grid_original_only_boundary[l][m] == 0)
+							if(grid_original[l][m] == 0)
+							// if(grid_original_only_boundary[l][m] == 0)
 							{
 								current_depth_ground_truth[j][k] = 1;
 								break;
@@ -934,43 +955,70 @@ public:
 				int x = i*x_increment;
 				int y = j*y_increment;
 						
-				bool obstacle_there = false;
-				bool free_space_there = false;
 				bool unknown_space_only = true;
 				for(int l=x ; l < (i+1)*x_increment; ++l)
 				{
 					for(int m=y ; m < (j+1)*y_increment; ++m)
 					{
-						if(grid[l][m]==-1)
-							continue;
-						if(grid[l][m] == 0)
+						if(grid[l][m]!=-1)
 						{
 							unknown_space_only = false;
-							obstacle_there = true;
 							break;
 						}
-						else if(grid[l][i]==1)
+					}
+					if (!unknown_space_only)
+					{
+						break;
+					}	
+				}
+				if(unknown_space_only)
+				{
+					for(int l=x ; l < (i+1)*x_increment; ++l)
+					{
+						for(int m=y ; m < (j+1)*y_increment; ++m)
 						{
-							unknown_space_only = false;
-							free_space_there = true;
+							ret_result[l][m] = -1;
 						}
 					}
-					if(obstacle_there)
-						break;
+				}
+				else
+				{
+					bool obstacle_present = false;
+					for(int l=x ; l < (i+1)*x_increment; ++l)
+					{
+						for(int m=y ; m < (j+1)*y_increment; ++m)
+						{
+							if(grid[l][m]==0)
+							{
+								obstacle_present=true;
+								break;
+							}
+						}
+						if (obstacle_present)
+						{
+							break;
+						}	
+					}
+					for(int l=x ; l < (i+1)*x_increment; ++l)
+					{
+						for(int m=y ; m < (j+1)*y_increment; ++m)
+						{
+							if(obstacle_present==false)
+							{
+								ret_result[l][m] = 1;
+							}
+							else
+							{
+								ret_result[l][m] = 0;
+							}
+							
+						}
+						
+					}
+
 				}
 
-				for(int l=x ; l < (i+1)*x_increment; ++l)
-				{
-					for(int m=y ; m < (j+1)*y_increment; ++m)
-					{
-						if(unknown_space_only)
-							ret_result[l][m] = -1;
-						else if(obstacle_there)
-							ret_result[l][m] = 0;
-						else
-							ret_result[l][m] = 1;
-					}
-				}
+				
 			}
 		}
 
@@ -992,7 +1040,7 @@ private:
 
 
 	std::vector<std::vector<std::vector<int>>> ground_truth_depth_result;
-	std::vector<int> depths = {2,4,8,16,32};
+	std::vector<int> depths = {2,4,8,16,32,64};
 	
 	int num_obstacles;
 	int total_cells_mapped=0;
@@ -1018,12 +1066,12 @@ int main(int argc, char *argv[])
 	{
 		srand(time(NULL));
 
-		Robot robot(256, 768,3.0, 128,use_window,"result_obs_256_0.txt","obs_256_0.txt",64,true);
+		Robot robot(64, 640,10.0, 32,use_window,"result_obs1.txt","obs1.txt",64,true,true,100,"dobs1.txt");
 		robot.start_exploring(0, 0);
 
 		for(int i=0;i<6;++i)
 		{
-			robot = Robot(256, 768,3.0,128,use_window,"result_obs_256_0.txt","obs_256_0.txt",64,true);
+			robot = Robot(64, 640,10.0,32,use_window,"result_obs1.txt","obs1.txt",64,true,false,100,"dobs1.txt");
 			robot.topological_explore_4({0,0});
 			SDL_Delay(1000);
 		}
