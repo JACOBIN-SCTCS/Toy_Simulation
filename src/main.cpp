@@ -206,7 +206,9 @@ public:
 									depth_ss<<"\n";
 									depth_file<<depth_ss.str();
 								}
+								depth_file<<"-\n";
 							}
+							
 						}
 					}
 					else
@@ -635,10 +637,16 @@ public:
 		srand(time(NULL));
 
 		std::fstream f;
+		std::fstream depth_file;
 		if(!use_window)
 		{
 			f.open(output_file_name, std::ios::app);
 			f << "-\n";
+		}
+		if(depth_result_visualize)
+		{
+			depth_file.open(depth_result_file_prefix,std::ios::app);
+			depth_file<<"-\n";
 		}
     	
 		
@@ -723,6 +731,27 @@ public:
 								ss_error << error_result[k] << " ";
 							}
 							f << timesteps_taken << " " << ((double)total_cells_mapped/(total_free_space)) * 100<<" "<<ss_error.str()<<"\n";
+							if(depth_result_visualize)
+							{
+								if(timesteps_taken%depth_result_visualize_timestep ==0)
+								{
+									for(int j=0;j<depths.size();++j)
+									{
+										std::vector<std::vector<int>> current_depth_result = get_current_depth_result(j);
+										std::stringstream depth_ss;
+										for(int k=0;k<current_depth_result.size();++k)
+										{
+											for(int l=0;l<current_depth_result[0].size();++l)
+											{
+												depth_ss << current_depth_result[k][l] <<",";
+											}
+										}
+										depth_ss<<"\n";
+										depth_file<<depth_ss.str();
+									}
+									depth_file<<"-\n";
+								}
+							}
 						}
 						else
 						{
@@ -815,6 +844,27 @@ public:
 								ss_error << error_result[k] << " ";
 							}
 							f << timesteps_taken << " " << ((double)total_cells_mapped/(total_free_space)) * 100<<" "<<ss_error.str()<<"\n";
+							if(depth_result_visualize)
+							{
+								if(timesteps_taken%depth_result_visualize_timestep ==0)
+								{
+									for(int j=0;j<depths.size();++j)
+									{
+										std::vector<std::vector<int>> current_depth_result = get_current_depth_result(j);
+										std::stringstream depth_ss;
+										for(int k=0;k<current_depth_result.size();++k)
+										{
+											for(int l=0;l<current_depth_result[0].size();++l)
+											{
+												depth_ss << current_depth_result[k][l] <<",";
+											}
+										}
+										depth_ss<<"\n";
+										depth_file<<depth_ss.str();
+									}
+									depth_file<<"-\n";
+								}
+							}
 						}
 						else
 						{
@@ -1066,15 +1116,18 @@ int main(int argc, char *argv[])
 	{
 		srand(time(NULL));
 
-		Robot robot(64, 640,10.0, 32,use_window,"result_obs1.txt","obs1.txt",64,true,true,100,"dobs1.txt");
+		Robot robot(64, 640,10.0, 32,use_window,"result_obs1.txt","obs1.txt",64,true,true,100,"dobs1_frontier.txt");
 		robot.start_exploring(0, 0);
 
 		for(int i=0;i<6;++i)
 		{
-			robot = Robot(64, 640,10.0,32,use_window,"result_obs1.txt","obs1.txt",64,true,false,100,"dobs1.txt");
+			robot = Robot(64, 640,10.0,32,use_window,"result_obs1.txt","obs1.txt",64,true,false,100,"dobs1_topo.txt");
 			robot.topological_explore_4({0,0});
 			SDL_Delay(1000);
 		}
+		robot = Robot(64, 640,10.0,32,use_window,"result_obs1.txt","obs1.txt",64,true,true,100,"dobs1_topo.txt");
+		robot.topological_explore_4({0,0});
+
 	}
 	else if(choice == 1)
 	{
