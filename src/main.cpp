@@ -158,6 +158,41 @@ public:
 		}
 
 		sensor_model(current_x, current_y);
+		if(!use_window)
+		{
+			if(depth_result)
+			{
+				std::vector<int> error_result = getError();
+				std::stringstream ss_error;
+				for(int k=0;k<error_result.size();++k)
+				{
+					ss_error << error_result[k] << " ";
+				}
+				f << timesteps_taken << " "<< ((double)total_cells_mapped/(total_free_space)) * 100<<" "<<ss_error.str()<<"\n";
+				if(depth_result_visualize)
+				{
+					if(timesteps_taken%depth_result_visualize_timestep ==0)
+					{
+						for(int j=0;j<depths.size();++j)
+						{
+							std::vector<std::vector<int>> current_depth_result = get_current_depth_result(j);
+							std::stringstream depth_ss;
+							for(int k=0;k<current_depth_result.size();++k)
+							{
+								for(int l=0;l<current_depth_result[0].size();++l)
+								{
+									depth_ss << current_depth_result[k][l] <<",";
+								}
+							}
+							depth_ss<<"\n";
+							depth_file<<depth_ss.str();
+						}
+						depth_file<<"-\n";
+					}
+					
+				}
+			}
+		}
 
 		FrontierExplore f_explore(&grid,&obstacles_seen);
 		f_explore.findFrontiers(current_x, current_y);
@@ -652,7 +687,42 @@ public:
 		
 		int start_x = current_x , start_y = current_y;
 		sensor_model(current_x, current_y);
-		
+		if(!use_window)
+		{
+			if(depth_result)
+			{
+				std::vector<int> error_result = getError();
+				std::stringstream ss_error;
+				for(int k=0;k<error_result.size();++k)
+				{
+					ss_error << error_result[k] << " ";
+				}
+				f << timesteps_taken << " "<< ((double)total_cells_mapped/(total_free_space)) * 100<<" "<<ss_error.str()<<"\n";
+				if(depth_result_visualize)
+				{
+					if(timesteps_taken%depth_result_visualize_timestep ==0)
+					{
+						for(int j=0;j<depths.size();++j)
+						{
+							std::vector<std::vector<int>> current_depth_result = get_current_depth_result(j);
+							std::stringstream depth_ss;
+							for(int k=0;k<current_depth_result.size();++k)
+							{
+								for(int l=0;l<current_depth_result[0].size();++l)
+								{
+									depth_ss << current_depth_result[k][l] <<",";
+								}
+							}
+							depth_ss<<"\n";
+							depth_file<<depth_ss.str();
+						}
+						depth_file<<"-\n";
+					}
+					
+				}
+			}
+		}
+
 		ModifiedTopolgicalExplore top_explore(&grid,&obstacles_seen,start,&grid_original,true);
 		FrontierExplore f_explore(&grid,&obstacles_seen);
 		
@@ -1116,16 +1186,16 @@ int main(int argc, char *argv[])
 	{
 		srand(time(NULL));
 
-		Robot robot(64, 640,10.0, 32,use_window,"result_obs1.txt","obs1.txt",64,true,true,100,"dobs1_frontier.txt");
+		Robot robot(256, 768,3.0, 128,use_window,"result_obs_256_1.txt","obs_256_1.txt",32,true,true,300,"dobs1_frontier.txt");
 		robot.start_exploring(0, 0);
 
 		for(int i=0;i<6;++i)
 		{
-			robot = Robot(64, 640,10.0,32,use_window,"result_obs1.txt","obs1.txt",64,true,false,100,"dobs1_topo.txt");
+			robot = Robot(256, 768,3.0,128,use_window,"result_obs_256_1.txt","obs_256_1.txt",32,true,false,300,"dobs1_topo.txt");
 			robot.topological_explore_4({0,0});
 			SDL_Delay(1000);
 		}
-		robot = Robot(64, 640,10.0,32,use_window,"result_obs1.txt","obs1.txt",64,true,true,100,"dobs1_topo.txt");
+		robot = Robot(256, 768,3.0,128,use_window,"result_obs_256_1.txt","obs_256_1.txt",32,true,true,300,"dobs1_topo.txt");
 		robot.topological_explore_4({0,0});
 
 	}
