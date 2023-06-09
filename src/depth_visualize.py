@@ -47,21 +47,46 @@ def get_image(grid_size,directory_name, filename , depths ,timestep = 100):
         
         stripped_line_int = [int(val) for val in stripped_line]
         processed_line = []
-        for j in range(len(stripped_line_int)):
-            if(stripped_line_int[j]==-1):
-                processed_line.append(0.5)
-            elif(stripped_line_int[j]==0):
-                processed_line.append(0.0)
-            else:
-                processed_line.append(1.0)
+        
+        stripped_line_np = np.zeros((grid_size,grid_size,4))
+        
+        index = 0
+        for j in range(grid_size):
+            for k in range(grid_size):
+                if(stripped_line_int[index]==-1):
+                    stripped_line_np[j,k,0] = 0.5
+                    stripped_line_np[j,k,1] = 0.5
+                    stripped_line_np[j,k,2] = 0.5
+                    stripped_line_np[j,k,3] = 1.0
+
+                elif(stripped_line_int[index]==0):
+                    stripped_line_np[j,k,0] = 0.0
+                    stripped_line_np[j,k,1] = 0.0
+                    stripped_line_np[j,k,2] = 0.0
+                    stripped_line_np[j,k,3] = 1.0
+
+                else:
+                    stripped_line_np[j,k,0] = 1.0
+                    stripped_line_np[j,k,1] = 1.0
+                    stripped_line_np[j,k,2] = 1.0
+                    stripped_line_np[j,k,3] = 1.0
                 
-        stripped_line_np = np.array(processed_line)
-        stripped_line_np = stripped_line_np.reshape(grid_size,-1)
+                index +=1
+        # for j in range(len(stripped_line_int)):
+        #     if(stripped_line_int[j]==-1):
+        #         processed_line.append(0.5)
+        #     elif(stripped_line_int[j]==0):
+        #         processed_line.append(0.0)
+        #     else:
+        #         processed_line.append(1.0)
+                
+        # stripped_line_np = np.array(processed_line)
+        # stripped_line_np = stripped_line_np.reshape(grid_size,-1)
         # stripped_line_np_image = Image.fromarray(stripped_line_np,mode='L')
         # stripped_line_np_image.save(directory_name+"/"+str(current_timestep)+"_"+str(depths[current_depth_index])+".png")
         # current_depth_index = (current_depth_index + 1)%len(depths)
         #plt.figure(figsize=(10,10))
-        plt.imshow(stripped_line_np,cmap='bone')
+        plt.imshow(stripped_line_np,cmap='magma')
         plt.savefig(directory_name+"/"+str(current_timestep)+"_"+str(depths[current_depth_index])+".png")
         current_depth_index = (current_depth_index + 1)%len(depths)
         # plt.show()
@@ -71,5 +96,5 @@ def plot_depth_map():
     pass
 
 
-get_image(256,'../frontier',"../build/dobs1_frontier.txt",depths,300)
+get_image(256,'../topological',"../build/dobs1_topo.txt",depths,300)
     
