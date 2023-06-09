@@ -1145,7 +1145,13 @@ public:
 		return ret_result;
 	}
 
-
+	void render_ground_truth()
+	{
+		while(1)
+		{
+			fw.render_screen(grid_original);
+		}
+	}
 	Framework fw;
 
 private:
@@ -1180,8 +1186,8 @@ private:
 
 int main(int argc, char *argv[])
 {
-	int choice = 0;
-	bool use_window = false;
+	int choice = 5;
+	bool use_window = true;
 	if(choice==0)
 	{
 		srand(time(NULL));
@@ -1245,7 +1251,14 @@ int main(int argc, char *argv[])
 	{
 		;
 	}
-	else 
+	else if(choice==5)
+	{
+		Robot robot(256, 512,2.0, 200,use_window,"result_obs_256_1.txt","maze_1.txt",32,true,false,300,"dobs1_frontier.txt");
+		robot.render_ground_truth();
+		
+
+	}
+	else
 	{
 		Robot robot(60, 600,10.0, 25,use_window,"result4.txt","obs0.txt",16);
 	}
