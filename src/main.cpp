@@ -5,7 +5,9 @@
 #include "frontier_explore.h"
 #include "topolgoical_explore.h"
 #include "modified_topological_explore.h"
+#include <chrono>
 
+using namespace std::chrono;
 
 class Robot
 {
@@ -1186,23 +1188,42 @@ private:
 
 int main(int argc, char *argv[])
 {
-	int choice = 5;
-	bool use_window = true;
+	int choice = 0;
+	bool use_window = false;
 	if(choice==0)
 	{
+		std::string obstacle_file = "multimodal_gaussian_1.txt";
+		std::string result_file = "result_"+obstacle_file;
+		std::string frontier_depth_file = "d"+obstacle_file+"_frontier.txt";
+		std::string topo_depth_file = "d"+obstacle_file+"_topo.txt";
 		srand(time(NULL));
 
-		Robot robot(256, 768,3.0, 128,use_window,"result_obs_256_1.txt","obs_256_1.txt",32,true,true,300,"dobs1_frontier.txt");
+		Robot robot(256, 768,3.0, 128,use_window,result_file,obstacle_file,32,true,true,100,frontier_depth_file);
+		auto frontier_start = high_resolution_clock::now();
 		robot.start_exploring(0, 0);
-
+		auto frontier_stop = high_resolution_clock::now();
+		auto duration_frontier = duration_cast<seconds>(frontier_stop - frontier_start);
+		
+		int topological_seconds = 0;
 		for(int i=0;i<6;++i)
 		{
-			robot = Robot(256, 768,3.0,128,use_window,"result_obs_256_1.txt","obs_256_1.txt",32,true,false,300,"dobs1_topo.txt");
+			robot = Robot(256, 768,3.0,128,use_window,result_file,obstacle_file,32,true,false,100,topo_depth_file);
+			auto topo_start = high_resolution_clock::now();
 			robot.topological_explore_4({0,0});
+			auto topo_stop = high_resolution_clock::now();
+			topological_seconds += duration_cast<seconds>(topo_stop - topo_start).count();
 			SDL_Delay(1000);
 		}
-		robot = Robot(256, 768,3.0,128,use_window,"result_obs_256_1.txt","obs_256_1.txt",32,true,true,300,"dobs1_topo.txt");
+
+		double result_topo = (double)topological_seconds/6.0;
+		robot = Robot(256, 768,3.0,128,use_window,result_file,obstacle_file,32,true,true,100,topo_depth_file);
 		robot.topological_explore_4({0,0});
+
+		std::cout << "Time taken by Frontier Exploration: "
+		 << duration_frontier.count() << " seconds" << std::endl;
+		
+		std::cout << "Time taken by Topological Exploration: "
+		 << result_topo << " seconds" << std::endl;
 
 	}
 	else if(choice == 1)
