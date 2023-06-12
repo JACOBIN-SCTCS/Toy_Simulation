@@ -70,7 +70,7 @@ public:
 			}
 		}
 
-		std::cout << "Size of the grid = " << grid_size << std::endl;
+		std::cout << "Size of the grid = " << grid_size<<"Total Free Space = "<<total_free_space<< std::endl;
 		create_ground_truth_resolutions(g_size);
 	}
 
@@ -269,8 +269,8 @@ public:
 				// 		break;
 				// 	}    
 				// }
-				if(grid[path[path.size()-1].first][path[path.size()-1].second] != -1 && grid[path[path.size()-1].first][path[path.size()-1].second] != 3)
-					break;
+				// if(grid[path[path.size()-1].first][path[path.size()-1].second] != -1 && grid[path[path.size()-1].first][path[path.size()-1].second] != 3)
+				// 	break;
 				
 				if(((i+1)<path.size() && grid_original[path[i+1].first][path[i+1].second]==0)  || towards_an_obstacle)
 				{
@@ -770,8 +770,8 @@ public:
 				if(!status)
 				{
 					std::cout<<"No Topological exploration path found"<<std::endl;
-					t+=1;
-					epsilon = 1.0 - ((double)total_cells_mapped/(total_free_space) + pow(2.71828,0.01*t)/(total_free_space));//pow(2.71828,-0.02*t);
+					// t+=1;
+					// epsilon = 1.0 - ((double)total_cells_mapped/(total_free_space) + pow(2.71828,0.01*t)/(total_free_space));//pow(2.71828,-0.02*t);
 					goto frontier;
 					// if(t>=1000)
 					// 	break;
@@ -948,8 +948,8 @@ public:
 						fw.render_screen(grid);
 						SDL_Delay(500);
 					}
-					if(grid[path[path.size()-1].first][path[path.size()-1].second] != -1 && grid[path[path.size()-1].first][path[path.size()-1].second] != 3)
-						break;
+					// if(grid[path[path.size()-1].first][path[path.size()-1].second] != -1 && grid[path[path.size()-1].first][path[path.size()-1].second] != 3)
+					// 	break;
 					// }
 					if(((i+1)<path.size() && grid_original[path[i+1].first][path[i+1].second]==0))
 					{
@@ -966,7 +966,14 @@ public:
 				previously_chosen = 1;	
 			}
 			t+=1;
-			epsilon = 1.0 - ((double)total_cells_mapped/(total_free_space) + pow(2.71828,0.01*t)/(total_free_space)); //pow(2.71828,-0.02*t);
+			// Could change the decay function here.
+			// epsilon = 1.0 - ((double)total_cells_mapped/(total_free_space) + pow(2.71828,0.01*t)/(total_free_space)); //pow(2.71828,-0.02*t);
+			epsilon = 1.0 - ((double)total_cells_mapped/total_free_space);
+			// f_explore.findFrontiers(current_x, current_y);
+			// if(f_explore.frontiers.size() <=0)
+			// {
+			// 	break;
+			// }
 			if(t>=1000)
 				break;
 		}
@@ -1018,6 +1025,7 @@ public:
 	std::vector<int> getError()
 	{
 		std::vector<int> error;
+		std::vector<int> unknown_cell_count;
 		for(int i=0;i<depths.size();++i)
 		{
 			int current_depth = depths[i];
@@ -1025,6 +1033,7 @@ public:
 			int y_increment = (int) grid_size/current_depth;
 			
 			int error_count = 0;
+
 			for(int j=0;j<current_depth;++j)
 			{
 				for(int k=0;k<current_depth;++k)
@@ -1057,8 +1066,42 @@ public:
 					}
 				}
 			}
+			int u_cell_count = 0;
+			for(int j=0;j<current_depth;++j)
+			{
+				for(int k=0;k<current_depth;++k)
+				{
+					int x = j*x_increment;
+					int y = k*y_increment;
+					
+					bool isunknown  = true;
+					for(int l=x ; l < (j+1)*x_increment; ++l)
+					{
+						for(int m=y ; m < (k+1)*y_increment; ++m)
+						{
+							if(grid[l][m] == 0 || grid[l][m]==1)
+							{
+								isunknown = false;
+								break;
+							}
+						}
+						if (!isunknown)
+						{
+							break;
+						}	
+					}
+					if (isunknown)
+					{
+						u_cell_count+=1;
+					}
+				}
+			}
+
 			error.push_back(error_count);
+			unknown_cell_count.push_back(u_cell_count);
 		}
+		for(int i=0;i<unknown_cell_count.size();++i)
+			error.push_back(unknown_cell_count[i]);
 		return error;
 	}
 
@@ -1192,10 +1235,10 @@ int main(int argc, char *argv[])
 	bool use_window = false;
 	if(choice==0)
 	{
-		std::string obstacle_file = "multimodal_gaussian_1.txt";
-		std::string result_file = "result_"+obstacle_file;
-		std::string frontier_depth_file = "d"+obstacle_file+"_frontier.txt";
-		std::string topo_depth_file = "d"+obstacle_file+"_topo.txt";
+		std::string obstacle_file = "obs_256_0.txt";
+		std::string result_file = "nresult_"+obstacle_file;
+		std::string frontier_depth_file = "nd"+obstacle_file+"_frontier.txt";
+		std::string topo_depth_file = "nd"+obstacle_file+"_topo.txt";
 		srand(time(NULL));
 
 		Robot robot(256, 768,3.0, 128,use_window,result_file,obstacle_file,32,true,true,100,frontier_depth_file);
@@ -1281,7 +1324,11 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
-		Robot robot(60, 600,10.0, 25,use_window,"result4.txt","obs0.txt",16);
+		std::string obstacle_file = "multimodal_gaussian_1.txt";
+		std::string result_file = "result_"+obstacle_file;
+		std::string frontier_depth_file = "d"+obstacle_file+"_frontier.txt";
+		std::string topo_depth_file = "d"+obstacle_file+"_topo.txt";
+		Robot robot(256, 768,3.0, 128,use_window,result_file,obstacle_file,32,true,true,100,frontier_depth_file);
 	}
 		
 	if(use_window)

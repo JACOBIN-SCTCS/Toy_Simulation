@@ -56,11 +56,23 @@ def individual_result():
     # plt.plot(topo_x, topo_y, 'b')
     plt.show()
 
-def individual_result_error():
-    f = open("../build/result_obs2.txt", "r")
-    index_to_plot = 5
-    trajectories_size = 20
+def individual_result_error(index_to_plot = 1,save_plot = False):
+    plot_unknown_cells_remaining = False
+    total_unknown_cells = 64542
+    f = open("../build/nresult_obs_256_0.txt", "r")
+    trajectories_size = 6
+    dict_mapping = {1:'percent area mapped',2:'Depth = 1', 3:'Depth = 2',
+                    4:'Depth = 3',5:'Depth = 4',6:'Depth = 5',7:'Depth = 6',
+                    8:'Depth = 1',9:'Depth = 2',10:'Depth = 3',11:'Depth = 4',
+                    12:'Depth = 5',13:'Depth = 6'}
+    yabels = ['Percentage','Error','Error','Error','Error','Error','Error',
+              'Unknown cell count','Unknown cell count','Unknown cell count',
+              'Unknown cell count','Unknown cell count','Unknown cell count']
+    xlabel = 'Robot steps'
 
+    plt.title(dict_mapping[index_to_plot])
+    plt.ylabel(yabels[index_to_plot-1])
+    plt.xlabel(xlabel)
     x =f.readline()
 
     frontier_result = []
@@ -120,12 +132,32 @@ def individual_result_error():
     # print(mean_plot.shape)
     std = np.std(map_np, axis=0)
     # print(std.shape)
-    plt.plot(frontier_result_np[:,0], frontier_result_np[:,index_to_plot], 'r')
-    plt.plot(mean_plot[:,0],mean_plot[ : , index_to_plot],'b')
-    plt.fill_between(mean_plot[:,0], mean_plot[:,index_to_plot]-std[:,index_to_plot], mean_plot[:,index_to_plot]+std[:,index_to_plot], color='b', alpha=.1)
-    # plt.plot(topo_x, topo_y, 'b')
-    plt.show()
-
+    if(plot_unknown_cells_remaining and index_to_plot==1):
+        modified_y_value_frontier = np.zeros(frontier_result_np.shape[0])
+        for i in range(frontier_result_np.shape[0]):
+            modified_y_value_frontier[i] = ((100-frontier_result_np[i,1])/100.0)*total_unknown_cells
+        plt.plot(frontier_result_np[:,0], modified_y_value_frontier, 'r')
+      
+        new_topo = np.zeros((map_np.shape[0],map_np.shape[1],2))
+        for i in range(map_np.shape[0]):
+            for j in range(map_np.shape[1]):
+                new_topo[i][j][0] = map_np[i][j][0]
+                new_topo[i][j][1] = ((100-map_np[i][j][1])/100.0)*total_unknown_cells
+        new_topo_mean = np.mean(new_topo,axis=0)
+        new_topo_std = np.std(new_topo,axis=0)
+        plt.plot(new_topo_mean[:,0],new_topo_mean[:,1],'b')
+        plt.fill_between(new_topo_mean[:,0], new_topo_mean[:,1]-new_topo_std[:,1], new_topo_mean[:,1]+new_topo_std[:,1], color='b', alpha=.1)
+        
+    else:
+        plt.plot(frontier_result_np[:,0], frontier_result_np[:,index_to_plot], 'r')
+        plt.plot(mean_plot[:,0],mean_plot[ : , index_to_plot],'b')
+        plt.fill_between(mean_plot[:,0], mean_plot[:,index_to_plot]-std[:,index_to_plot], mean_plot[:,index_to_plot]+std[:,index_to_plot], color='b', alpha=.1)
+        # plt.plot(topo_x, topo_y, 'b')
+    if save_plot:
+        plt.savefig('../plots/'+dict_mapping[index_to_plot]+'_'+yabels[index_to_plot-1]+'.png')
+    else:
+        plt.show()
+    plt.cla()
 
 def frontier_result(return_results = False):
     results = []
@@ -271,4 +303,6 @@ def show_frontier_topology():
         plt.fill_between(topology_mean[i][:,0],topology_mean[i][:,1]-topology_std[i][:,1],topology_mean[i][:,1]+topology_std[i][:,1],color=colors[i],alpha=0.4)
     plt.show()
 
-individual_result_error()
+# individual_result_error()
+for i in range(1,14):
+    individual_result_error(i,save_plot=False)
