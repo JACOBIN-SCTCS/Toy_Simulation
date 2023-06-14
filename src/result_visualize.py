@@ -61,11 +61,11 @@ def individual_result_error(index_to_plot = 1,save_plot = False):
     total_unknown_cells = 64542
     f = open("../build/nresult_obs_256_0.txt", "r")
     trajectories_size = 6
-    dict_mapping = {1:'percent area mapped',2:'Depth = 1', 3:'Depth = 2',
-                    4:'Depth = 3',5:'Depth = 4',6:'Depth = 5',7:'Depth = 6',
-                    8:'Depth = 1',9:'Depth = 2',10:'Depth = 3',11:'Depth = 4',
-                    12:'Depth = 5',13:'Depth = 6'}
-    yabels = ['Percentage','Error','Error','Error','Error','Error','Error',
+    dict_mapping = {1:'Percentage of area mapped',2:'Error vs steps(Depth = 1)', 3:'Error vs steps(Depth = 2)',
+                    4:'Error vs steps(Depth = 3)',5:'Error vs steps(Depth = 4)',6:'Error vs steps(Depth = 5)',7:'Error vs steps(Depth = 6)',
+                    8:'Number of unknown cells vs steps (Depth = 1)',9:'Number of unknown cells vs steps (Depth = 2)',10:'Number of unknown cells vs steps (Depth = 3)',11:'Number of unknown cells vs steps (Depth = 4)',
+                    12:'Number of unknown cells vs steps (Depth = 5)',13:'Number of unknown cells vs steps (Depth = 6)'}
+    yabels = ['%','Error','Error','Error','Error','Error','Error',
               'Unknown cell count','Unknown cell count','Unknown cell count',
               'Unknown cell count','Unknown cell count','Unknown cell count']
     xlabel = 'Robot steps'
