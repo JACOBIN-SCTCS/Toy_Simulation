@@ -74,7 +74,7 @@ public:
 		create_ground_truth_resolutions(g_size);
 	}
 
-	void sensor_model(int x, int y)
+	void sensor_model(int x, int y,bool use_tan = false)
 	{
 		int num_rays = 360;
 		double angle = 0;
@@ -85,29 +85,36 @@ public:
 
 		for(int i=0;i<num_rays;++i)
 		{
-			for(int j=0;j<range;++j)
+			if(!use_tan)
 			{
-				double new_x = ceil(x + j*cos(angle));
-				double new_y = ceil(y + j*sin(angle));
-				int new_int_x = int(new_x);
-				int new_int_y = int(new_y);
-				if(new_int_x<0 || new_int_x >=grid_size || new_int_y<0 || new_int_y>=grid_size)
-					break;	
+				for(int j=0;j<range;++j)
+				{
+					double new_x = x + j*cos(angle);
+					double new_y =y + j*sin(angle);
+					int new_int_x = static_cast<int>(new_x);
+					int new_int_y = static_cast<int>(new_y);
+					if(new_int_x<0 || new_int_x >=grid_size || new_int_y<0 || new_int_y>=grid_size)
+						break;	
 
-				if(grid_original[new_int_x][new_int_y]==0)
-				{
-					grid[new_int_x][new_int_y]=0;
-					touched_an_obstacle[obstacle_id_grid[new_int_x][new_int_y]] = true;
-					break;
-				}
-				else
-				{
-					if(grid[new_int_x][new_int_y]==-1 || grid[new_int_x][new_int_y]==3)
-						total_cells_mapped+=1;
+					if(grid_original[new_int_x][new_int_y]==0)
+					{
+						grid[new_int_x][new_int_y]=0;
+						touched_an_obstacle[obstacle_id_grid[new_int_x][new_int_y]] = true;
+						break;
+					}
+					else
+					{
+						if(grid[new_int_x][new_int_y]==-1 || grid[new_int_x][new_int_y]==3)
+							total_cells_mapped+=1;
+						
+						grid[new_int_x][new_int_y] = 1;
 					
-					grid[new_int_x][new_int_y] = 1;
-				
+					}
 				}
+			}
+			else
+			{
+				;
 			}
 			angle = angle + resolution;
 		}
@@ -201,7 +208,11 @@ public:
 
 		while(f_explore.frontiers.size() > 0)
 		{
-			 std::cout << "Frontiers size = " << f_explore.frontiers.size() << std::endl;
+			double stopping_percentage = ((double)total_cells_mapped/(total_free_space)) * 100;
+			if(stopping_percentage>=99.0)
+				break;
+			
+			std::cout << "Frontiers size = " << f_explore.frontiers.size() << std::endl;
 			std::vector<std::pair<int, int>> path = f_explore.getPath(current_x, current_y, f_explore.frontiers[0].x, f_explore.frontiers[0].y);
 			// grid[f_explore.frontiers[0].x][f_explore.frontiers[0].y] = 3;
 
@@ -735,6 +746,12 @@ public:
 		while(true)
 		{
 			double drawn_number = ((double)rand()/(double)RAND_MAX);
+			double stopping_percentage = ((double)total_cells_mapped/(total_free_space)) * 100;
+			if(stopping_percentage>=99.0)
+				break;
+			
+			// Can comment out the below line for epsilon
+			// epsilon = 1.0;
 			if(drawn_number <= epsilon)
 			{
 				// Adopt a topolgical exploration strategy
@@ -1022,7 +1039,7 @@ public:
 		}
 	}
 	
-	std::vector<int> getError()
+	std::vector<int> getError(bool get_weighted_error = false)
 	{
 		std::vector<int> error;
 		std::vector<int> unknown_cell_count;
@@ -1211,6 +1228,8 @@ private:
 
 
 	std::vector<std::vector<std::vector<int>>> ground_truth_depth_result;
+	std::vector<std::vector<std::vector<int>>> ground_truth_depth_weight_result;
+
 	std::vector<int> depths = {2,4,8,16,32,64};
 	
 	int num_obstacles;
@@ -1235,12 +1254,13 @@ int main(int argc, char *argv[])
 	bool use_window = false;
 	if(choice==0)
 	{
-		std::string obstacle_file = "obs_256_0.txt";
-		std::string result_file = "nresult_"+obstacle_file;
-		std::string frontier_depth_file = "nd"+obstacle_file+"_frontier.txt";
-		std::string topo_depth_file = "nd"+obstacle_file+"_topo.txt";
+		std::string obstacle_file = "grid_256_1.txt";
+		std::string result_file = "nnresult_"+obstacle_file;
+		std::string frontier_depth_file = "nnd"+obstacle_file+"_frontier.txt";
+		std::string topo_depth_file = "nnd"+obstacle_file+"_topo.txt";
 		srand(time(NULL));
 
+		// Robot robot(60,600.0,10.0,100,use_window,result_file,obstacle_file,16,true,true,100,frontier_depth_file);
 		Robot robot(256, 768,3.0, 128,use_window,result_file,obstacle_file,32,true,true,100,frontier_depth_file);
 		auto frontier_start = high_resolution_clock::now();
 		robot.start_exploring(0, 0);
@@ -1250,6 +1270,7 @@ int main(int argc, char *argv[])
 		int topological_seconds = 0;
 		for(int i=0;i<6;++i)
 		{
+			// robot = Robot(60, 600.0,10.0,100,use_window,result_file,obstacle_file,16,true,false,100,topo_depth_file);
 			robot = Robot(256, 768,3.0,128,use_window,result_file,obstacle_file,32,true,false,100,topo_depth_file);
 			auto topo_start = high_resolution_clock::now();
 			robot.topological_explore_4({0,0});
@@ -1259,6 +1280,7 @@ int main(int argc, char *argv[])
 		}
 
 		double result_topo = (double)topological_seconds/6.0;
+		// robot = Robot(60, 600.0,10.0,100,use_window,result_file,obstacle_file,16,true,true,100,topo_depth_file);
 		robot = Robot(256, 768,3.0,128,use_window,result_file,obstacle_file,32,true,true,100,topo_depth_file);
 		robot.topological_explore_4({0,0});
 
@@ -1306,8 +1328,10 @@ int main(int argc, char *argv[])
 	}
 	else if(choice==3)
 	{
-		Robot robot(256, 768 ,3.0, 128,use_window,"result_256_0.txt","obs_256_0.txt",64);
-		// robot.topological_explore_4({0,0});
+		use_window = true;
+		Robot robot(60,600,10.0,100,use_window,"result_obs0.txt","obs0.txt",16,false,false,200,"dobs0.txt");
+		// Robot robot(256, 768 ,3.0, 128,use_window,"result_256_0.txt","obs_256_0.txt",64,true,false,300,"dobs0_256_0_topo.txt");
+		//robot.topological_explore_4({0,0});
 		robot.start_exploring(0,0);
 		// ;
 	}

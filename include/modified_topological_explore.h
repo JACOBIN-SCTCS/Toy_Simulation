@@ -77,7 +77,7 @@ class ModifiedTopolgicalExplore
                     break;
             }
             current_start_quadrant = quadrant;
-
+            srand(time(NULL));
             std::default_random_engine generator;
             std::vector<int> quadrant_weights = get_quadrant_vector();
             std::discrete_distribution<int> distribution(quadrant_weights.begin(),quadrant_weights.end());
@@ -333,6 +333,7 @@ class ModifiedTopolgicalExplore
                 current_start = {current_goal[0],current_goal[1]};
                 current_start_quadrant = current_goal_quadrant;
                 
+                srand(time(NULL));
                 std::default_random_engine generator;
                 std::vector<int> quadrant_weights = get_quadrant_vector();
                 std::discrete_distribution<int> distribution(quadrant_weights.begin(),quadrant_weights.end());

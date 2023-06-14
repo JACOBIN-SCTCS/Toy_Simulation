@@ -28,11 +28,11 @@ def generate_random_obstacles(n_obstacles=25,grid_size = 60 , number_of_runs=10)
 
         f.close()
 
-def generate_grid_1():
+def generate_grid_1(filename="../build/grid_1.txt",lower_bound = 5 , upper_bound = 55):
     
-    f = open("../build/grid_1.txt","w")
-    for i in range(5,55,5):
-        for j in range(5,55,5):
+    f = open(filename,"w")
+    for i in range(lower_bound,upper_bound,5):
+        for j in range(lower_bound,upper_bound,5):
             content_to_write = str(i) + " " + str(j) +"\n"
             f.write(content_to_write)
     f.close()
@@ -114,6 +114,7 @@ def helper_generate_maze():
 
 # generate_random_obstacles()
 # helper_multimodal_gaussian()
-helper_generate_maze()
+# helper_generate_maze()
+generate_grid_1("../build/grid_256_1.txt",5,250)
 
 
