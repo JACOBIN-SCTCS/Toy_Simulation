@@ -4,7 +4,7 @@ import numpy as np
 
 def generate_random_obstacles(n_obstacles=25,grid_size = 60 , number_of_runs=10):
     for i in range(number_of_runs):
-        f = open("../build/obs"+str(i)+".txt","w")
+        f = open("../build/obs_256_"+str(i)+".txt","w")
         j= 0
         while j<n_obstacles:
             x = random.randint(0,grid_size-1)
@@ -31,8 +31,8 @@ def generate_random_obstacles(n_obstacles=25,grid_size = 60 , number_of_runs=10)
 def generate_grid_1(filename="../build/grid_1.txt",lower_bound = 5 , upper_bound = 55):
     
     f = open(filename,"w")
-    for i in range(lower_bound,upper_bound,5):
-        for j in range(lower_bound,upper_bound,5):
+    for i in range(lower_bound,upper_bound,10):
+        for j in range(lower_bound,upper_bound,10):
             content_to_write = str(i) + " " + str(j) +"\n"
             f.write(content_to_write)
     f.close()
@@ -52,8 +52,9 @@ def generate_multimodal_gaussian_obstacles(grid_size,n_clusters,num_objects_clus
 
 
 def helper_multimodal_gaussian():
-    for i in range(1):
-        generate_multimodal_gaussian_obstacles(200,8,8,[21,231,21,231],20,'../build/multimodal_gaussian_1.txt')
+    for i in range(1,6):
+        file_name = '../build/multimodal_gaussian_'+str(i)+'.txt'
+        generate_multimodal_gaussian_obstacles(256,12,12,[21,231,21,231],20,file_name)
 
 def generate_maze_like_environment(grid_size,num_walls,size_of_each_wall,file_name):
     f = open(file_name,"w")
@@ -110,11 +111,11 @@ def generate_maze_like_environment(grid_size,num_walls,size_of_each_wall,file_na
     f.close()
 
 def helper_generate_maze():
-    generate_maze_like_environment(256,20,10,'../build/maze_1.txt')
+    generate_maze_like_environment(256,20,10,'../build/maze_256_2.txt')
 
-# generate_random_obstacles()
+# generate_random_obstacles(150,256,10)
 # helper_multimodal_gaussian()
-# helper_generate_maze()
-generate_grid_1("../build/grid_256_1.txt",5,250)
+helper_generate_maze()
+# generate_grid_1("../build/grid_256_1.txt",5,245)
 
 
