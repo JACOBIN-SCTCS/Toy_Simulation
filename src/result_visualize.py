@@ -159,6 +159,132 @@ def individual_result_error(index_to_plot = 1,save_plot = False):
         plt.show()
     plt.cla()
 
+def individual_result_error_include_random_walk(index_to_plot = 1,save_plot = False):
+    plot_unknown_cells_remaining = False
+    total_unknown_cells = 64542
+    f = open("../build/result_obs5.txt", "r")
+    trajectories_size = 5
+    dict_mapping = {1:'Percentage of area mapped',2:'Error vs steps(Depth = 1)', 3:'Error vs steps(Depth = 2)',
+                    4:'Error vs steps(Depth = 3)',5:'Error vs steps(Depth = 4)',6:'Error vs steps(Depth = 5)',7:'Error vs steps(Depth = 6)',
+                    8:'Number of unknown cells vs steps (Depth = 1)',9:'Number of unknown cells vs steps (Depth = 2)',10:'Number of unknown cells vs steps (Depth = 3)',11:'Number of unknown cells vs steps (Depth = 4)',
+                    12:'Number of unknown cells vs steps (Depth = 5)',13:'Number of unknown cells vs steps (Depth = 6)'}
+    yabels = ['%','Error','Error','Error','Error','Error','Error',
+              'Unknown cell count','Unknown cell count','Unknown cell count',
+              'Unknown cell count','Unknown cell count','Unknown cell count']
+    xlabel = 'Robot steps'
+
+    plt.title(dict_mapping[index_to_plot])
+    plt.ylabel(yabels[index_to_plot-1])
+    plt.xlabel(xlabel)
+    x =f.readline()
+
+    frontier_result = []
+    x = f.readline()
+    while (x != str('-\n')):
+        if x=='-':
+            break
+        x_split = x.strip().split()
+        # print(x_split)
+        x_split_float = [ float(ele) for ele in x_split]
+        frontier_result.append(x_split_float)
+        x = f.readline()
+    frontier_result_np = np.array(frontier_result)
+
+    topo_plot = []
+    max_len = 0
+    # print(frontier_result_np.shape)
+    for i in range(trajectories_size):
+        new_top_list = [] 
+        while (x != str('-\n') or x!=''):
+            x = f.readline()
+
+            if (x == '-\n' or x == ''):
+                break
+            x_split = x.strip().split()
+            x_split_float = [float(ele) for ele in x_split]
+            new_top_list.append(x_split_float)
+        max_len = max(max_len, len(new_top_list))
+        topo_plot.append(new_top_list)
+
+
+    map_np_topo = np.zeros((trajectories_size,max_len,frontier_result_np.shape[1]))
+    for i in range(trajectories_size):
+        j  = 0
+        while j  < len(topo_plot[i]):
+            for k in range(frontier_result_np.shape[1]):
+                map_np_topo[i][j][k] = topo_plot[i][j][k]
+            j+=1
+        while(j<max_len):
+            for k in range(frontier_result_np.shape[1]):
+                map_np_topo[i][j][k] = topo_plot[i][len(topo_plot[i])-1][k]
+            # map_np[i][j][0] = topo_plot[i][len(topo_plot[i])-1][0]
+            # map_np[i][j][1] = topo_plot[i][len(topo_plot[i])-1][1]
+            j+=1
+    mean_plot_topo = np.mean(map_np_topo, axis=0)
+    # print(mean_plot.shape)
+    std_topo = np.std(map_np_topo, axis=0)
+    # print(std.shape)
+    
+    
+    rw_plot = []
+    max_len = 0
+    for i in range(trajectories_size):
+        new_rw_list = [] 
+        while (x != str('-\n') or x!=''):
+            x = f.readline()
+
+            if (x == '-\n' or x == ''):
+                break
+            x_split = x.strip().split()
+            x_split_float = [float(ele) for ele in x_split]
+            new_rw_list.append(x_split_float)
+        max_len = max(max_len, len(new_rw_list))
+        rw_plot.append(new_rw_list)
+
+    map_np_rw = np.zeros((trajectories_size,max_len,frontier_result_np.shape[1]))
+    for i in range(trajectories_size):
+        j  = 0
+        while j  < len(rw_plot[i]):
+            for k in range(frontier_result_np.shape[1]):
+                map_np_rw[i][j][k] = rw_plot[i][j][k]
+            j+=1
+        while(j<max_len):
+            for k in range(frontier_result_np.shape[1]):
+                map_np_rw[i][j][k] = rw_plot[i][len(rw_plot[i])-1][k]
+            j+=1
+    mean_plot_rw = np.mean(map_np_rw, axis=0)
+    # print(mean_plot.shape)
+    std_rw = np.std(map_np_rw, axis=0)  
+    
+    if(plot_unknown_cells_remaining and index_to_plot==1):
+        modified_y_value_frontier = np.zeros(frontier_result_np.shape[0])
+        for i in range(frontier_result_np.shape[0]):
+            modified_y_value_frontier[i] = ((100-frontier_result_np[i,1])/100.0)*total_unknown_cells
+        plt.plot(frontier_result_np[:,0], modified_y_value_frontier, 'r')
+      
+        new_topo = np.zeros((map_np_topo.shape[0],map_np_topo.shape[1],2))
+        for i in range(map_np_topo.shape[0]):
+            for j in range(map_np_topo.shape[1]):
+                new_topo[i][j][0] = map_np_topo[i][j][0]
+                new_topo[i][j][1] = ((100-map_np_topo[i][j][1])/100.0)*total_unknown_cells
+        new_topo_mean = np.mean(new_topo,axis=0)
+        new_topo_std = np.std(new_topo,axis=0)
+        plt.plot(new_topo_mean[:,0],new_topo_mean[:,1],'b')
+        plt.fill_between(new_topo_mean[:,0], new_topo_mean[:,1]-new_topo_std[:,1], new_topo_mean[:,1]+new_topo_std[:,1], color='b', alpha=.1)
+        
+    else:
+        plt.plot(frontier_result_np[:,0], frontier_result_np[:,index_to_plot], 'r')
+        plt.plot(mean_plot_topo[:,0],mean_plot_topo[ : , index_to_plot],'b')
+        plt.fill_between(mean_plot_topo[:,0], mean_plot_topo[:,index_to_plot]-std_topo[:,index_to_plot], mean_plot_topo[:,index_to_plot]+std_topo[:,index_to_plot], color='b', alpha=.1)
+        plt.plot(mean_plot_rw[:,0],mean_plot_rw[ : , index_to_plot],'g')
+        plt.fill_between(mean_plot_rw[:,0], mean_plot_rw[:,index_to_plot]-std_rw[:,index_to_plot], mean_plot_rw[:,index_to_plot]+std_rw[:,index_to_plot], color='g', alpha=.1) 
+        # plt.plot(topo_x, topo_y, 'b')
+    if save_plot:
+        plt.savefig('../plots/'+dict_mapping[index_to_plot]+'_'+yabels[index_to_plot-1]+'.png')
+    else:
+        plt.show()
+    plt.cla()
+
 def frontier_result(return_results = False):
     results = []
     f = open("../build/result_frontiers.txt", "r")
@@ -305,4 +431,4 @@ def show_frontier_topology():
 
 # individual_result_error()
 for i in range(1,14):
-    individual_result_error(i,save_plot=False)
+    individual_result_error_include_random_walk(i,save_plot=False)

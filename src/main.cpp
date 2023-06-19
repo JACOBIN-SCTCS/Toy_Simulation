@@ -1181,7 +1181,7 @@ public:
 		}
 	}
 	
-	std::vector<double> getError(bool get_weighted_error = true)
+	std::vector<double> getError(bool get_weighted_error = false)
 	{
 		std::vector<double> error;
 		std::vector<double> unknown_cell_count;
@@ -1478,7 +1478,7 @@ private:
 
 int main(int argc, char *argv[])
 {
-	int choice = 6;
+	int choice = -1;
 	bool use_window = false;
 	if(choice==0)
 	{
@@ -1529,6 +1529,76 @@ int main(int argc, char *argv[])
 		 << duration_frontier.count() << " seconds" << std::endl;
 		std::cout << "Time taken by Topological Exploration: "
 		 << result_topo << " seconds" << std::endl;
+	}
+	else if(choice == -1)
+	{
+		int image_snapshot_time = 300;
+		int topology_num_runs = 5;
+		std::string obstacle_file = "obs5.txt";
+		std::string result_file = "result_"+obstacle_file;
+		std::string frontier_depth_file = "result_"+obstacle_file+"_frontier.txt";
+		std::string topo_depth_file = "result_" + obstacle_file+"_topo.txt";
+		std::string rw_depth_file = "result_" + obstacle_file+"_rw.txt";
+		std::string time_result_file = "result_" + obstacle_file+"_time.txt";
+		srand(time(NULL));
+
+		// Robot robot(60,600.0,10.0,25,use_window,result_file,obstacle_file,16,true,true,100,frontier_depth_file);
+		// Robot robot(60,600.0,10.0,100,use_window,result_file,obstacle_file,16,true,true,100,frontier_depth_file);
+		Robot robot(60, 600,10.0, 25,use_window,result_file,obstacle_file,32,true,false,image_snapshot_time,frontier_depth_file);
+		auto frontier_start = high_resolution_clock::now();
+		robot.start_exploring(0, 0);
+		auto frontier_stop = high_resolution_clock::now();
+		auto duration_frontier = duration_cast<seconds>(frontier_stop - frontier_start);
+		
+		int topological_seconds = 0;
+		for(int i=0;i<topology_num_runs;++i)
+		{
+			// robot = Robot(60, 600.0,10.0,25,use_window,result_file,obstacle_file,16,true,false,100,topo_depth_file);
+			// robot = Robot(60, 600.0,10.0,100,use_window,result_file,obstacle_file,16,true,false,100,topo_depth_file);
+			robot = Robot(60, 600,10.0, 25,use_window,result_file,obstacle_file,32,true,false,image_snapshot_time,topo_depth_file);
+			auto topo_start = high_resolution_clock::now();
+			robot.topological_explore_4({0,0});
+			auto topo_stop = high_resolution_clock::now();
+			topological_seconds += duration_cast<seconds>(topo_stop - topo_start).count();
+			SDL_Delay(1000);
+		}
+
+		double result_topo = (double)topological_seconds/((double) topology_num_runs);
+		// robot = Robot(60, 600.0,10.0,25,use_window,result_file,obstacle_file,16,true,true,100,topo_depth_file);
+		// robot = Robot(60, 600.0,10.0,100,use_window,result_file,obstacle_file,16,true,true,100,topo_depth_file);
+		// robot = Robot(256, 768,3.0,128,use_window,result_file,obstacle_file,32,true,true,image_snapshot_time,topo_depth_file);
+		// robot.topological_explore_4({0,0});
+		int random_walk_seconds = 0;
+		for(int i=0;i<topology_num_runs;++i)
+		{
+			// robot = Robot(60, 600.0,10.0,25,use_window,result_file,obstacle_file,16,true,false,100,topo_depth_file);
+			// robot = Robot(60, 600.0,10.0,100,use_window,result_file,obstacle_file,16,true,false,100,topo_depth_file);
+			robot = Robot(60, 600,10.0, 25,use_window,result_file,obstacle_file,32,true,false,image_snapshot_time,rw_depth_file);
+			auto rw_start = high_resolution_clock::now();
+			robot.random_walk_explore({0,0});
+			auto rw_stop = high_resolution_clock::now();
+			random_walk_seconds += duration_cast<seconds>(rw_stop - rw_start).count();
+			SDL_Delay(1000);
+		}
+
+		double result_rw = (double)random_walk_seconds/((double) topology_num_runs);
+
+		std::ofstream MyFile(time_result_file);
+  		MyFile << "Time taken by Frontier Exploration: "
+		 << duration_frontier.count() << " seconds" << std::endl;
+		 MyFile << "Time taken by Topological Exploration: "
+		 << result_topo << " seconds" << std::endl;
+		 MyFile << "Time taken by Random Walk: "
+		 << result_rw << " seconds" << std::endl;
+  		MyFile.close();
+		
+		std::cout << "Time taken by Frontier Exploration: "
+		 << duration_frontier.count() << " seconds" << std::endl;
+		std::cout << "Time taken by Topological Exploration: "
+		 << result_topo << " seconds" << std::endl;
+		std::cout << "Time taken by Random Walk Explorartion: "
+		 << result_rw << " seconds" << std::endl;
+
 	}
 	else if(choice == 1)
 	{
