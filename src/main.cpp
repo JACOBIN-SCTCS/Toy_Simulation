@@ -5,6 +5,7 @@
 #include "frontier_explore.h"
 #include "topolgoical_explore.h"
 #include "modified_topological_explore.h"
+#include "random_walk.h"
 #include <chrono>
 
 using namespace std::chrono;
@@ -171,7 +172,7 @@ public:
 		{
 			if(depth_result)
 			{
-				std::vector<int> error_result = getError();
+				auto error_result = getError();
 				std::stringstream ss_error;
 				for(int k=0;k<error_result.size();++k)
 				{
@@ -229,7 +230,7 @@ public:
 				{
 					if(depth_result)
 					{
-						std::vector<int> error_result = getError();
+						auto error_result = getError();
 						std::stringstream ss_error;
 						for(int k=0;k<error_result.size();++k)
 						{
@@ -704,7 +705,7 @@ public:
 		{
 			if(depth_result)
 			{
-				std::vector<int> error_result = getError();
+				auto error_result = getError();
 				std::stringstream ss_error;
 				for(int k=0;k<error_result.size();++k)
 				{
@@ -813,7 +814,7 @@ public:
 					{
 						if(depth_result)
 						{
-							std::vector<int> error_result = getError();
+							auto error_result = getError();
 							std::stringstream ss_error;
 							for(int k=0;k<error_result.size();++k)
 							{
@@ -926,7 +927,7 @@ public:
 					{
 						if(depth_result)
 						{
-							std::vector<int> error_result = getError();
+							auto error_result = getError();
 							std::stringstream ss_error;
 							for(int k=0;k<error_result.size();++k)
 							{
@@ -999,6 +1000,147 @@ public:
 
 	}
 
+	void random_walk_explore(std::vector<int> start)
+	{
+		int current_x = start[0] ;
+		int current_y = start[1];
+
+		if(obstacle_id_grid[current_x][current_y] == 0)
+		{
+			std::cout << "Robot is in obstacle" << std::endl;
+			return;
+		}
+
+		std::fstream f;
+		std::fstream depth_file;
+		if(!use_window)
+		{	
+			f.open(output_file_name, std::ios::app);
+			f << "-\n";
+		}
+		if(depth_result_visualize)
+		{
+			depth_file.open(depth_result_file_prefix,std::ios::app);
+			depth_file<<"-\n";
+		}
+
+		sensor_model(current_x, current_y);
+		if(!use_window)
+		{
+			if(depth_result)
+			{
+				auto error_result = getError();
+				std::stringstream ss_error;
+				for(int k=0;k<error_result.size();++k)
+				{
+					ss_error << error_result[k] << " ";
+				}
+				f << timesteps_taken << " "<< ((double)total_cells_mapped/(total_free_space)) * 100<<" "<<ss_error.str()<<"\n";
+				if(depth_result_visualize)
+				{
+					if(timesteps_taken%depth_result_visualize_timestep ==0)
+					{
+						for(int j=0;j<depths.size();++j)
+						{
+							std::vector<std::vector<int>> current_depth_result = get_current_depth_result(j);
+							std::stringstream depth_ss;
+							for(int k=0;k<current_depth_result.size();++k)
+							{
+								for(int l=0;l<current_depth_result[0].size();++l)
+								{
+									depth_ss << current_depth_result[k][l] <<",";
+								}
+							}
+							depth_ss<<"\n";
+							depth_file<<depth_ss.str();
+						}
+						depth_file<<"-\n";
+					}
+					
+				}
+			}
+		}
+
+		RandomWalk rw(&grid,&obstacles_seen);
+		// FrontierExplore f_explore(&grid,&obstacles_seen);
+		// f_explore.findFrontiers(current_x, current_y);
+		std::vector<int> destination = rw.getDestinationPoint();
+		while( destination.size() > 0)
+		{
+			double stopping_percentage = ((double)total_cells_mapped/(total_free_space)) * 100;
+			if(stopping_percentage>=99.0)
+				break;
+			
+			std::vector<std::pair<int, int>> path = rw.getPath(current_x, current_y,destination[0], destination[1]);
+			std::cout << "Random Walk Exploration Path Size = " << path.size() << std::endl;
+			for (int i = 0; i < path.size(); ++i)
+			{
+				timesteps_taken +=1;
+				grid[current_x][current_y] = 1;
+				current_x = path[i].first;
+				current_y = path[i].second;
+				grid[current_x][current_y] = 2;
+				sensor_model(current_x,current_y);
+				if(!use_window)
+				{
+					if(depth_result)
+					{
+						auto error_result = getError();
+						std::stringstream ss_error;
+						for(int k=0;k<error_result.size();++k)
+						{
+							ss_error << error_result[k] << " ";
+						}
+						f << timesteps_taken << " "<< ((double)total_cells_mapped/(total_free_space)) * 100<<" "<<ss_error.str()<<"\n";
+						if(depth_result_visualize)
+						{
+							if(timesteps_taken%depth_result_visualize_timestep ==0)
+							{
+								for(int j=0;j<depths.size();++j)
+								{
+									std::vector<std::vector<int>> current_depth_result = get_current_depth_result(j);
+									std::stringstream depth_ss;
+									for(int k=0;k<current_depth_result.size();++k)
+									{
+										for(int l=0;l<current_depth_result[0].size();++l)
+										{
+											depth_ss << current_depth_result[k][l] <<",";
+										}
+									}
+									depth_ss<<"\n";
+									depth_file<<depth_ss.str();
+								}
+								depth_file<<"-\n";
+							}
+							
+						}
+					}
+					else
+					{
+						f << timesteps_taken << " " << ((double)total_cells_mapped/(total_free_space)) * 100<<"\n";
+					}
+				}
+				if(use_window)
+				{
+					fw.render_screen(grid);
+					SDL_Delay(500);
+				}
+				bool towards_an_obstacle = false;
+			
+				if(((i+1)<path.size() && grid_original[path[i+1].first][path[i+1].second]==0)  || towards_an_obstacle)
+				{
+					grid[path[i+1].first][path[i+1].second] = 0;
+					break;
+				}
+			}
+			destination = rw.getDestinationPoint();
+			// f_explore.findFrontiers(current_x, current_y);
+		}
+		f.close();
+		depth_file.close();
+		std::cout<<"Exploration complete"<<std::endl;
+	}
+
 	void create_ground_truth_resolutions(int g_size)
 	{
 		for(int i=0;i<depths.size();++i)
@@ -1039,84 +1181,170 @@ public:
 		}
 	}
 	
-	std::vector<int> getError(bool get_weighted_error = false)
+	std::vector<double> getError(bool get_weighted_error = false)
 	{
-		std::vector<int> error;
-		std::vector<int> unknown_cell_count;
-		for(int i=0;i<depths.size();++i)
+		std::vector<double> error;
+		std::vector<double> unknown_cell_count;
+		if(get_weighted_error==false)
 		{
-			int current_depth = depths[i];
-			int x_increment = (int) grid_size/current_depth;
-			int y_increment = (int) grid_size/current_depth;
-			
-			int error_count = 0;
-
-			for(int j=0;j<current_depth;++j)
+			for(int i=0;i<depths.size();++i)
 			{
-				for(int k=0;k<current_depth;++k)
+				int current_depth = depths[i];
+				int x_increment = (int) grid_size/current_depth;
+				int y_increment = (int) grid_size/current_depth;
+				
+				double error_count = 0;
+
+				for(int j=0;j<current_depth;++j)
 				{
-					int x = j*x_increment;
-					int y = k*y_increment;
-					
-					if(ground_truth_depth_result[i][j][k] == 0)
-						continue;
-					
-					bool obstacle_there = false;
-					for(int l=x ; l < (j+1)*x_increment; ++l)
+					for(int k=0;k<current_depth;++k)
 					{
-						for(int m=y ; m < (k+1)*y_increment; ++m)
+						int x = j*x_increment;
+						int y = k*y_increment;
+						
+						if(ground_truth_depth_result[i][j][k] == 0)
+							continue;
+						
+						bool obstacle_there = false;
+						for(int l=x ; l < (j+1)*x_increment; ++l)
 						{
-							if(grid[l][m] == 0)
+							for(int m=y ; m < (k+1)*y_increment; ++m)
 							{
-								obstacle_there = true;
-								break;
+								if(grid[l][m] == 0)
+								{
+									obstacle_there = true;
+									break;
+								}
 							}
+							if (obstacle_there)
+							{
+								break;
+							}	
 						}
-						if (obstacle_there)
+						if (!obstacle_there)
 						{
-							break;
-						}	
-					}
-					if (!obstacle_there)
-					{
-						error_count+=1;
+							error_count+=1;
+						}
 					}
 				}
-			}
-			int u_cell_count = 0;
-			for(int j=0;j<current_depth;++j)
-			{
-				for(int k=0;k<current_depth;++k)
+				double u_cell_count = 0;
+				for(int j=0;j<current_depth;++j)
 				{
-					int x = j*x_increment;
-					int y = k*y_increment;
-					
-					bool isunknown  = true;
-					for(int l=x ; l < (j+1)*x_increment; ++l)
+					for(int k=0;k<current_depth;++k)
 					{
-						for(int m=y ; m < (k+1)*y_increment; ++m)
+						int x = j*x_increment;
+						int y = k*y_increment;
+						
+						bool isunknown  = true;
+						for(int l=x ; l < (j+1)*x_increment; ++l)
 						{
-							if(grid[l][m] == 0 || grid[l][m]==1)
+							for(int m=y ; m < (k+1)*y_increment; ++m)
 							{
-								isunknown = false;
-								break;
+								if(grid[l][m] == 0 || grid[l][m]==1)
+								{
+									isunknown = false;
+									break;
+								}
 							}
+							if (!isunknown)
+							{
+								break;
+							}	
 						}
-						if (!isunknown)
+						if (isunknown)
 						{
-							break;
-						}	
-					}
-					if (isunknown)
-					{
-						u_cell_count+=1;
+							u_cell_count+=1;
+						}
 					}
 				}
-			}
 
-			error.push_back(error_count);
-			unknown_cell_count.push_back(u_cell_count);
+				error.push_back(error_count);
+				unknown_cell_count.push_back(u_cell_count);
+			}
 		}
+		else
+		{
+			for(int i=0;i<depths.size();++i)
+			{
+				int current_depth = depths[i];
+				int x_increment = (int) grid_size/current_depth;
+				int y_increment = (int) grid_size/current_depth;
+				
+				double error_count = 0;
+
+				for(int j=0;j<current_depth;++j)
+				{
+					for(int k=0;k<current_depth;++k)
+					{
+						int x = j*x_increment;
+						int y = k*y_increment;
+						
+						if(ground_truth_depth_result[i][j][k] == 0)
+							continue;
+						
+						double ground_truth_probability = 0 ;
+						double mapped_cells = 0;
+						double predicted_probability = 0;
+						
+						for(int l=x ; l < (j+1)*x_increment; ++l)
+						{
+							for(int m=y ; m < (k+1)*y_increment; ++m)
+							{
+								if(grid[l][m] == 0)
+								{
+									predicted_probability+=1;
+								}
+								else if(grid[l][m]==1)
+								{
+									mapped_cells+=1;
+								}
+								if(grid_original[l][m] == 0)
+								{
+									ground_truth_probability+=1;
+								}
+							}
+						}
+						ground_truth_probability = ground_truth_probability/((double)(x_increment*y_increment));
+						predicted_probability = predicted_probability/((mapped_cells+ predicted_probability));
+						error_count+= abs(ground_truth_probability - predicted_probability);
+					}
+				}
+				double u_cell_count = 0;
+				for(int j=0;j<current_depth;++j)
+				{
+					for(int k=0;k<current_depth;++k)
+					{
+						int x = j*x_increment;
+						int y = k*y_increment;
+						
+						bool isunknown  = true;
+						for(int l=x ; l < (j+1)*x_increment; ++l)
+						{
+							for(int m=y ; m < (k+1)*y_increment; ++m)
+							{
+								if(grid[l][m] == 0 || grid[l][m]==1)
+								{
+									isunknown = false;
+									break;
+								}
+							}
+							if (!isunknown)
+							{
+								break;
+							}	
+						}
+						if (isunknown)
+						{
+							u_cell_count+=1;
+						}
+					}
+				}
+
+				error.push_back(error_count);
+				unknown_cell_count.push_back(u_cell_count);
+			}
+		}
+
 		for(int i=0;i<unknown_cell_count.size();++i)
 			error.push_back(unknown_cell_count[i]);
 		return error;
@@ -1250,13 +1478,13 @@ private:
 
 int main(int argc, char *argv[])
 {
-	int choice = 0;
+	int choice = -1;
 	bool use_window = false;
 	if(choice==0)
 	{
 		int image_snapshot_time = 500;
-		int topology_num_runs = 3;
-		std::string obstacle_file = "grid_256_1.txt";
+		int topology_num_runs = 5;
+		std::string obstacle_file = "obs_256_5.txt";
 		std::string result_file = "result_"+obstacle_file;
 		std::string frontier_depth_file = "result_"+obstacle_file+"_frontier.txt";
 		std::string topo_depth_file = "result_" + obstacle_file+"_topo.txt";
@@ -1265,7 +1493,7 @@ int main(int argc, char *argv[])
 
 		// Robot robot(60,600.0,10.0,25,use_window,result_file,obstacle_file,16,true,true,100,frontier_depth_file);
 		// Robot robot(60,600.0,10.0,100,use_window,result_file,obstacle_file,16,true,true,100,frontier_depth_file);
-		Robot robot(256, 768,3.0, 2401,use_window,result_file,obstacle_file,32,true,true,image_snapshot_time,frontier_depth_file);
+		Robot robot(256, 768,3.0, 128,use_window,result_file,obstacle_file,32,true,false,image_snapshot_time,frontier_depth_file);
 		auto frontier_start = high_resolution_clock::now();
 		robot.start_exploring(0, 0);
 		auto frontier_stop = high_resolution_clock::now();
@@ -1276,7 +1504,7 @@ int main(int argc, char *argv[])
 		{
 			// robot = Robot(60, 600.0,10.0,25,use_window,result_file,obstacle_file,16,true,false,100,topo_depth_file);
 			// robot = Robot(60, 600.0,10.0,100,use_window,result_file,obstacle_file,16,true,false,100,topo_depth_file);
-			robot = Robot(256, 768,3.0,2401,use_window,result_file,obstacle_file,32,true,false,image_snapshot_time,topo_depth_file);
+			robot = Robot(256, 768,3.0,128,use_window,result_file,obstacle_file,32,true,false,image_snapshot_time,topo_depth_file);
 			auto topo_start = high_resolution_clock::now();
 			robot.topological_explore_4({0,0});
 			auto topo_stop = high_resolution_clock::now();
@@ -1287,8 +1515,8 @@ int main(int argc, char *argv[])
 		double result_topo = (double)topological_seconds/((double) topology_num_runs);
 		// robot = Robot(60, 600.0,10.0,25,use_window,result_file,obstacle_file,16,true,true,100,topo_depth_file);
 		// robot = Robot(60, 600.0,10.0,100,use_window,result_file,obstacle_file,16,true,true,100,topo_depth_file);
-		robot = Robot(256, 768,3.0,2401,use_window,result_file,obstacle_file,32,true,true,image_snapshot_time,topo_depth_file);
-		robot.topological_explore_4({0,0});
+		// robot = Robot(256, 768,3.0,128,use_window,result_file,obstacle_file,32,true,true,image_snapshot_time,topo_depth_file);
+		// robot.topological_explore_4({0,0});
 
 		std::ofstream MyFile(time_result_file);
   		MyFile << "Time taken by Frontier Exploration: "
@@ -1301,6 +1529,76 @@ int main(int argc, char *argv[])
 		 << duration_frontier.count() << " seconds" << std::endl;
 		std::cout << "Time taken by Topological Exploration: "
 		 << result_topo << " seconds" << std::endl;
+	}
+	else if(choice == -1)
+	{
+		int image_snapshot_time = 300;
+		int topology_num_runs = 5;
+		std::string obstacle_file = "obs5.txt";
+		std::string result_file = "result_"+obstacle_file;
+		std::string frontier_depth_file = "result_"+obstacle_file+"_frontier.txt";
+		std::string topo_depth_file = "result_" + obstacle_file+"_topo.txt";
+		std::string rw_depth_file = "result_" + obstacle_file+"_rw.txt";
+		std::string time_result_file = "result_" + obstacle_file+"_time.txt";
+		srand(time(NULL));
+
+		// Robot robot(60,600.0,10.0,25,use_window,result_file,obstacle_file,16,true,true,100,frontier_depth_file);
+		// Robot robot(60,600.0,10.0,100,use_window,result_file,obstacle_file,16,true,true,100,frontier_depth_file);
+		Robot robot(60, 600,10.0, 25,use_window,result_file,obstacle_file,32,true,false,image_snapshot_time,frontier_depth_file);
+		auto frontier_start = high_resolution_clock::now();
+		robot.start_exploring(0, 0);
+		auto frontier_stop = high_resolution_clock::now();
+		auto duration_frontier = duration_cast<seconds>(frontier_stop - frontier_start);
+		
+		int topological_seconds = 0;
+		for(int i=0;i<topology_num_runs;++i)
+		{
+			// robot = Robot(60, 600.0,10.0,25,use_window,result_file,obstacle_file,16,true,false,100,topo_depth_file);
+			// robot = Robot(60, 600.0,10.0,100,use_window,result_file,obstacle_file,16,true,false,100,topo_depth_file);
+			robot = Robot(60, 600,10.0, 25,use_window,result_file,obstacle_file,32,true,false,image_snapshot_time,topo_depth_file);
+			auto topo_start = high_resolution_clock::now();
+			robot.topological_explore_4({0,0});
+			auto topo_stop = high_resolution_clock::now();
+			topological_seconds += duration_cast<seconds>(topo_stop - topo_start).count();
+			SDL_Delay(1000);
+		}
+
+		double result_topo = (double)topological_seconds/((double) topology_num_runs);
+		// robot = Robot(60, 600.0,10.0,25,use_window,result_file,obstacle_file,16,true,true,100,topo_depth_file);
+		// robot = Robot(60, 600.0,10.0,100,use_window,result_file,obstacle_file,16,true,true,100,topo_depth_file);
+		// robot = Robot(256, 768,3.0,128,use_window,result_file,obstacle_file,32,true,true,image_snapshot_time,topo_depth_file);
+		// robot.topological_explore_4({0,0});
+		int random_walk_seconds = 0;
+		for(int i=0;i<topology_num_runs;++i)
+		{
+			// robot = Robot(60, 600.0,10.0,25,use_window,result_file,obstacle_file,16,true,false,100,topo_depth_file);
+			// robot = Robot(60, 600.0,10.0,100,use_window,result_file,obstacle_file,16,true,false,100,topo_depth_file);
+			robot = Robot(60, 600,10.0, 25,use_window,result_file,obstacle_file,32,true,false,image_snapshot_time,rw_depth_file);
+			auto rw_start = high_resolution_clock::now();
+			robot.random_walk_explore({0,0});
+			auto rw_stop = high_resolution_clock::now();
+			random_walk_seconds += duration_cast<seconds>(rw_stop - rw_start).count();
+			SDL_Delay(1000);
+		}
+
+		double result_rw = (double)random_walk_seconds/((double) topology_num_runs);
+
+		std::ofstream MyFile(time_result_file);
+  		MyFile << "Time taken by Frontier Exploration: "
+		 << duration_frontier.count() << " seconds" << std::endl;
+		 MyFile << "Time taken by Topological Exploration: "
+		 << result_topo << " seconds" << std::endl;
+		 MyFile << "Time taken by Random Walk: "
+		 << result_rw << " seconds" << std::endl;
+  		MyFile.close();
+		
+		std::cout << "Time taken by Frontier Exploration: "
+		 << duration_frontier.count() << " seconds" << std::endl;
+		std::cout << "Time taken by Topological Exploration: "
+		 << result_topo << " seconds" << std::endl;
+		std::cout << "Time taken by Random Walk Explorartion: "
+		 << result_rw << " seconds" << std::endl;
+
 	}
 	else if(choice == 1)
 	{
@@ -1352,10 +1650,16 @@ int main(int argc, char *argv[])
 	}
 	else if(choice==5)
 	{
-		Robot robot(256, 512,2.0, 200,use_window,"result_obs_256_1.txt","maze_1.txt",32,true,false,300,"dobs1_frontier.txt");
+		Robot robot(256, 512,2.0, 2401,use_window,"result_obs_256_4.txt","grid_256_1.txt",32,true,false,300,"dobs1_frontier.txt");
 		robot.render_ground_truth();
 		
 
+	}
+	else if(choice == 6)
+	{
+		use_window = true;
+		Robot robot(60, 600,10.0, 25,use_window,"result_obs_256_4.txt","obs0.txt",16,true,false,100,"dobs4_frontier.txt");
+		robot.random_walk_explore({0,0});
 	}
 	else
 	{
