@@ -2,7 +2,7 @@
 import random
 import numpy as np
 
-def generate_random_obstacles(n_obstacles=25,grid_size = 60 , number_of_runs=10):
+def generate_random_obstacles(n_obstacles=25,grid_size = 60 , number_of_runs=10,obstacle_size = 4):
     for i in range(number_of_runs):
         f = open("../build/obs_256_"+str(i)+".txt","w")
         j= 0
@@ -11,8 +11,8 @@ def generate_random_obstacles(n_obstacles=25,grid_size = 60 , number_of_runs=10)
             y = random.randint(0,grid_size-1)
 
             invalid_point = False
-            for k in range(4):
-                for l in range(4):
+            for k in range(obstacle_size):
+                for l in range(obstacle_size):
                     if(x+k <=0 or x+k >= (grid_size-1) or y+l<=0 or y+l>=(grid_size-1)):
                         invalid_point = True
                         break

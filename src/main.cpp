@@ -33,9 +33,9 @@ public:
 			int x =   tmp_x ; 
 			int y =   tmp_y ;
 			bool obstacle_invalid = false;
-			for(int j=0;j<4;++j)
+			for(int j=0;j<square_obstacle_size;++j)
 			{
-				for(int k=0;k<4;++k)
+				for(int k=0;k<square_obstacle_size;++k)
 				{
 					if(x+j >= (grid_size-1) ||  x+j < 0 ||  y+k >= (grid_size-1) ||  y+k < 0)
 					{
@@ -47,9 +47,9 @@ public:
 					break;
 			}
 
-			for(int j=0;j<4;++j)
+			for(int j=0;j<square_obstacle_size;++j)
 			{
-				for(int k=0;k<4;++k)
+				for(int k=0;k<square_obstacle_size;++k)
 				{
 					grid_original[x+j][y+k] = 0;
 					// if(j == 0 || j == 3 || k == 0 || k == 3)
@@ -737,7 +737,7 @@ public:
 			}
 		}
 
-		ModifiedTopolgicalExplore top_explore(&grid,&obstacles_seen,start,&grid_original,true);
+		ModifiedTopolgicalExplore top_explore(&grid,&obstacles_seen,start,&grid_original,true,square_obstacle_size);
 		FrontierExplore f_explore(&grid,&obstacles_seen);
 		
 		std::vector<std::vector<std::pair<int,int>>> already_traversed_paths;
@@ -1473,6 +1473,7 @@ private:
 	bool depth_result_visualize = false;
 	int  depth_result_visualize_timestep = 200;
 	std::string depth_result_file_prefix = "obs0";
+	int square_obstacle_size = 4;
 
 };
 
