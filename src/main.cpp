@@ -1181,7 +1181,7 @@ public:
 		}
 	}
 	
-	std::vector<double> getError(bool get_weighted_error = false)
+	std::vector<double> getError(bool get_weighted_error = true)
 	{
 		std::vector<double> error;
 		std::vector<double> unknown_cell_count;
@@ -1306,7 +1306,7 @@ public:
 						}
 						ground_truth_probability = ground_truth_probability/((double)(x_increment*y_increment));
 						predicted_probability = predicted_probability/((mapped_cells+ predicted_probability));
-						error_count+= abs(ground_truth_probability - predicted_probability);
+						error_count+= abs(ground_truth_probability - std::min(1.0,predicted_probability));
 					}
 				}
 				double u_cell_count = 0;
@@ -1479,13 +1479,13 @@ private:
 
 int main(int argc, char *argv[])
 {
-	int choice = -1;
+	int choice = 0;
 	bool use_window = false;
 	if(choice==0)
 	{
 		int image_snapshot_time = 500;
 		int topology_num_runs = 5;
-		std::string obstacle_file = "obs_256_5.txt";
+		std::string obstacle_file = "obs_256_7.txt";
 		std::string result_file = "result_"+obstacle_file;
 		std::string frontier_depth_file = "result_"+obstacle_file+"_frontier.txt";
 		std::string topo_depth_file = "result_" + obstacle_file+"_topo.txt";
