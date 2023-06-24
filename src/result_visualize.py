@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 def individual_result():
-    f = open("../build/result_grid_1.txt", "r")
+    f = open("../build/result_obs_256_15.txt", "r")
     x =f.readline()
     print(x)
 
@@ -59,7 +59,7 @@ def individual_result():
 def individual_result_error(index_to_plot = 1,save_plot = False):
     plot_unknown_cells_remaining = False
     total_unknown_cells = 64542
-    f = open("../build/nresult_obs_256_0.txt", "r")
+    f = open("../build/result_obs_256_15_3.txt", "r")
     trajectories_size = 6
     dict_mapping = {1:'Percentage of area mapped',2:'Error vs steps(Depth = 1)', 3:'Error vs steps(Depth = 2)',
                     4:'Error vs steps(Depth = 3)',5:'Error vs steps(Depth = 4)',6:'Error vs steps(Depth = 5)',7:'Error vs steps(Depth = 6)',
@@ -162,8 +162,8 @@ def individual_result_error(index_to_plot = 1,save_plot = False):
 def individual_result_error_include_random_walk(index_to_plot = 1,save_plot = False):
     plot_unknown_cells_remaining = False
     total_unknown_cells = 64542
-    f = open("../build/result_obs5.txt", "r")
-    trajectories_size = 5
+    f = open("../build/result_multimodal_gaussian_15_2.txt", "r")
+    trajectories_size = 6
     dict_mapping = {1:'Percentage of area mapped',2:'Error vs steps(Depth = 1)', 3:'Error vs steps(Depth = 2)',
                     4:'Error vs steps(Depth = 3)',5:'Error vs steps(Depth = 4)',6:'Error vs steps(Depth = 5)',7:'Error vs steps(Depth = 6)',
                     8:'Number of unknown cells vs steps (Depth = 1)',9:'Number of unknown cells vs steps (Depth = 2)',10:'Number of unknown cells vs steps (Depth = 3)',11:'Number of unknown cells vs steps (Depth = 4)',

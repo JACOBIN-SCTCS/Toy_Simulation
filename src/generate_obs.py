@@ -2,9 +2,9 @@
 import random
 import numpy as np
 
-def generate_random_obstacles(n_obstacles=25,grid_size = 60 , number_of_runs=10,obstacle_size = 4):
+def generate_random_obstacles(n_obstacles=25,grid_size = 60 , number_of_runs=10,obstacle_size = 15):
     for i in range(number_of_runs):
-        f = open("../build/obs_256_"+str(i)+".txt","w")
+        f = open("../build/obs_256_15_"+str(i)+".txt","w")
         j= 0
         while j<n_obstacles:
             x = random.randint(0,grid_size-1)
@@ -53,15 +53,16 @@ def generate_multimodal_gaussian_obstacles(grid_size,n_clusters,num_objects_clus
 
 def helper_multimodal_gaussian():
     for i in range(1,6):
-        file_name = '../build/multimodal_gaussian_'+str(i)+'.txt'
-        generate_multimodal_gaussian_obstacles(256,12,12,[21,231,21,231],20,file_name)
+        file_name = '../build/multimodal_gaussian_15_'+str(i)+'.txt'
+        generate_multimodal_gaussian_obstacles(256,12,6,[21,231,21,231],20,file_name)
 
 def generate_maze_like_environment(grid_size,num_walls,size_of_each_wall,file_name):
+    obstacle_size = 10
     f = open(file_name,"w")
     i = 0
     while (i< num_walls):
-        x = np.random.randint(1,grid_size-(size_of_each_wall*4)-1)
-        y = np.random.randint(1,grid_size-(size_of_each_wall*4)-1)
+        x = np.random.randint(1,grid_size-(size_of_each_wall*obstacle_size)-1)
+        y = np.random.randint(1,grid_size-(size_of_each_wall*obstacle_size)-1)
         wall_build = False
         horizontal_vertical = np.random.randint(0,2)
         if horizontal_vertical == 0:
@@ -71,8 +72,8 @@ def generate_maze_like_environment(grid_size,num_walls,size_of_each_wall,file_na
             for j in range(size_of_each_wall):
                 invalid_point = False
                 
-                for k in range(4):
-                    for l in range(4):
+                for k in range(obstacle_size):
+                    for l in range(obstacle_size):
                         if(current_x+k <=0 or current_x+k >= (grid_size-1) or current_y+l<=0 or current_y+l>=(grid_size-1)):
                             invalid_point = True
                             break    
@@ -91,8 +92,8 @@ def generate_maze_like_environment(grid_size,num_walls,size_of_each_wall,file_na
             current_y = y
             for j in range(size_of_each_wall):
                 invalid_point = False
-                for k in range(4):
-                    for l in range(4):
+                for k in range(obstacle_size):
+                    for l in range(obstacle_size):
                         if(current_x+k <=0 or current_x+k >= (grid_size-1) or current_y+l<=0 or current_y+l>=(grid_size-1)):
                             invalid_point = True
                             break    
@@ -111,11 +112,11 @@ def generate_maze_like_environment(grid_size,num_walls,size_of_each_wall,file_na
     f.close()
 
 def helper_generate_maze():
-    generate_maze_like_environment(256,20,10,'../build/maze_256_2.txt')
+    generate_maze_like_environment(256,20,10,'../build/maze_256_10_2.txt')
 
-# generate_random_obstacles(150,256,10)
-# helper_multimodal_gaussian()
-helper_generate_maze()
+# generate_random_obstacles(60,256,10)
+helper_multimodal_gaussian()
+# helper_generate_maze()
 # generate_grid_1("../build/grid_256_1.txt",5,245)
 
 
