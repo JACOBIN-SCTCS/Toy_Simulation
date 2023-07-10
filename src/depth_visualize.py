@@ -122,8 +122,23 @@ def plot_depth_map(grid_size,directory_name, filename , depths ,timestep = 100):
                     stripped_line_np[j,k,2] = 0.65
                     stripped_line_np[j,k,3] = 1.0
                 else:
+                   
                     probability = stripped_line_int[index]
-                    occ_value =  (1.0 - probability)
+                    occ_value = 1.0-probability
+                    # the above gives the probability of an obstacle being present
+                    # we want to convert this to an occupancy value
+
+
+                    # occ_value =  (1.0 - probability)
+                    # if occ_value <= 0.25:
+                    #     occ_value = 0.25
+                    # elif occ_value >= 0.25 and occ_value <= 0.5:
+                    #     occ_value = 0.5
+                    # elif occ_value >= 0.5 and occ_value <= 0.75:
+                    #     occ_value = 0.75
+                    # else:
+                    #     occ_value = 1.0
+                    
                     stripped_line_np[j,k,0] = occ_value
                     stripped_line_np[j,k,1] = occ_value
                     stripped_line_np[j,k,2] = occ_value
@@ -156,13 +171,23 @@ def plot_depth_map(grid_size,directory_name, filename , depths ,timestep = 100):
         # stripped_line_np_image.save(directory_name+"/"+str(current_timestep)+"_"+str(depths[current_depth_index])+".png")
         # current_depth_index = (current_depth_index + 1)%len(depths)
         #plt.figure(figsize=(10,10))
+        plt.xticks([])
+        plt.yticks([])
         plt.imshow(stripped_line_np,cmap='magma')
         plt.savefig(directory_name+"/"+str(current_timestep)+"_"+str(depths[current_depth_index])+".png")
         current_depth_index = (current_depth_index + 1)%len(depths)
         # plt.show()
     file.close()
 
+def plot_original():
+    pass
 
-plot_depth_map(256,'../depth_map',"../build/visual_result_obs_256_15_5.txt_frontier.txt",depths,300)
+print("rw")
+plot_depth_map(256,'../rw_3',"../build/visual_result_obs_256_15_3.txt_rw.txt",depths,300)
+print("topo")
+plot_depth_map(256,'../topological_3',"../build/visual_result_obs_256_15_3.txt_topo.txt",depths,300)
+print("frontier")
+plot_depth_map(256,'../frontier_3',"../build/visual_result_obs_256_15_3.txt_frontier.txt",depths,300)
+
 # get_image(256,'../topological',"../build/dobs1_topo.txt",depths,300)
     

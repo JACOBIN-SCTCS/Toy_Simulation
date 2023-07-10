@@ -1306,7 +1306,7 @@ public:
 						}
 						ground_truth_probability = ground_truth_probability/((double)(x_increment*y_increment));
 						predicted_probability = predicted_probability/((mapped_cells+ predicted_probability));
-						error_count+= abs(ground_truth_probability - std::min(1.0,predicted_probability));
+						error_count+= abs(ground_truth_probability - std::min(2.0,predicted_probability));
 					}
 				}
 				double u_cell_count = 0;
@@ -1433,6 +1433,10 @@ public:
 					}
 					else
 					{
+						obstacle_cell_count = 0;
+						free_cell_count = 0;
+						unknown_cell_count = 0;
+						
 						for(int l=x ; l < (i+1)*x_increment; ++l)
 						{
 							for(int m=y ; m < (j+1)*y_increment; ++m)
@@ -1526,8 +1530,8 @@ private:
 
 int main(int argc, char *argv[])
 {
-	int choice = -2;
-	bool use_window = true;
+	int choice = 5;
+	bool use_window = false;
 	if(choice==0)
 	{
 		int image_snapshot_time = 500;
@@ -1583,17 +1587,17 @@ int main(int argc, char *argv[])
 		int image_snapshot_time = 300;
 		int topology_num_runs = 5;
 		int obstacle_count = 72;
-		std::string obstacle_file = "multimodal_gaussian_15_2.txt";
-		std::string result_file = "result_"+obstacle_file;
-		std::string frontier_depth_file = "result_"+obstacle_file+"_frontier.txt";
-		std::string topo_depth_file = "result_" + obstacle_file+"_topo.txt";
-		std::string rw_depth_file = "result_" + obstacle_file+"_rw.txt";
-		std::string time_result_file = "result_" + obstacle_file+"_time.txt";
+		std::string obstacle_file = "multimodal_gaussian_15_16.txt";
+		std::string result_file = "m_result_"+obstacle_file;
+		std::string frontier_depth_file = "m_result_"+obstacle_file+"_frontier.txt";
+		std::string topo_depth_file = "m_result_" + obstacle_file+"_topo.txt";
+		std::string rw_depth_file = "m_result_" + obstacle_file+"_rw.txt";
+		std::string time_result_file = "m_result_" + obstacle_file+"_time.txt";
 		srand(time(NULL));
 
 		// Robot robot(60,600.0,10.0,25,use_window,result_file,obstacle_file,16,true,true,100,frontier_depth_file);
 		// Robot robot(60,600.0,10.0,100,use_window,result_file,obstacle_file,16,true,true,100,frontier_depth_file);
-		Robot robot(256, 768,3.0, obstacle_count,use_window,result_file,obstacle_file,32,true,true,image_snapshot_time,frontier_depth_file);
+		Robot robot(256, 768,3.0, obstacle_count,use_window,result_file,obstacle_file,32,true,false,image_snapshot_time,frontier_depth_file);
 		auto frontier_start = high_resolution_clock::now();
 		robot.start_exploring(0, 0);
 		auto frontier_stop = high_resolution_clock::now();
@@ -1616,8 +1620,8 @@ int main(int argc, char *argv[])
 		// robot = Robot(60, 600.0,10.0,25,use_window,result_file,obstacle_file,16,true,true,100,topo_depth_file);
 		// robot = Robot(60, 600.0,10.0,100,use_window,result_file,obstacle_file,16,true,true,100,topo_depth_file);
 		// robot = Robot(256, 768,3.0,128,use_window,result_file,obstacle_file,32,true,true,image_snapshot_time,topo_depth_file);
-		robot = Robot(256, 768,3.0, obstacle_count,use_window,result_file,obstacle_file,32,true,true,image_snapshot_time,topo_depth_file);
-		robot.topological_explore_4({0,0});
+		// robot = Robot(256, 768,3.0, obstacle_count,use_window,result_file,obstacle_file,32,true,true,image_snapshot_time,topo_depth_file);
+		// robot.topological_explore_4({0,0});
 		int random_walk_seconds = 0;
 		for(int i=0;i<topology_num_runs;++i)
 		{
@@ -1631,8 +1635,8 @@ int main(int argc, char *argv[])
 			SDL_Delay(1000);
 		}
 		
-		robot = Robot(256, 768,3.0, obstacle_count,use_window,result_file,obstacle_file,32,true,true,image_snapshot_time,rw_depth_file);
-		robot.random_walk_explore({0,0});
+		// robot = Robot(256, 768,3.0, obstacle_count,use_window,result_file,obstacle_file,32,true,true,image_snapshot_time,rw_depth_file);
+		// robot.random_walk_explore({0,0});
 		double result_rw = (double)random_walk_seconds/((double) topology_num_runs);
 
 		std::ofstream MyFile(time_result_file);
@@ -1657,8 +1661,8 @@ int main(int argc, char *argv[])
 		use_window = false;
 		int image_snapshot_time = 300;
 		int topology_num_runs = 5;
-		int obstacle_count = 72;
-		std::string obstacle_file = "obs_256_15_5.txt";
+		int obstacle_count = 60;
+		std::string obstacle_file = "obs_256_15_3.txt";
 		std::string result_file = "visual_result_"+obstacle_file;
 		std::string frontier_depth_file = "visual_result_"+obstacle_file+"_frontier.txt";
 		std::string topo_depth_file = "visual_result_" + obstacle_file+"_topo.txt";
@@ -1729,6 +1733,7 @@ int main(int argc, char *argv[])
 	}
 	else if(choice==5)
 	{
+		use_window = true;
 		int image_snapshot_time = 500;
 		int topology_num_runs = 5;
 		std::string obstacle_file = "maze_256_10_2";
@@ -1738,7 +1743,7 @@ int main(int argc, char *argv[])
 		std::string time_result_file = "result_" + obstacle_file+"_time.txt";
 		srand(time(NULL));
 
-		Robot robot(256, 512,2.0, 60,use_window,"result_obs_256_4.txt","obs_256_15_3.txt",32,true,false,300,"dobs1_frontier.txt");
+		Robot robot(256, 512,2.0, 90,use_window,"result_obs_256_4.txt","multimodal_gaussian_15_18.txt",32,true,false,300,"dobs1_frontier.txt");
 		robot.render_ground_truth();
 		
 

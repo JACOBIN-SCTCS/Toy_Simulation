@@ -52,7 +52,7 @@ def generate_multimodal_gaussian_obstacles(grid_size,n_clusters,num_objects_clus
 
 
 def helper_multimodal_gaussian():
-    for i in range(1,6):
+    for i in range(16,21):
         file_name = '../build/multimodal_gaussian_15_'+str(i)+'.txt'
         generate_multimodal_gaussian_obstacles(256,12,6,[21,231,21,231],20,file_name)
 
@@ -114,6 +114,33 @@ def generate_maze_like_environment(grid_size,num_walls,size_of_each_wall,file_na
 def helper_generate_maze():
     generate_maze_like_environment(256,20,10,'../build/maze_256_10_2.txt')
 
+def generate_custom_clustered(file_name,grid_size = 256):
+    f = open(file_name,"w")
+    
+    cluster_centers = [[64,64],[64,172],[172,64],[172,172]]
+    for i in range(len(cluster_centers)):
+        x_center = cluster_centers[i][0]
+        y_center = cluster_centers[i][1]
+
+        for j in range(10):
+            x = np.random.randint(x_center-35,x_center+35+1)
+            y = np.random.randint(y_center-35,y_center+35+1)
+            content_to_write = str(x) + " " + str(y) +"\n"
+            f.write(content_to_write)
+    f.close()
+    # for i in range(n_clusters):
+    #     x_center = np.random.randint(sampling_intervals[0],sampling_intervals[1])
+    #     y_center = np.random.randint(sampling_intervals[2],sampling_intervals[3])
+
+    #     for j in range(num_objects_cluster):
+    #         x = np.random.randint(x_center-deviation,x_center+deviation+1)
+    #         y = np.random.randint(y_center-deviation,y_center+deviation+1)
+    #         content_to_write = str(x) + " " + str(y) +"\n"
+    #         f.write(content_to_write)
+
+
+
+# generate_custom_clustered('../build/custom_clustered_256_10_1.txt')
 # generate_random_obstacles(60,256,10)
 helper_multimodal_gaussian()
 # helper_generate_maze()

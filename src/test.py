@@ -58,36 +58,36 @@ from mpl_toolkits.axes_grid1 import ImageGrid
 #         ax.imshow(image,cmap='bone')
 #     index+=1
 # plt.show()
-from PIL import Image
-import os
+from PIL import Image, ImageDraw
 
 # Define the dimensions of the final collage
-cell_width = 1000  # Width of each cell
-cell_height = 1000  # Height of each cell
-num_rows = 12  # Number of rows in the grid
-num_columns = 5  # Number of columns in the grid
+cell_width = 600  # Width of each cell
+cell_height = 600  # Height of each cell
+num_rows = 3  # Number of rows in the grid
+num_columns = 3   # Number of columns in the grid
 collage_width = cell_width * num_columns  # Width of the entire collage
 collage_height = cell_height * num_rows  # Height of the entire collage
 
 # Create a blank canvas for the collage
-collage = Image.new('L', (collage_width, collage_height))
+collage = Image.new("RGB", (collage_width, collage_height))
 
 num_images = num_rows * num_columns
 
 image_paths = []
-time_steps = [0,300,900,1500,2400]
-depths = [2,4,8,16,32,64]
+time_steps = [300, 900, 2100]
+depths = [32]
 
 for i in range(len(time_steps)):
     for j in range(len(depths)):
-        image_paths.append('../frontier/'+str(time_steps[i])+'_'+str(depths[j])+'.png')
-        image_paths.append('../topological/'+str(time_steps[i])+'_'+str(depths[j])+'.png')
+        image_paths.append('../frontier_3/' + str(time_steps[i]) + '_' + str(depths[j]) + '.png')
+        image_paths.append('../topological_3/' + str(time_steps[i]) + '_' + str(depths[j]) + '.png')
+        image_paths.append('../rw_3/' + str(time_steps[i]) + '_' + str(depths[j]) + '.png')
 
 
 # Iterate over the cells and paste the images onto the collage
 for i, image_path in enumerate(image_paths):
     # Open the image and resize it to fit the cell dimensions
-    image = Image.open(image_path).resize((cell_width, cell_height), Image.ANTIALIAS)
+    image = Image.open(image_path).resize((cell_width, cell_height))
 
     # Calculate the position to paste the image onto the collage
     row = i % num_rows
