@@ -594,12 +594,15 @@ class ModifiedTopolgicalExplore
             {
                 std::vector<std::vector<int>> &grid_ref = *grid;
                 std::vector<std::vector<int>> &grid_ref_original = *grid_original;
+                std::vector<std::vector<int>> &obstacles_seen_start_point_ref = *obstacles_seen_start_point;
 
 
                 for(int  i = 0; i< obstacles_ref.size();++i)
                 {
-                    int current_obstacle_x = obstacles_ref[i][0];
-                    int current_obstacle_y = obstacles_ref[i][1];
+                    int current_obstacle_x = obstacles_seen_start_point_ref[i][0];
+                    int current_obstacle_y = obstacles_seen_start_point_ref[i][1];
+                    // int current_obstacle_x = obstacles_ref[i][0];
+                    // int current_obstacle_y = obstacles_ref[i][1];
                     int unmapped_cell_count = 0;
                     
                     if(current_obstacle_y-1 >= 0)

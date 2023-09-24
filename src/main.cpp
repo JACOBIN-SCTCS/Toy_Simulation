@@ -41,6 +41,8 @@ class Robot
             int i=0;
             while(i < num_obstacles)
             {   
+                if(infile.peek() == EOF)
+                    break;
                 int tmp_x, tmp_y;
                 infile >> tmp_x >> tmp_y;
                 std::cout << tmp_x <<" "<< tmp_y <<std::endl;
@@ -68,8 +70,6 @@ class Robot
                     for(int k=0;k<square_obstacle_size;++k)
                     {
                         grid_original[x+j][y+k] = 0;
-                        // if(j == 0 || j == 3 || k == 0 || k == 3)
-                        //  grid_original_only_boundary[x+j][y+k] = 0;
                         obstacle_id_grid[x+j][y+k] = i;
                     }
                 }
@@ -1122,13 +1122,13 @@ private:
     bool depth_result_visualize = false;
     int  depth_result_visualize_timestep = 200;
     std::string depth_result_file_prefix = "obs0";
-    int square_obstacle_size = 15;
+    int square_obstacle_size = 4;
 
 };
 
 int main(int argc, char *argv[])
 {
-    int choice = 5;
+    int choice = 7;
     bool use_window = false;
     if(choice==0)
     {
@@ -1351,6 +1351,13 @@ int main(int argc, char *argv[])
         use_window = true;
         Robot robot(60, 600,10.0, 25,use_window,"result_obs_256_4.txt","obs0.txt",16,true,false,100,"dobs4_frontier.txt");
         robot.random_walk_explore({0,0});
+    }
+    else if(choice ==7)
+    {
+        use_window = true;
+        Robot robot(60,600,10.0,25,use_window,"result_obs_0.txt","obs0.txt",8,false,false,200,"obs0_");
+        robot.topological_explore_4({0,0});
+        // robot.start_exploring(0,0);
     }
     else
     {
