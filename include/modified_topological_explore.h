@@ -57,7 +57,14 @@ class ModifiedTopolgicalExplore
         };
 
 
-        ModifiedTopolgicalExplore(std::vector<std::vector<int>> *g, std::vector<std::vector<int>> *o, std::vector<int> start, std::vector<std::vector<int>> *g_o ,bool r_explored=false, int obstacle_size=4) : grid(g), obstacles_seen(o), start_coordinates(start),grid_original(g_o),remove_explored_obstacles(r_explored), obstacle_size(obstacle_size)
+        ModifiedTopolgicalExplore(std::vector<std::vector<int>> *g, 
+        std::vector<std::vector<int>> *o,
+        std::vector<int> start, 
+        std::vector<std::vector<int>> *g_o,
+        std::vector<std::vector<int>> *o_s,
+        bool r_explored=false, int obstacle_size=4)
+        
+         : grid(g), obstacles_seen(o), start_coordinates(start),grid_original(g_o),remove_explored_obstacles(r_explored), obstacle_size(obstacle_size) , obstacles_seen_start_point(o_s)
         {
             current_start = {start[0],start[1]};
             std::vector<std::vector<int>> &grid_ref = *grid;
@@ -81,40 +88,14 @@ class ModifiedTopolgicalExplore
             std::default_random_engine generator;
             std::vector<int> quadrant_weights = get_quadrant_vector();
             std::discrete_distribution<int> distribution(quadrant_weights.begin(),quadrant_weights.end());
-            int quadrant_select_index = distribution(generator);//rand() % 4;
+            int quadrant_select_index = distribution(generator);
 
             std::vector<std::pair<int,int>> dest_points = get_destination_point(quadrant_select_index);
             
             int random_index = rand() % dest_points.size();
             current_goal = {dest_points[random_index].first,dest_points[random_index].second};
-            // switch (quadrant_select_index)
-            // {
-            //     case 0:
-            //         random_index = rand() % (grid->size() - 1);
-            //         current_goal = {0,random_index};
-            //         break;
-            //     case 1:
-            //         random_index = rand() % (grid->size() - 1);
-            //         current_goal = {random_index , (int)grid->size()-1};
-            //         break;
-            //     case 2:
-            //         random_index = rand() % (grid->size() - 1)+1;
-            //         current_goal = {(int)grid->size()-1, random_index};
-            //         break;
-            //     case 3 : 
-            //         random_index = rand() % (grid->size() - 1) + 1;
-            //         current_goal = {random_index , 0};
-            //         break;
-            //     default:
-            //         random_index = rand() % (grid->size() - 1) + 1;
-            //         current_goal = {random_index , 0};
-            //         break;
-            // }
+           
             current_goal_quadrant = quadrant_select_index;
-            // std::cout << "-----\nQuadrant checking----\n" << std::endl;
-            // std::cout << quadrant << std::endl;
-            // std::cout << quadrant_select_index << "--" << current_goal[0] << "," << current_goal[1] << std::endl; 
-            
             current_path_index = 0;
             traversed_paths.clear();
             current_path.clear();
@@ -257,6 +238,7 @@ class ModifiedTopolgicalExplore
             };
             
             std::vector<std::vector<int>> &obstacles_ref = *obstacles_seen;
+            std::vector<std::vector<int>> &obstacles_seen_start_point_ref = *obstacles_seen_start_point;
             std::vector<std::vector<int>> &grid_ref = *grid;
             std::vector<std::vector<int>> obstacles_to_use;
 
@@ -265,13 +247,16 @@ class ModifiedTopolgicalExplore
                 std::vector<std::vector<int>> &grid_ref = *grid;
                 std::vector<std::vector<int>> &grid_ref_original = *grid_original;
 
-
-                for(int  i = 0; i< obstacles_ref.size();++i)
+                
+                for(int  i = 0; i< obstacles_seen_start_point_ref.size();++i)
                 {
-                    int current_obstacle_x = obstacles_ref[i][0];
-                    int current_obstacle_y = obstacles_ref[i][1];
+                    // int current_obstacle_x = obstacles_ref[i][0];
+                    // int current_obstacle_y = obstacles_ref[i][1];
+                    int current_obstacle_x = obstacles_seen_start_point_ref[i][0];
+                    int current_obstacle_y = obstacles_seen_start_point_ref[i][1];
                     int unmapped_cell_count = 0;
                     
+                    // I have changed how representative points are identified need to change
                     if(current_obstacle_y-1 >= 0)
                     {
                         for(int j=current_obstacle_x-1;j<current_obstacle_x + obstacle_size+1;++j)
@@ -344,31 +329,7 @@ class ModifiedTopolgicalExplore
             
                 int random_index = rand() % dest_points.size();
                 current_goal = {dest_points[random_index].first,dest_points[random_index].second};
-                // int next_quadrant_index = rand() % 4;
-                // int random_index = -1;
-                // switch (next_quadrant_index)
-                // {
-                //     case 0:
-                //         random_index = rand() % (grid->size() - 1);
-                //         current_goal = {0,random_index};
-                //         break;
-                //     case 1:
-                //         random_index = rand() % (grid->size() - 1);
-                //         current_goal = {random_index , (int)grid->size()-1};
-                //         break;
-                //     case 2:
-                //         random_index = rand() % (grid->size() - 1) + 1;
-                //         current_goal = {(int)grid->size()-1, random_index};
-                //         break;
-                //     case 3 : 
-                //         random_index = rand() % (grid->size() - 1) + 1;
-                //         current_goal = {random_index , 0};
-                //         break;
-                //     default:
-                //         random_index = rand() % (grid->size() - 1) + 1;
-                //         current_goal = {random_index , 0};
-                //         break;
-                // }
+      
                 current_goal_quadrant  = next_quadrant_index;
                 std::vector<std::pair<int,int>> current_path_copy;
                 for(int i=0;i<current_path.size();++i)
@@ -458,26 +419,7 @@ class ModifiedTopolgicalExplore
             };
 
             double cell_costs[grid_ref.size()][grid_ref[0].size()];
-            // for(int i=0;i<grid_ref.size();++i)
-            // {
-            //     for(int j=0;j<grid_ref[0].size();++j)
-            //     {
-            //         if(grid_ref[i][j]!=0)
-            //         {
-            //             double cell_cost = 0.0;
-            //             for(int k = 0; k< obstacles_ref.size();++k)
-            //             {
-            //                 int c_x = obstacles_ref[k][0];
-            //                 int c_y = obstacles_ref[k][1];
-            //                 std::complex<double> obs_point(c_x,c_y);
-            //                 std::complex<double> current_point(i,j);
-            //                 cell_cost = cell_cost + std::abs(current_point - obs_point);
-            //             }
-            //             cell_costs[i][j] = cell_cost;
-            //         }
-            //     }
-            // }
-
+        
             std::priority_queue<AstarNode *, std::vector<AstarNode *>, std::function<bool(AstarNode *, AstarNode *)>> pq([](AstarNode *a, AstarNode *b)
                                                                                                                 { return (a->f  +  a->g) > (b->f + b->g); });      //{ return (a->f + a->g) > (b->f + b->g); });
             std::unordered_map<std::string, double> distance_count;
@@ -496,30 +438,7 @@ class ModifiedTopolgicalExplore
             distance_count[ss.str()] = f; //std::abs(goal_point - start_point);
             pq.push(node);
 
-            // for (unsigned int i = 0; i < directions.size(); ++i)
-            // {
-            //     std::complex<double> new_point = start_point + directions[i];
-            //     if (int(real(new_point)) < 0 || int(real(new_point)) >= grid_ref.size() || int(imag(new_point)) < 0 || int(imag(new_point)) >= grid_ref[0].size() || grid_ref[int(new_point.real())][int(new_point.imag())] == 0)
-            //         continue;
-
-            //     Eigen::VectorXcd s_vec = Eigen::VectorXcd::Constant(obstacle_points.size(), start_point) - obstacle_points;
-            //     Eigen::VectorXcd e_vec = Eigen::VectorXcd::Constant(obstacle_points.size(), new_point) - obstacle_points;
-            //     Eigen::VectorXd temp = s_vec.array().binaryExpr(e_vec.array(), customOp);
-
-            //     double cell_cost = 1.0; // grid_ref[new_point.real()][new_point.imag()];
-            //     if (cell_cost == -1)
-            //         cell_cost = 1.0;
-                
-            //     double f = cell_cost;
-            //     double g = std::abs(new_point - goal_point);
-            //     double c = f + g;
-            //     std::vector<std::complex<double>> e = {start_point, new_point};
-                
-            //     AstarNode *node = new AstarNode(new_point, temp + partial_signature, f,g, NULL, e);
-            //     // AstarNode *node = new AstarNode(new_point, temp + partial_signature, c, NULL, e);
-            //     pq.push(node);
-            // }
-
+           
             while (!pq.empty())
             {
                 AstarNode *node = pq.top();
@@ -862,36 +781,38 @@ class ModifiedTopolgicalExplore
         }
 
 
-std::vector<std::vector<int>> *grid;
-std::vector<std::vector<int>> *obstacles_seen;
-std::map<std::string, int> done_signatures;
+    std::vector<std::vector<int>> *grid;
+    std::vector<std::vector<int>> *obstacles_seen;
+    std::vector<std::vector<int>> *obstacles_seen_start_point;
 
-std::vector<std::vector<std::vector<std::pair<int,int>>>> boundary_points_path;
+    std::map<std::string, int> done_signatures;
 
-
-std::vector<int> start_coordinates;
-std::vector<int> goal_coordinates;
-std::vector<std::vector<int>> goals;
-
-std::vector<int> n_times_chosen;
-
-std::vector<std::vector<std::pair<int,int>>> corner_point_paths;
+    std::vector<std::vector<std::vector<std::pair<int,int>>>> boundary_points_path;
 
 
+    std::vector<int> start_coordinates;
+    std::vector<int> goal_coordinates;
+    std::vector<std::vector<int>> goals;
+
+    std::vector<int> n_times_chosen;
+
+    std::vector<std::vector<std::pair<int,int>>> corner_point_paths;
 
 
-std::vector<int> current_start;
-int current_start_quadrant;
-std::vector<int> current_goal;
-int current_goal_quadrant;
-std::vector<int> start_quadrants;
-std::vector<int> goal_quadrants;
-std::vector<std::vector<std::pair<int,int>>> traversed_paths;
-std::vector<std::pair<int,int>> current_path;
-int current_path_index;
-std::vector<Eigen::VectorXd> traversed_signatures;
-std::vector<std::vector<int>> *grid_original;
-bool remove_explored_obstacles = false;
-int obstacle_size = 4;
+
+
+    std::vector<int> current_start;
+    int current_start_quadrant;
+    std::vector<int> current_goal;
+    int current_goal_quadrant;
+    std::vector<int> start_quadrants;
+    std::vector<int> goal_quadrants;
+    std::vector<std::vector<std::pair<int,int>>> traversed_paths;
+    std::vector<std::pair<int,int>> current_path;
+    int current_path_index;
+    std::vector<Eigen::VectorXd> traversed_signatures;
+    std::vector<std::vector<int>> *grid_original;
+    bool remove_explored_obstacles = false;
+    int obstacle_size = 4;
 
 };
