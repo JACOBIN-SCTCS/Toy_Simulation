@@ -19,7 +19,7 @@ class Robot
         int n_obstacles, bool window = true , std::string filename = "results.txt", 
         std::string obs_filename="obs0.txt",int sensor_range=8,
         bool d_result = false,bool d_result_visualize=false, int d_result_visualize_timestep=200,
-        std::string depth_file_prefix="obs0_") 
+        std::string depth_file_prefix="obs0_", bool print_logs = true) 
         : grid_size(g_size),  
           fw(w_size,w_size,scale),
           num_obstacles(n_obstacles),
@@ -27,7 +27,8 @@ class Robot
           depth_result(d_result) ,
           depth_result_visualize(d_result_visualize),
           depth_result_visualize_timestep(d_result_visualize_timestep),
-          depth_result_file_prefix(depth_file_prefix)
+          depth_result_file_prefix(depth_file_prefix),
+          print_logs(print_logs)
 
         {
             use_window  = window;
@@ -45,7 +46,9 @@ class Robot
                     break;
                 int tmp_x, tmp_y;
                 infile >> tmp_x >> tmp_y;
-                std::cout << tmp_x <<" "<< tmp_y <<std::endl;
+                if(print_logs)
+                    std::cout << tmp_x <<" "<< tmp_y <<std::endl;
+                
                 int x =   tmp_x ; 
                 int y =   tmp_y ;
                 bool obstacle_invalid = false;
@@ -88,7 +91,8 @@ class Robot
                 }
             }
 
-            std::cout << "Size of the grid = " << grid_size<<"Total Free Space = "<<total_free_space<< std::endl;
+            if(print_logs)
+                std::cout << "Size of the grid = " << grid_size<<"Total Free Space = "<<total_free_space<< std::endl;
             create_ground_truth_resolutions(g_size);
         }
 
@@ -167,7 +171,9 @@ class Robot
 
         if(obstacle_id_grid[current_x][current_y] >= 0)
         {
-            std::cout << "Robot is in obstacle" << std::endl;
+            if(print_logs)
+                std::cout << "Robot is in obstacle" << std::endl;
+            
             return;
         }
         std::fstream f;
@@ -222,7 +228,7 @@ class Robot
             }
         }
 
-        FrontierExplore f_explore(&grid,&obstacles_seen);
+        FrontierExplore f_explore(&grid,&obstacles_seen,print_logs);
         f_explore.findFrontiers(current_x, current_y);
 
         while(f_explore.frontiers.size() > 0)
@@ -230,12 +236,14 @@ class Robot
             double stopping_percentage = ((double)total_cells_mapped/(total_free_space)) * 100;
             if(stopping_percentage>=99.0)
                 break;
+            if(print_logs)
+                std::cout << "Frontiers size = " << f_explore.frontiers.size() << std::endl;
             
-            std::cout << "Frontiers size = " << f_explore.frontiers.size() << std::endl;
             std::vector<std::pair<int, int>> path = f_explore.getPath(current_x, current_y, f_explore.frontiers[0].x, f_explore.frontiers[0].y);
             // grid[f_explore.frontiers[0].x][f_explore.frontiers[0].y] = 3;
+            if(print_logs)
+                std::cout << "Frontier exploration Path size = " << path.size() << std::endl;
 
-            std::cout << "Frontier exploration Path size = " << path.size() << std::endl;
             for (int i = 0; i < path.size(); ++i)
             {
                 timesteps_taken +=1;
@@ -373,8 +381,8 @@ class Robot
             }
         }
 
-        ModifiedTopolgicalExplore top_explore(&grid,&obstacles_seen,start,&grid_original,&obstacles_seen_start_point,true,square_obstacle_size);
-        FrontierExplore f_explore(&grid,&obstacles_seen);
+        ModifiedTopolgicalExplore top_explore(&grid,&obstacles_seen,start,&grid_original,&obstacles_seen_start_point,true,square_obstacle_size,print_logs);
+        FrontierExplore f_explore(&grid,&obstacles_seen,print_logs);
         
         std::vector<std::vector<std::pair<int,int>>> already_traversed_paths;
         double epsilon = 1.0;
@@ -389,8 +397,9 @@ class Robot
             
             if(drawn_number <= epsilon)
             {
-         
-                std::cout<<"Doing a topological exploration strategy"<<std::endl;
+                if(print_logs)
+                    std::cout<<"Doing a topological exploration strategy"<<std::endl;
+                
                 if(grid[top_explore.current_goal[0]][top_explore.current_goal[1]]!=-1)
                 {
                     std::default_random_engine generator;
@@ -408,7 +417,8 @@ class Robot
                 std::vector<std::pair<int,int>> p = top_explore.current_path;
                 if(!status)
                 {
-                    std::cout<<"No Topological exploration path found"<<std::endl;
+                    if(print_logs)
+                        std::cout<<"No Topological exploration path found"<<std::endl;
                     // t+=1;
                     // epsilon = 1.0 - ((double)total_cells_mapped/(total_free_space) + pow(2.71828,0.01*t)/(total_free_space));//pow(2.71828,-0.02*t);
                     goto frontier;
@@ -518,7 +528,8 @@ class Robot
             else
             {
                 frontier:
-                std::cout<<"Doing Frontier Based exploration"<<std::endl;
+                if(print_logs)
+                    std::cout<<"Doing Frontier Based exploration"<<std::endl;
                 f_explore.findFrontiers(current_x, current_y);
                 if(f_explore.frontiers.size() <=0)
                 {
@@ -529,7 +540,8 @@ class Robot
                 std::vector<std::pair<int, int>> path = f_explore.getPath(current_x, current_y, f_explore.frontiers[0].x, f_explore.frontiers[0].y);
                 grid[f_explore.frontiers[0].x][f_explore.frontiers[0].y] = 3;
 
-                std::cout << "Frontier ExplorationPath size = " << path.size() << std::endl;
+                if(print_logs)
+                    std::cout << "Frontier ExplorationPath size = " << path.size() << std::endl;
                 std::vector<std::pair<int,int>> new_current_path_copy;
                 for(int i =0;i<top_explore.current_path_index;++i)
                     new_current_path_copy.push_back(top_explore.current_path[i]);
@@ -611,9 +623,10 @@ class Robot
         int current_x = start[0] ;
         int current_y = start[1];
 
-        if(obstacle_id_grid[current_x][current_y] == 0)
+        if(obstacle_id_grid[current_x][current_y] >= 0)
         {
-            std::cout << "Robot is in obstacle" << std::endl;
+            if(print_logs)
+                std::cout << "Robot is in obstacle" << std::endl;
             return;
         }
 
@@ -678,7 +691,8 @@ class Robot
                 break;
             
             std::vector<std::pair<int, int>> path = rw.getPath(current_x, current_y,destination[0], destination[1]);
-            std::cout << "Random Walk Exploration Path Size = " << path.size() << std::endl;
+            if(print_logs)
+                std::cout << "Random Walk Exploration Path Size = " << path.size() << std::endl;
             for (int i = 0; i < path.size(); ++i)
             {
                 timesteps_taken +=1;
@@ -1123,6 +1137,8 @@ private:
     int  depth_result_visualize_timestep = 200;
     std::string depth_result_file_prefix = "obs0";
     int square_obstacle_size = 4;
+
+    bool print_logs = true;
 
 };
 

@@ -30,7 +30,7 @@ class FrontierExplore
             struct AstarNode* parent;
         };
 
-        FrontierExplore(std::vector<std::vector<int>> *grid, std::vector<std::vector<int>> *obs) : grid(grid), obstacles(obs)
+        FrontierExplore(std::vector<std::vector<int>> *grid, std::vector<std::vector<int>> *obs, bool print_logs = true) : grid(grid), obstacles(obs) , print_logs(print_logs)
         {
             ;
         }
@@ -172,8 +172,11 @@ class FrontierExplore
 
         std::vector<std::pair<int,int>> getPath(int start_x, int start_y , int end_x, int end_y)
         {
-            std::cout<<"Source = (" << start_x <<","<<start_y<<")\n";
-            std::cout<<"Destination = (" << end_x <<","<<end_y<<")\n";
+            if(print_logs)
+            {
+                std::cout<<"Source = (" << start_x <<","<<start_y<<")\n";
+                std::cout<<"Destination = (" << end_x <<","<<end_y<<")\n";
+            }
 
             std::vector<std::vector<int>>& grid_ref = *grid;
             int distance[grid_ref.size()][grid_ref[0].size()];
@@ -285,10 +288,13 @@ class FrontierExplore
         {
             std::vector<std::vector<int>>& grid_ref = *grid;
             int ele = grid_ref[0][0];
-            std::cout<<ele<<std::endl;
+            if(print_logs)
+                std::cout<<ele<<std::endl;
         }
 
         std::vector<std::vector<int>>* grid;
         std::vector<std::vector<int>> *obstacles;
         std::vector<Frontier> frontiers;
+
+        bool print_logs;
 };

@@ -62,9 +62,11 @@ class ModifiedTopolgicalExplore
         std::vector<int> start, 
         std::vector<std::vector<int>> *g_o,
         std::vector<std::vector<int>> *o_s,
-        bool r_explored=false, int obstacle_size=4)
+        bool r_explored=false, int obstacle_size=4,
+        bool print_logs = true
+        )
         
-         : grid(g), obstacles_seen(o), start_coordinates(start),grid_original(g_o),remove_explored_obstacles(r_explored), obstacle_size(obstacle_size) , obstacles_seen_start_point(o_s)
+         : grid(g), obstacles_seen(o), start_coordinates(start),grid_original(g_o),remove_explored_obstacles(r_explored), obstacle_size(obstacle_size) , obstacles_seen_start_point(o_s) , print_logs(print_logs)
         {
             current_start = {start[0],start[1]};
             std::vector<std::vector<int>> &grid_ref = *grid;
@@ -219,7 +221,8 @@ class ModifiedTopolgicalExplore
         bool getNonHomologousPaths(int x, int y, std::vector<Eigen::VectorXd> visited_h_signatures)
         {
             // struct NonHomologouspath p;
-            std::cout << "Reached inside"<<std::endl;
+            if(print_logs)
+                std::cout << "Reached inside"<<std::endl;
             auto customOp = [](const std::complex<double> &a, const std::complex<double> &b) -> double
             {
                 double minimum_phase_difference = std::arg(b) - std::arg(a);
@@ -348,20 +351,25 @@ class ModifiedTopolgicalExplore
                 Eigen::VectorXd prev_h_signature = recompute_h_signature(traversed_paths[i]);
                 Eigen::VectorXd augmented_path_signature_start = Eigen::VectorXd::Zero(obstacles_to_use.size());
                 Eigen::VectorXd augmented_path_signature_goal = Eigen::VectorXd::Zero(obstacles_to_use.size());
-                std::cout <<"Traversed paths size = "<< traversed_paths.size()<<std::endl;
-                std::cout << "Previous H signature = " << prev_h_signature.transpose() << std::endl;
-                std::cout << "Traversed_path size = " << traversed_paths[i].size() << std::endl;
-                std::cout << "Current index= " << i <<std::endl;
-                std::cout << "Start quadrant index = " << start_quadrants[i] << std::endl;
-                std::cout << "Destination quadrant index = " << goal_quadrants[i] << std::endl;
-                std::cout << "Current start = " << current_start[0] << "," << current_start[1] << std::endl;    
-                std::cout << "Current goal = " << current_goal[0] << "," << current_goal[1] << std::endl;
+                
+                if(print_logs)
+                {
+                    std::cout <<"Traversed paths size = "<< traversed_paths.size()<<std::endl;
+                    std::cout << "Previous H signature = " << prev_h_signature.transpose() << std::endl;
+                    std::cout << "Traversed_path size = " << traversed_paths[i].size() << std::endl;
+                    std::cout << "Current index= " << i <<std::endl;
+                    std::cout << "Start quadrant index = " << start_quadrants[i] << std::endl;
+                    std::cout << "Destination quadrant index = " << goal_quadrants[i] << std::endl;
+                    std::cout << "Current start = " << current_start[0] << "," << current_start[1] << std::endl;    
+                    std::cout << "Current goal = " << current_goal[0] << "," << current_goal[1] << std::endl;
+
+                }
+                
                 if(traversed_paths[i].size() == 0)
                     continue;
                 
                 for(int j = 0 ; j < boundary_points_path[start_quadrants[i]].size() ; ++j)
                 {
-                    // std::cout << "Traversed path" << traversed_paths[i][0].first << ", " << traversed_paths[i][0].second << std::endl;
                     if(boundary_points_path[start_quadrants[i]][j][0].first == traversed_paths[i][0].first && boundary_points_path[start_quadrants[i]][j][0].second == traversed_paths[i][0].second)
                     {
                         std::vector<std::pair<int,int>> current_path_tmp;
@@ -396,7 +404,6 @@ class ModifiedTopolgicalExplore
 
             Eigen::VectorXd partial_signature = Eigen::VectorXd::Zero(obstacles_to_use.size());
             partial_signature = recompute_h_signature(current_path,current_path_index);
-            // std::cout<<"Partial signature: "<<partial_signature.transpose()<<std::endl;
 
         
             Eigen::VectorXcd obstacle_points = Eigen::VectorXcd::Zero(obstacles_to_use.size());
@@ -492,8 +499,8 @@ class ModifiedTopolgicalExplore
                     }
                     if (is_already_seen)
                         continue;
-
-                    std::cout<<"H signature = "<< corrected_signature << std::endl;
+                    if(print_logs)
+                        std::cout<<"H signature = "<< corrected_signature << std::endl;
                     std::vector<std::pair<int, int>> path;
                     AstarNode *temp = node;
                     while (temp != NULL)
@@ -817,5 +824,7 @@ class ModifiedTopolgicalExplore
     std::vector<std::vector<int>> *grid_original;
     bool remove_explored_obstacles = false;
     int obstacle_size = 4;
+    
+    bool print_logs;
 
 };
