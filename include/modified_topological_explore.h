@@ -348,7 +348,7 @@ class ModifiedTopolgicalExplore
             
             for(int i=0;i<traversed_paths.size();++i)
             {
-                Eigen::VectorXd prev_h_signature = recompute_h_signature(traversed_paths[i]);
+                Eigen::VectorXd prev_h_signature = recompute_h_signature(traversed_paths[i],obstacles_to_use);
                 Eigen::VectorXd augmented_path_signature_start = Eigen::VectorXd::Zero(obstacles_to_use.size());
                 Eigen::VectorXd augmented_path_signature_goal = Eigen::VectorXd::Zero(obstacles_to_use.size());
                 
@@ -378,7 +378,7 @@ class ModifiedTopolgicalExplore
                             current_path_tmp.push_back({boundary_points_path[start_quadrants[i]][j][k].first,boundary_points_path[start_quadrants[i]][j][k].second});
                         }
                         // std::reverse(current_path_tmp.begin(),current_path_tmp.end());
-                        augmented_path_signature_start = -recompute_h_signature(current_path_tmp);
+                        augmented_path_signature_start = -recompute_h_signature(current_path_tmp,obstacles_to_use);
                     }
                 }
 
@@ -393,7 +393,7 @@ class ModifiedTopolgicalExplore
                             current_path_tmp.push_back({boundary_points_path[start_quadrants[i]][j][k].first,boundary_points_path[start_quadrants[i]][j][k].second});
                         }
                         // std::reverse(current_path_tmp.begin(),current_path_tmp.end());
-                        augmented_path_signature_goal = recompute_h_signature(current_path_tmp);
+                        augmented_path_signature_goal = recompute_h_signature(current_path_tmp,obstacles_to_use);
                     }
                 }           
                 prev_h_signature =  prev_h_signature + augmented_path_signature_start + augmented_path_signature_goal;
@@ -403,7 +403,7 @@ class ModifiedTopolgicalExplore
 
 
             Eigen::VectorXd partial_signature = Eigen::VectorXd::Zero(obstacles_to_use.size());
-            partial_signature = recompute_h_signature(current_path,current_path_index);
+            partial_signature = recompute_h_signature(current_path,obstacles_to_use,current_path_index);
 
         
             Eigen::VectorXcd obstacle_points = Eigen::VectorXcd::Zero(obstacles_to_use.size());
@@ -465,7 +465,7 @@ class ModifiedTopolgicalExplore
                     {
                         if(boundary_points_path[current_start_quadrant][j][0].first == current_start[0] && boundary_points_path[current_start_quadrant][j][0].second == current_start[1])
                         {
-                            augmented_start_signature =  - recompute_h_signature(boundary_points_path[current_start_quadrant][j]);
+                            augmented_start_signature =  - recompute_h_signature(boundary_points_path[current_start_quadrant][j],obstacles_to_use);
                         }
                     }
 
@@ -473,7 +473,7 @@ class ModifiedTopolgicalExplore
                     {
                         if(boundary_points_path[current_goal_quadrant][j][0].first == current_goal[0] && boundary_points_path[current_goal_quadrant][j][0].second == current_goal[1])
                         {
-                            augmented_goal_signature =   recompute_h_signature(boundary_points_path[current_goal_quadrant][j]);
+                            augmented_goal_signature =   recompute_h_signature(boundary_points_path[current_goal_quadrant][j],obstacles_to_use);
                         }
                     }
 
@@ -572,7 +572,7 @@ class ModifiedTopolgicalExplore
             return false;
         }
         
-        Eigen::VectorXd recompute_h_signature(std::vector<std::pair<int,int>> path, int index = -1)
+        Eigen::VectorXd recompute_h_signature(std::vector<std::pair<int,int>> path,std::vector<std::vector<int>> obstacles_to_use, int index = -1)
         {
             int n = (index==-1)?(path.size()-1):index;
 
@@ -592,78 +592,6 @@ class ModifiedTopolgicalExplore
                 }
                 return minimum_phase_difference;
             };
-
-            // std::vector<Eigen::VectorXd> h_signatures;
-            std::vector<std::vector<int>> &obstacles_ref = *obstacles_seen;
-            std::vector<std::vector<int>> obstacles_to_use;
-
-            if(remove_explored_obstacles)
-            {
-                std::vector<std::vector<int>> &grid_ref = *grid;
-                std::vector<std::vector<int>> &grid_ref_original = *grid_original;
-                std::vector<std::vector<int>> &obstacles_seen_start_point_ref = *obstacles_seen_start_point;
-
-
-                for(int  i = 0; i< obstacles_ref.size();++i)
-                {
-                    int current_obstacle_x = obstacles_seen_start_point_ref[i][0];
-                    int current_obstacle_y = obstacles_seen_start_point_ref[i][1];
-                    // int current_obstacle_x = obstacles_ref[i][0];
-                    // int current_obstacle_y = obstacles_ref[i][1];
-                    int unmapped_cell_count = 0;
-                    
-                    if(current_obstacle_y-1 >= 0)
-                    {
-                        for(int j=current_obstacle_x-1;j<current_obstacle_x + obstacle_size+1;++j)
-                        {
-                            if(j<0 || j>= grid_ref.size())
-                                continue;
-                            if(grid_ref[j][current_obstacle_y-1] == -1 && grid_ref_original[j][current_obstacle_y-1] != 0)
-                                unmapped_cell_count+=1;
-                        
-                        }  
-                    }
-                    if(current_obstacle_y + obstacle_size < grid_ref[0].size())
-                    {
-                        for(int j=current_obstacle_x-1;j<current_obstacle_x + obstacle_size+1;++j)
-                        {
-                            if(j<0 || j>= grid_ref.size())
-                                continue;
-                            if(grid_ref[j][current_obstacle_y+obstacle_size] == -1 && grid_ref_original[j][current_obstacle_y+obstacle_size] != 0)
-                                unmapped_cell_count+=1;
-                        }  
-                    }
-
-                    if(current_obstacle_x-1 >= 0)
-                    {
-                        for(int j=current_obstacle_y-1;j<current_obstacle_y + obstacle_size+1;++j)
-                        {
-                            if(j<0 || j>= grid_ref[0].size())
-                                continue;
-                            if(grid_ref[current_obstacle_x-1][j] == -1 && grid_ref_original[current_obstacle_x-1][j] != 0)
-                                unmapped_cell_count+=1;
-                        }  
-                    }
-                    
-                    if(current_obstacle_x + obstacle_size < grid_ref.size())
-                    {
-                        for(int j=current_obstacle_y-1;j<current_obstacle_y + obstacle_size+1;++j)
-                        {
-                            if(j<0 || j>= grid_ref[0].size())
-                                continue;
-                            if(grid_ref[current_obstacle_x+obstacle_size][j] == -1 && grid_ref_original[current_obstacle_x+obstacle_size][j] != 0)
-                                unmapped_cell_count+=1;
-                        }  
-                    }
-
-                    if(unmapped_cell_count > 0)
-                        obstacles_to_use.push_back(obstacles_ref[i]);
-                }
-            }
-            else
-            {
-                obstacles_to_use = obstacles_ref;
-            }
 
             Eigen::VectorXd current_h_signature = Eigen::VectorXd::Zero(obstacles_to_use.size());
             
