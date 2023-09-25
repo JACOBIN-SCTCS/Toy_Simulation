@@ -93,7 +93,7 @@ class Robot
 
             if(print_logs)
                 std::cout << "Size of the grid = " << grid_size<<"Total Free Space = "<<total_free_space<< std::endl;
-            create_ground_truth_resolutions(g_size);
+            // create_ground_truth_resolutions(g_size);
         }
 
     void sensor_model(int x, int y,bool use_tan = false)
@@ -761,45 +761,45 @@ class Robot
         std::cout<<"Exploration complete"<<std::endl;
     }
 
-    void create_ground_truth_resolutions(int g_size)
-    {
-        for(int i=0;i<depths.size();++i)
-        {
-            std::vector<std::vector<int>> current_depth_ground_truth;
-            int current_depth = depths[i];
-            current_depth_ground_truth.resize(current_depth,std::vector<int>(current_depth,0));
+    // void create_ground_truth_resolutions(int g_size)
+    // {
+    //     for(int i=0;i<depths.size();++i)
+    //     {
+    //         std::vector<std::vector<int>> current_depth_ground_truth;
+    //         int current_depth = depths[i];
+    //         current_depth_ground_truth.resize(current_depth,std::vector<int>(current_depth,0));
 
-            int x_increment = (int) g_size/current_depth;
-            int y_increment = (int) g_size/current_depth;
+    //         int x_increment = (int) g_size/current_depth;
+    //         int y_increment = (int) g_size/current_depth;
 
-            for(int j=0;j<current_depth;++j)
-            {
-                for(int k=0;k<current_depth;++k)
-                {
-                    int x = j*x_increment;
-                    int y = k*y_increment;
-                    for(int l=x ; l < (j+1)*x_increment; ++l)
-                    {
-                        for(int m=y ; m < (k+1)*y_increment; ++m)
-                        {
-                            if(grid_original[l][m] == 0)
-                            // if(grid_original_only_boundary[l][m] == 0)
-                            {
-                                current_depth_ground_truth[j][k] = 1;
-                                break;
-                            }
-                        }
-                        if (current_depth_ground_truth[j][k]==1)
-                        {
-                            break;
-                        }   
-                    }
+    //         for(int j=0;j<current_depth;++j)
+    //         {
+    //             for(int k=0;k<current_depth;++k)
+    //             {
+    //                 int x = j*x_increment;
+    //                 int y = k*y_increment;
+    //                 for(int l=x ; l < (j+1)*x_increment; ++l)
+    //                 {
+    //                     for(int m=y ; m < (k+1)*y_increment; ++m)
+    //                     {
+    //                         if(grid_original[l][m] == 0)
+    //                         // if(grid_original_only_boundary[l][m] == 0)
+    //                         {
+    //                             current_depth_ground_truth[j][k] = 1;
+    //                             break;
+    //                         }
+    //                     }
+    //                     if (current_depth_ground_truth[j][k]==1)
+    //                     {
+    //                         break;
+    //                     }   
+    //                 }
                     
-                }
-            }
-            ground_truth_depth_result.push_back(current_depth_ground_truth);
-        }
-    }
+    //             }
+    //         }
+    //         ground_truth_depth_result.push_back(current_depth_ground_truth);
+    //     }
+    // }
     
     std::vector<double> getError(bool get_weighted_error = true)
     {

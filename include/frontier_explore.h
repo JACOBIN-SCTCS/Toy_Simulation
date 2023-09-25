@@ -192,8 +192,9 @@ class FrontierExplore
 
             distance[start_x][start_y] = 0;
     	    std::priority_queue<AstarNode*, std::vector<AstarNode*>, std::function<bool(AstarNode*, AstarNode*)>> pq([](AstarNode* a, AstarNode* b) {
-                return  ((a->f + a->g) > (b->f + b->g));
+                // return  ((a->f + a->g) > (b->f + b->g));
                 // return ((a->cost) > (b->cost));
+                return (a->g) > (b->g);
              });
 
             double cell_cost = 0.0;
@@ -240,7 +241,7 @@ class FrontierExplore
                         std::complex<double> neighbour_complex(x_new,y_new);
                         double new_cell_cost = std::abs(neighbour_complex - current_point_complex);
                         double f_new = curr->f +  new_cell_cost ;         
-                        double g_new = sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
+                        double g_new = f_new +  sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
                         if(f_new < distance[x_new][y_new])
                         {
                             distance[x_new][y_new] = f_new;
@@ -265,7 +266,7 @@ class FrontierExplore
                         double new_cell_cost = std::abs(neighbour_complex - current_point_complex);
                         
                         double f_new = curr->f +  new_cell_cost;
-                        double g_new = sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
+                        double g_new = f_new + sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
                         if(f_new < distance[x_new][y_new])
                         {
                             distance[x_new][y_new] = f_new;

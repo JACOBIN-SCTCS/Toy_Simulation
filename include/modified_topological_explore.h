@@ -428,7 +428,10 @@ class ModifiedTopolgicalExplore
             double cell_costs[grid_ref.size()][grid_ref[0].size()];
         
             std::priority_queue<AstarNode *, std::vector<AstarNode *>, std::function<bool(AstarNode *, AstarNode *)>> pq([](AstarNode *a, AstarNode *b)
-                                                                                                                { return (a->f  +  a->g) > (b->f + b->g); });      //{ return (a->f + a->g) > (b->f + b->g); });
+                                                                                                                { 
+                                                                                                                    // return (a->f  +  a->g) > (b->f + b->g); 
+                                                                                                                    return (a->g) > (b->g);
+                                                                                                                });      //{ return (a->f + a->g) > (b->f + b->g); });
             std::unordered_map<std::string, double> distance_count;
             std::set<std::string> visited;
             
@@ -549,7 +552,7 @@ class ModifiedTopolgicalExplore
                         // double cell_cost=  cell_costs[int(real(new_point))][int(imag(new_point))];
                         double f = cell_cost  + node->f;
                         //double f = cell_cost;
-                        double g = std::abs(new_point - goal_point);
+                        double g = f + std::abs(new_point - goal_point);
                         // double c = node->cost + f + g;
 
                         std::stringstream ss;
