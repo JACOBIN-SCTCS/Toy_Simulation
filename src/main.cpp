@@ -228,7 +228,8 @@ class Robot
             }
         }
 
-        FrontierExplore f_explore(&grid,&obstacles_seen,print_logs);
+        // FrontierExplore f_explore(&grid,&obstacles_seen,print_logs);
+        FrontierExplore f_explore(&grid,print_logs);   
         f_explore.findFrontiers(current_x, current_y);
 
         while(f_explore.frontiers.size() > 0)
@@ -382,7 +383,8 @@ class Robot
         }
 
         ModifiedTopolgicalExplore top_explore(&grid,&obstacles_seen,start,&grid_original,&obstacles_seen_start_point,true,square_obstacle_size,print_logs);
-        FrontierExplore f_explore(&grid,&obstacles_seen,print_logs);
+        // FrontierExplore f_explore(&grid,&obstacles_seen,print_logs);
+        FrontierExplore f_explore(&grid,print_logs);
         
         std::vector<std::vector<std::pair<int,int>>> already_traversed_paths;
         double epsilon = 1.0;
@@ -1372,8 +1374,8 @@ int main(int argc, char *argv[])
     {
         use_window = true;
         Robot robot(60,600,10.0,25,use_window,"result_obs_0.txt","obs0.txt",8,false,false,200,"obs0_");
-        robot.topological_explore_4({0,0});
-        // robot.start_exploring(0,0);
+        // robot.topological_explore_4({0,0});
+        robot.start_exploring(0,0);
     }
     else
     {

@@ -30,7 +30,8 @@ class FrontierExplore
             struct AstarNode* parent;
         };
 
-        FrontierExplore(std::vector<std::vector<int>> *grid, std::vector<std::vector<int>> *obs, bool print_logs = true) : grid(grid), obstacles(obs) , print_logs(print_logs)
+        // FrontierExplore(std::vector<std::vector<int>> *grid, std::vector<std::vector<int>> *obs, bool print_logs = true) : grid(grid), obstacles(obs) , print_logs(print_logs)
+        FrontierExplore(std::vector<std::vector<int>> *grid, bool print_logs = true) : grid(grid), print_logs(print_logs)
         {
             ;
         }
@@ -234,29 +235,31 @@ class FrontierExplore
                 {
                     int x_new = neighbours[i].first;
                     int y_new = neighbours[i].second;
-                    if(x_new==end_x && y_new==end_y)
-                    {
+                    // if(x_new==end_x && y_new==end_y)
+                    // {
                       
-                        std::complex<double> current_point_complex(x,y);
-                        std::complex<double> neighbour_complex(x_new,y_new);
-                        double new_cell_cost = std::abs(neighbour_complex - current_point_complex);
-                        double f_new = curr->f +  new_cell_cost ;         
-                        double g_new = f_new +  sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
-                        if(f_new < distance[x_new][y_new])
-                        {
-                            distance[x_new][y_new] = f_new;
-                            AstarNode* new_node = new AstarNode();
-                            new_node->x = x_new;
-                            new_node->y = y_new;
-                            new_node->g = g_new; //curr->g + sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
-                            new_node->f = f_new;
-                            new_node->parent = curr;
-                            pq.push(new_node);
-                            continue;
-                        }
-                    }
+                    //     std::complex<double> current_point_complex(x,y);
+                    //     std::complex<double> neighbour_complex(x_new,y_new);
+                    //     double new_cell_cost = std::abs(neighbour_complex - current_point_complex);
+                    //     double f_new = curr->f +  new_cell_cost ;         
+                    //     double g_new = f_new +  sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
+                    //     if(f_new < distance[x_new][y_new])
+                    //     {
+                    //         distance[x_new][y_new] = f_new;
+                    //         AstarNode* new_node = new AstarNode();
+                    //         new_node->x = x_new;
+                    //         new_node->y = y_new;
+                    //         new_node->g = g_new; //curr->g + sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
+                    //         new_node->f = f_new;
+                    //         new_node->parent = curr;
+                    //         pq.push(new_node);
+                    //         continue;
+                    //     }
+                    // }
 
-                    if(grid_ref[x_new][y_new]==0 || grid_ref[x_new][y_new]==-1)
+                    // if(grid_ref[x_new][y_new]==0 || grid_ref[x_new][y_new]==-1)
+                    //     continue;
+                    if(grid_ref[x_new][y_new] == 0)
                         continue;
                     else
                     {
@@ -294,7 +297,7 @@ class FrontierExplore
         }
 
         std::vector<std::vector<int>>* grid;
-        std::vector<std::vector<int>> *obstacles;
+        // std::vector<std::vector<int>> *obstacles;
         std::vector<Frontier> frontiers;
 
         bool print_logs;
