@@ -72,6 +72,8 @@ class ModifiedTopolgicalExplore
             std::vector<std::vector<int>> &grid_ref = *grid;
             boundary_points_path = getBoundaryPaths(grid_ref.size());
             int quadrant = -1;
+
+            // This could be reduced to a series of if else
             for(int i=0;i<boundary_points_path.size();++i)
             {
                 for(int j = 0; j < boundary_points_path[i].size();++j)
@@ -85,6 +87,8 @@ class ModifiedTopolgicalExplore
                 if(quadrant != - 1)
                     break;
             }
+
+            
             current_start_quadrant = quadrant;
             srand(time(NULL));
             std::default_random_engine generator;
@@ -104,7 +108,7 @@ class ModifiedTopolgicalExplore
             traversed_signatures.clear();
         }
 
-
+        // Working as expected
         std::vector<std::vector<std::vector<std::pair<int,int>>>> getBoundaryPaths(int grid_size)
         {
             std::vector<std::vector<std::vector<std::pair<int,int>>>> v;
@@ -244,17 +248,12 @@ class ModifiedTopolgicalExplore
             std::vector<std::vector<int>> &obstacles_seen_start_point_ref = *obstacles_seen_start_point;
             std::vector<std::vector<int>> &grid_ref = *grid;
             std::vector<std::vector<int>> obstacles_to_use;
-
+            std::vector<std::vector<int>> &grid_ref_original = *grid_original;
             if(remove_explored_obstacles)
             {
-                std::vector<std::vector<int>> &grid_ref = *grid;
-                std::vector<std::vector<int>> &grid_ref_original = *grid_original;
-
-                
                 for(int  i = 0; i< obstacles_seen_start_point_ref.size();++i)
                 {
-                    // int current_obstacle_x = obstacles_ref[i][0];
-                    // int current_obstacle_y = obstacles_ref[i][1];
+                  
                     int current_obstacle_x = obstacles_seen_start_point_ref[i][0];
                     int current_obstacle_y = obstacles_seen_start_point_ref[i][1];
                     int unmapped_cell_count = 0;

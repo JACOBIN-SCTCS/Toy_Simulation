@@ -96,7 +96,8 @@ class Robot
             // create_ground_truth_resolutions(g_size);
         }
 
-    void sensor_model(int x, int y,bool use_tan = false)
+    // Change the way the sensor is modelled
+    void sensor_model(int x, int y,bool use_tan = true)
     {
         int num_rays = 360;
         double angle = 0;
@@ -142,7 +143,41 @@ class Robot
             }
             else
             {
-                ;
+                double new_x = x + range*cos(angle);
+                double new_y =y + range*sin(angle);
+                int new_int_x = static_cast<int>(new_x);
+                int new_int_y = static_cast<int>(new_y);
+
+                for(int j=0; j < 100; j++)
+                {
+                    double fraction  = (j*1.0)/100;
+                    double inter_new_x = x*(1.0-fraction) + fraction*new_x;
+                    double inter_new_y = y*(1.0-fraction) + fraction*new_y;
+                    int inter_new_int_x = static_cast<int>(inter_new_x);
+                    int inter_new_int_y = static_cast<int>(inter_new_y);
+                    if(inter_new_int_x<0 || inter_new_int_x >=grid_size || inter_new_int_y<0 || inter_new_int_y>=grid_size)
+                        break;
+                    if(grid_original[inter_new_int_x][inter_new_int_y]==0)
+                    {
+                        grid[inter_new_int_x][inter_new_int_y]=0;
+                        if(touched_an_obstacle[obstacle_id_grid[inter_new_int_x][inter_new_int_y]] == false)
+                        {
+                            touched_an_obstacle[obstacle_id_grid[inter_new_int_x][inter_new_int_y]] = true;
+                            found_rep_points[obstacle_id_grid[inter_new_int_x][inter_new_int_y]].push_back(inter_new_int_x);
+                            found_rep_points[obstacle_id_grid[inter_new_int_x][inter_new_int_y]].push_back(inter_new_int_y);
+                        }
+                        break;
+                    }
+                    else
+                    {
+                        if(grid[inter_new_int_x][inter_new_int_y]==-1 || grid[inter_new_int_x][inter_new_int_y]==3)
+                            total_cells_mapped+=1;
+                        
+                        grid[inter_new_int_x][inter_new_int_y] = 1;
+                    
+                    }
+                    
+                }
             }
             angle = angle + resolution;
         }
@@ -1101,6 +1136,27 @@ class Robot
             fw.render_screen(grid_original);
         }
     }
+
+    void test_function()
+    {
+    //     ModifiedTopolgicalExplore top_explore(&grid,&obstacles_seen,{0,0},&grid_original,&obstacles_seen_start_point,true,square_obstacle_size,print_logs);
+    //     std::vector<std::vector<std::vector<std::pair<int,int>>>> boundary_point_paths = top_explore.boundary_points_path;
+    //    // print the boundary point paths
+    //     for(int i=0;i<boundary_point_paths.size();++i)
+    //     {
+    //         std::cout<<"Boundary Point Path Quadrant : "<<i<<std::endl;
+    //         for(int j=0;j<boundary_point_paths[i].size();++j)
+    //         {
+    //             std::cout<<"Path "<<j<<std::endl;
+    //             for(int k=0;k<boundary_point_paths[i][j].size();++k)
+    //             {
+    //                 std::cout<< "(" << boundary_point_paths[i][j][k].first<<","<<boundary_point_paths[i][j][k].second<<"),";
+    //             }
+    //             std::cout<<std::endl;
+    //         }
+    //     }
+    }
+
     Framework fw;
     bool write_probability_depth_map = true;
 
@@ -1376,6 +1432,8 @@ int main(int argc, char *argv[])
         Robot robot(60,600,10.0,25,use_window,"result_obs_0.txt","obs0.txt",8,false,false,200,"obs0_");
         // robot.topological_explore_4({0,0});
         robot.start_exploring(0,0);
+        // Robot robot(5,100,20.0,25,use_window,"result_obs_0.txt","obs0.txt",8,false,false,200,"obs0_");
+        // robot.test_function();
     }
     else
     {
