@@ -56,7 +56,7 @@ class Robot
                 {
                     for(int k=0;k<square_obstacle_size;++k)
                     {
-                        if(x+j >= (grid_size-1) ||  x+j < 0 ||  y+k >= (grid_size-1) ||  y+k < 0)
+                        if(x+j >= (grid_size-1) ||  x+j <= 0 ||  y+k >= (grid_size-1) ||  y+k <= 0)
                         {
                             obstacle_invalid = true;
                             break;
@@ -93,10 +93,44 @@ class Robot
 
             if(print_logs)
                 std::cout << "Size of the grid = " << grid_size<<"Total Free Space = "<<total_free_space<< std::endl;
-            // create_ground_truth_resolutions(g_size);
+            create_ground_truth_resolutions(g_size);
         }
 
     // Change the way the sensor is modelled
+
+    void print_depth_result()
+    {
+        // auto error_result = getError();
+        // std::stringstream ss_error;
+        // for(int k=0;k<error_result.size();++k)
+        // {
+        //     ss_error << error_result[k] << " ";
+        // }
+        // f << timesteps_taken << " "<< ((double)total_cells_mapped/(total_free_space)) * 100<<" "<<ss_error.str()<<"\n";
+        // if(depth_result_visualize)
+        // {
+        //     if(timesteps_taken%depth_result_visualize_timestep ==0)
+        //     {
+        //         for(int j=0;j<depths.size();++j)
+        //         {
+        //             std::vector<std::vector<float>> current_depth_result = get_current_depth_result(j);
+        //             std::stringstream depth_ss;
+        //             for(int k=0;k<current_depth_result.size();++k)
+        //             {
+        //                 for(int l=0;l<current_depth_result[0].size();++l)
+        //                 {
+        //                     depth_ss << current_depth_result[k][l] <<",";
+        //                 }
+        //             }
+        //             depth_ss<<"\n";
+        //             depth_file<<depth_ss.str();
+        //         }
+        //         depth_file<<"-\n";
+        //     }
+            
+        // }
+    }
+
     void sensor_model(int x, int y,bool use_tan = true)
     {
         int num_rays = 360;
@@ -265,6 +299,8 @@ class Robot
 
         // FrontierExplore f_explore(&grid,&obstacles_seen,print_logs);
         FrontierExplore f_explore(&grid,print_logs);   
+       
+        // Start benchmarking from here, Sometimes writting to the file f can take time.
         f_explore.findFrontiers(current_x, current_y);
 
         while(f_explore.frontiers.size() > 0)
@@ -416,6 +452,8 @@ class Robot
                 }
             }
         }
+        
+        // Start benchmarking from here
 
         ModifiedTopolgicalExplore top_explore(&grid,&obstacles_seen,start,&grid_original,&obstacles_seen_start_point,true,square_obstacle_size,print_logs);
         // FrontierExplore f_explore(&grid,&obstacles_seen,print_logs);
@@ -652,6 +690,7 @@ class Robot
         }
         std::cout<<"Done Exploration"<<std::endl;
         f.close();
+        depth_file.close();
 
     }
 
@@ -798,45 +837,45 @@ class Robot
         std::cout<<"Exploration complete"<<std::endl;
     }
 
-    // void create_ground_truth_resolutions(int g_size)
-    // {
-    //     for(int i=0;i<depths.size();++i)
-    //     {
-    //         std::vector<std::vector<int>> current_depth_ground_truth;
-    //         int current_depth = depths[i];
-    //         current_depth_ground_truth.resize(current_depth,std::vector<int>(current_depth,0));
+    void create_ground_truth_resolutions(int g_size)
+    {
+        for(int i=0;i<depths.size();++i)
+        {
+            std::vector<std::vector<int>> current_depth_ground_truth;
+            int current_depth = depths[i];
+            current_depth_ground_truth.resize(current_depth,std::vector<int>(current_depth,0));
 
-    //         int x_increment = (int) g_size/current_depth;
-    //         int y_increment = (int) g_size/current_depth;
+            int x_increment = (int) g_size/current_depth;
+            int y_increment = (int) g_size/current_depth;
 
-    //         for(int j=0;j<current_depth;++j)
-    //         {
-    //             for(int k=0;k<current_depth;++k)
-    //             {
-    //                 int x = j*x_increment;
-    //                 int y = k*y_increment;
-    //                 for(int l=x ; l < (j+1)*x_increment; ++l)
-    //                 {
-    //                     for(int m=y ; m < (k+1)*y_increment; ++m)
-    //                     {
-    //                         if(grid_original[l][m] == 0)
-    //                         // if(grid_original_only_boundary[l][m] == 0)
-    //                         {
-    //                             current_depth_ground_truth[j][k] = 1;
-    //                             break;
-    //                         }
-    //                     }
-    //                     if (current_depth_ground_truth[j][k]==1)
-    //                     {
-    //                         break;
-    //                     }   
-    //                 }
+            for(int j=0;j<current_depth;++j)
+            {
+                for(int k=0;k<current_depth;++k)
+                {
+                    int x = j*x_increment;
+                    int y = k*y_increment;
+                    for(int l=x ; l < (j+1)*x_increment; ++l)
+                    {
+                        for(int m=y ; m < (k+1)*y_increment; ++m)
+                        {
+                            if(grid_original[l][m] == 0)
+                            // if(grid_original_only_boundary[l][m] == 0)
+                            {
+                                current_depth_ground_truth[j][k] = 1;
+                                break;
+                            }
+                        }
+                        if (current_depth_ground_truth[j][k]==1)
+                        {
+                            break;
+                        }   
+                    }
                     
-    //             }
-    //         }
-    //         ground_truth_depth_result.push_back(current_depth_ground_truth);
-    //     }
-    // }
+                }
+            }
+            ground_truth_depth_result.push_back(current_depth_ground_truth);
+        }
+    }
     
     std::vector<double> getError(bool get_weighted_error = true)
     {
@@ -1430,8 +1469,8 @@ int main(int argc, char *argv[])
     {
         use_window = true;
         Robot robot(60,600,10.0,25,use_window,"result_obs_0.txt","obs0.txt",8,false,false,200,"obs0_");
-        // robot.topological_explore_4({0,0});
-        robot.start_exploring(0,0);
+        robot.topological_explore_4({0,0});
+        // robot.start_exploring(0,0);
         // Robot robot(5,100,20.0,25,use_window,"result_obs_0.txt","obs0.txt",8,false,false,200,"obs0_");
         // robot.test_function();
     }

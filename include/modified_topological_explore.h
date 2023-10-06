@@ -338,7 +338,10 @@ class ModifiedTopolgicalExplore
                 {
                         current_path_copy.push_back({current_path[i].first,current_path[i].second});
                 }
-                traversed_paths.push_back(current_path_copy);
+
+                if(!(current_path_copy.size() <= 0))
+                    traversed_paths.push_back(current_path_copy);
+                
                 current_path.clear();
                 current_path_index = 0;
             }
@@ -364,20 +367,27 @@ class ModifiedTopolgicalExplore
 
                 }
                 
-                if(traversed_paths[i].size() == 0)
-                    continue;
+                // Commented out
+                // remove paths of length 0 from the list
+                // if(traversed_paths[i].size() == 0)
+                    // continue;
                 
                 for(int j = 0 ; j < boundary_points_path[start_quadrants[i]].size() ; ++j)
                 {
                     if(boundary_points_path[start_quadrants[i]][j][0].first == traversed_paths[i][0].first && boundary_points_path[start_quadrants[i]][j][0].second == traversed_paths[i][0].second)
                     {
-                        std::vector<std::pair<int,int>> current_path_tmp;
-                        for(int k = 0; k < boundary_points_path[start_quadrants[i]][j].size() ; ++k)
-                        {
-                            current_path_tmp.push_back({boundary_points_path[start_quadrants[i]][j][k].first,boundary_points_path[start_quadrants[i]][j][k].second});
-                        }
+
+                        augmented_path_signature_start = -recompute_h_signature(boundary_points_path[start_quadrants[i]][j],obstacles_to_use);
+                        // Forgot a break here
+                        break;
+                        // Do we need to copy to an auxilary array ?
+                        // std::vector<std::pair<int,int>> current_path_tmp;
+                        // for(int k = 0; k < boundary_points_path[start_quadrants[i]][j].size() ; ++k)
+                        // {
+                        //     current_path_tmp.push_back({boundary_points_path[start_quadrants[i]][j][k].first,boundary_points_path[start_quadrants[i]][j][k].second});
+                        // }
                         // std::reverse(current_path_tmp.begin(),current_path_tmp.end());
-                        augmented_path_signature_start = -recompute_h_signature(current_path_tmp,obstacles_to_use);
+                        // augmented_path_signature_start = -recompute_h_signature(current_path_tmp,obstacles_to_use);
                     }
                 }
 
@@ -386,13 +396,15 @@ class ModifiedTopolgicalExplore
                 {
                     if(boundary_points_path[goal_quadrants[i]][j][0].first == traversed_paths[i][traversed_paths[i].size()-1].first && boundary_points_path[goal_quadrants[i]][j][0].second == traversed_paths[i][traversed_paths[i].size()-1].second)
                     {
-                        std::vector<std::pair<int,int>> current_path_tmp;
-                        for(int k = 0; k < boundary_points_path[start_quadrants[i]][j].size() ; ++k)
-                        {
-                            current_path_tmp.push_back({boundary_points_path[start_quadrants[i]][j][k].first,boundary_points_path[start_quadrants[i]][j][k].second});
-                        }
+                        augmented_path_signature_goal = recompute_h_signature(boundary_points_path[start_quadrants[i]][j],obstacles_to_use);
+                        break;
+                        // std::vector<std::pair<int,int>> current_path_tmp;
+                        // for(int k = 0; k < boundary_points_path[start_quadrants[i]][j].size() ; ++k)
+                        // {
+                        //     current_path_tmp.push_back({boundary_points_path[start_quadrants[i]][j][k].first,boundary_points_path[start_quadrants[i]][j][k].second});
+                        // }
                         // std::reverse(current_path_tmp.begin(),current_path_tmp.end());
-                        augmented_path_signature_goal = recompute_h_signature(current_path_tmp,obstacles_to_use);
+                        // augmented_path_signature_goal = recompute_h_signature(current_path_tmp,obstacles_to_use);
                     }
                 }           
                 prev_h_signature =  prev_h_signature + augmented_path_signature_start + augmented_path_signature_goal;
@@ -468,6 +480,7 @@ class ModifiedTopolgicalExplore
                         if(boundary_points_path[current_start_quadrant][j][0].first == current_start[0] && boundary_points_path[current_start_quadrant][j][0].second == current_start[1])
                         {
                             augmented_start_signature =  - recompute_h_signature(boundary_points_path[current_start_quadrant][j],obstacles_to_use);
+                            break;
                         }
                     }
 
@@ -476,6 +489,7 @@ class ModifiedTopolgicalExplore
                         if(boundary_points_path[current_goal_quadrant][j][0].first == current_goal[0] && boundary_points_path[current_goal_quadrant][j][0].second == current_goal[1])
                         {
                             augmented_goal_signature =   recompute_h_signature(boundary_points_path[current_goal_quadrant][j],obstacles_to_use);
+                            break;
                         }
                     }
 
