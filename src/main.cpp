@@ -100,35 +100,35 @@ class Robot
 
     void print_depth_result()
     {
-        // auto error_result = getError();
-        // std::stringstream ss_error;
-        // for(int k=0;k<error_result.size();++k)
-        // {
-        //     ss_error << error_result[k] << " ";
-        // }
-        // f << timesteps_taken << " "<< ((double)total_cells_mapped/(total_free_space)) * 100<<" "<<ss_error.str()<<"\n";
-        // if(depth_result_visualize)
-        // {
-        //     if(timesteps_taken%depth_result_visualize_timestep ==0)
-        //     {
-        //         for(int j=0;j<depths.size();++j)
-        //         {
-        //             std::vector<std::vector<float>> current_depth_result = get_current_depth_result(j);
-        //             std::stringstream depth_ss;
-        //             for(int k=0;k<current_depth_result.size();++k)
-        //             {
-        //                 for(int l=0;l<current_depth_result[0].size();++l)
-        //                 {
-        //                     depth_ss << current_depth_result[k][l] <<",";
-        //                 }
-        //             }
-        //             depth_ss<<"\n";
-        //             depth_file<<depth_ss.str();
-        //         }
-        //         depth_file<<"-\n";
-        //     }
+        auto error_result = getError();
+        std::stringstream ss_error;
+        for(int k=0;k<error_result.size();++k)
+        {
+            ss_error << error_result[k] << " ";
+        }
+        f << timesteps_taken << " "<< ((double)total_cells_mapped/(total_free_space)) * 100<<" "<<ss_error.str()<<"\n";
+        if(depth_result_visualize)
+        {
+            if(timesteps_taken%depth_result_visualize_timestep ==0)
+            {
+                for(int j=0;j<depths.size();++j)
+                {
+                    std::vector<std::vector<float>> current_depth_result = get_current_depth_result(j);
+                    std::stringstream depth_ss;
+                    for(int k=0;k<current_depth_result.size();++k)
+                    {
+                        for(int l=0;l<current_depth_result[0].size();++l)
+                        {
+                            depth_ss << current_depth_result[k][l] <<",";
+                        }
+                    }
+                    depth_ss<<"\n";
+                    depth_file<<depth_ss.str();
+                }
+                depth_file<<"-\n";
+            }
             
-        // }
+        }
     }
 
     void sensor_model(int x, int y,bool use_tan = true)
@@ -245,8 +245,8 @@ class Robot
             
             return;
         }
-        std::fstream f;
-        std::fstream depth_file;
+        // std::fstream f;
+        // std::fstream depth_file;
 
         if(!use_window)
         {
@@ -265,41 +265,16 @@ class Robot
         {
             if(depth_result)
             {
-                auto error_result = getError();
-                std::stringstream ss_error;
-                for(int k=0;k<error_result.size();++k)
-                {
-                    ss_error << error_result[k] << " ";
-                }
-                f << timesteps_taken << " "<< ((double)total_cells_mapped/(total_free_space)) * 100<<" "<<ss_error.str()<<"\n";
-                if(depth_result_visualize)
-                {
-                    if(timesteps_taken%depth_result_visualize_timestep ==0)
-                    {
-                        for(int j=0;j<depths.size();++j)
-                        {
-                            std::vector<std::vector<float>> current_depth_result = get_current_depth_result(j);
-                            std::stringstream depth_ss;
-                            for(int k=0;k<current_depth_result.size();++k)
-                            {
-                                for(int l=0;l<current_depth_result[0].size();++l)
-                                {
-                                    depth_ss << current_depth_result[k][l] <<",";
-                                }
-                            }
-                            depth_ss<<"\n";
-                            depth_file<<depth_ss.str();
-                        }
-                        depth_file<<"-\n";
-                    }
-                    
-                }
+                print_depth_result();
             }
         }
-
+        
+        double time_taken  = 0;
+        
         // FrontierExplore f_explore(&grid,&obstacles_seen,print_logs);
         FrontierExplore f_explore(&grid,print_logs);   
        
+        auto start_time = high_resolution_clock::now();
         // Start benchmarking from here, Sometimes writting to the file f can take time.
         f_explore.findFrontiers(current_x, current_y);
 
@@ -328,35 +303,7 @@ class Robot
                 {
                     if(depth_result)
                     {
-                        auto error_result = getError();
-                        std::stringstream ss_error;
-                        for(int k=0;k<error_result.size();++k)
-                        {
-                            ss_error << error_result[k] << " ";
-                        }
-                        f << timesteps_taken << " "<< ((double)total_cells_mapped/(total_free_space)) * 100<<" "<<ss_error.str()<<"\n";
-                        if(depth_result_visualize)
-                        {
-                            if(timesteps_taken%depth_result_visualize_timestep ==0)
-                            {
-                                for(int j=0;j<depths.size();++j)
-                                {
-                                    std::vector<std::vector<float>> current_depth_result = get_current_depth_result(j);
-                                    std::stringstream depth_ss;
-                                    for(int k=0;k<current_depth_result.size();++k)
-                                    {
-                                        for(int l=0;l<current_depth_result[0].size();++l)
-                                        {
-                                            depth_ss << current_depth_result[k][l] <<",";
-                                        }
-                                    }
-                                    depth_ss<<"\n";
-                                    depth_file<<depth_ss.str();
-                                }
-                                depth_file<<"-\n";
-                            }
-                            
-                        }
+                        print_depth_result();
                     }
                     else
                     {
@@ -390,6 +337,9 @@ class Robot
             }
             f_explore.findFrontiers(current_x, current_y);
         }
+        auto end = high_resolution_clock::now();
+        time_taken = duration_cast<milliseconds>(end - start_time).count();
+        std::cout<< "Time taken for exploration = "<<time_taken<<std::endl;
         f.close();
         depth_file.close();
         std::cout<<"Exploration complete"<<std::endl;
@@ -401,8 +351,7 @@ class Robot
         int current_y = start[1];
         srand(time(NULL));
 
-        std::fstream f;
-        std::fstream depth_file;
+     
         if(!use_window)
         {
             f.open(output_file_name, std::ios::app);
@@ -421,35 +370,7 @@ class Robot
         {
             if(depth_result)
             {
-                auto error_result = getError();
-                std::stringstream ss_error;
-                for(int k=0;k<error_result.size();++k)
-                {
-                    ss_error << error_result[k] << " ";
-                }
-                f << timesteps_taken << " "<< ((double)total_cells_mapped/(total_free_space)) * 100<<" "<<ss_error.str()<<"\n";
-                if(depth_result_visualize)
-                {
-                    if(timesteps_taken%depth_result_visualize_timestep ==0)
-                    {
-                        for(int j=0;j<depths.size();++j)
-                        {
-                            std::vector<std::vector<float>> current_depth_result = get_current_depth_result(j);
-                            std::stringstream depth_ss;
-                            for(int k=0;k<current_depth_result.size();++k)
-                            {
-                                for(int l=0;l<current_depth_result[0].size();++l)
-                                {
-                                    depth_ss << current_depth_result[k][l] <<",";
-                                }
-                            }
-                            depth_ss<<"\n";
-                            depth_file<<depth_ss.str();
-                        }
-                        depth_file<<"-\n";
-                    }
-                    
-                }
+                print_depth_result();
             }
         }
         
@@ -520,34 +441,7 @@ class Robot
                     {
                         if(depth_result)
                         {
-                            auto error_result = getError();
-                            std::stringstream ss_error;
-                            for(int k=0;k<error_result.size();++k)
-                            {
-                                ss_error << error_result[k] << " ";
-                            }
-                            f << timesteps_taken << " " << ((double)total_cells_mapped/(total_free_space)) * 100<<" "<<ss_error.str()<<"\n";
-                            if(depth_result_visualize)
-                            {
-                                if(timesteps_taken%depth_result_visualize_timestep ==0)
-                                {
-                                    for(int j=0;j<depths.size();++j)
-                                    {
-                                        std::vector<std::vector<float>> current_depth_result = get_current_depth_result(j);
-                                        std::stringstream depth_ss;
-                                        for(int k=0;k<current_depth_result.size();++k)
-                                        {
-                                            for(int l=0;l<current_depth_result[0].size();++l)
-                                            {
-                                                depth_ss << current_depth_result[k][l] <<",";
-                                            }
-                                        }
-                                        depth_ss<<"\n";
-                                        depth_file<<depth_ss.str();
-                                    }
-                                    depth_file<<"-\n";
-                                }
-                            }
+                            print_depth_result();
                         }
                         else
                         {
@@ -559,6 +453,8 @@ class Robot
                     if((i+1)< p.size() && grid_original[p[i+1].first][p[i+1].second] ==0)
                     {
                         grid[p[i+1].first][p[i+1].second] = 0;
+                        
+                        // Can cut the cost of duplicating the array
                         std::vector<std::pair<int,int>> new_current_path;
                         for(int j=0;j<=i;++j)
                             new_current_path.push_back(p[j]);
@@ -635,34 +531,7 @@ class Robot
                     {
                         if(depth_result)
                         {
-                            auto error_result = getError();
-                            std::stringstream ss_error;
-                            for(int k=0;k<error_result.size();++k)
-                            {
-                                ss_error << error_result[k] << " ";
-                            }
-                            f << timesteps_taken << " " << ((double)total_cells_mapped/(total_free_space)) * 100<<" "<<ss_error.str()<<"\n";
-                            if(depth_result_visualize)
-                            {
-                                if(timesteps_taken%depth_result_visualize_timestep ==0)
-                                {
-                                    for(int j=0;j<depths.size();++j)
-                                    {
-                                        std::vector<std::vector<float>> current_depth_result = get_current_depth_result(j);
-                                        std::stringstream depth_ss;
-                                        for(int k=0;k<current_depth_result.size();++k)
-                                        {
-                                            for(int l=0;l<current_depth_result[0].size();++l)
-                                            {
-                                                depth_ss << current_depth_result[k][l] <<",";
-                                            }
-                                        }
-                                        depth_ss<<"\n";
-                                        depth_file<<depth_ss.str();
-                                    }
-                                    depth_file<<"-\n";
-                                }
-                            }
+                           print_depth_result();
                         }
                         else
                         {
@@ -706,8 +575,8 @@ class Robot
             return;
         }
 
-        std::fstream f;
-        std::fstream depth_file;
+        // std::fstream f;
+        // std::fstream depth_file;
         if(!use_window)
         {   
             f.open(output_file_name, std::ios::app);
@@ -724,35 +593,7 @@ class Robot
         {
             if(depth_result)
             {
-                auto error_result = getError();
-                std::stringstream ss_error;
-                for(int k=0;k<error_result.size();++k)
-                {
-                    ss_error << error_result[k] << " ";
-                }
-                f << timesteps_taken << " "<< ((double)total_cells_mapped/(total_free_space)) * 100<<" "<<ss_error.str()<<"\n";
-                if(depth_result_visualize)
-                {
-                    if(timesteps_taken%depth_result_visualize_timestep ==0)
-                    {
-                        for(int j=0;j<depths.size();++j)
-                        {
-                            std::vector<std::vector<float>> current_depth_result = get_current_depth_result(j);
-                            std::stringstream depth_ss;
-                            for(int k=0;k<current_depth_result.size();++k)
-                            {
-                                for(int l=0;l<current_depth_result[0].size();++l)
-                                {
-                                    depth_ss << current_depth_result[k][l] <<",";
-                                }
-                            }
-                            depth_ss<<"\n";
-                            depth_file<<depth_ss.str();
-                        }
-                        depth_file<<"-\n";
-                    }
-                    
-                }
+                print_depth_result();
             }
         }
 
@@ -781,35 +622,7 @@ class Robot
                 {
                     if(depth_result)
                     {
-                        auto error_result = getError();
-                        std::stringstream ss_error;
-                        for(int k=0;k<error_result.size();++k)
-                        {
-                            ss_error << error_result[k] << " ";
-                        }
-                        f << timesteps_taken << " "<< ((double)total_cells_mapped/(total_free_space)) * 100<<" "<<ss_error.str()<<"\n";
-                        if(depth_result_visualize)
-                        {
-                            if(timesteps_taken%depth_result_visualize_timestep ==0)
-                            {
-                                for(int j=0;j<depths.size();++j)
-                                {
-                                    std::vector<std::vector<float>> current_depth_result = get_current_depth_result(j);
-                                    std::stringstream depth_ss;
-                                    for(int k=0;k<current_depth_result.size();++k)
-                                    {
-                                        for(int l=0;l<current_depth_result[0].size();++l)
-                                        {
-                                            depth_ss << current_depth_result[k][l] <<",";
-                                        }
-                                    }
-                                    depth_ss<<"\n";
-                                    depth_file<<depth_ss.str();
-                                }
-                                depth_file<<"-\n";
-                            }
-                            
-                        }
+                        print_depth_result();
                     }
                     else
                     {
@@ -1198,6 +1011,8 @@ class Robot
 
     Framework fw;
     bool write_probability_depth_map = true;
+    std::fstream f;
+    std::fstream depth_file;
 
 
 private:
@@ -1467,10 +1282,10 @@ int main(int argc, char *argv[])
     }
     else if(choice ==7)
     {
-        use_window = true;
-        Robot robot(60,600,10.0,25,use_window,"result_obs_0.txt","obs0.txt",8,false,false,200,"obs0_");
-        robot.topological_explore_4({0,0});
-        // robot.start_exploring(0,0);
+        use_window = false;
+        Robot robot(60,600,10.0,25,use_window,"result_obs_0.txt","obs0.txt",8,false,false,200,"obs0_",false);
+        // robot.topological_explore_4({0,0});
+        robot.start_exploring(0,0);
         // Robot robot(5,100,20.0,25,use_window,"result_obs_0.txt","obs0.txt",8,false,false,200,"obs0_");
         // robot.test_function();
     }
