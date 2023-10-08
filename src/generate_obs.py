@@ -4,7 +4,7 @@ import numpy as np
 
 def generate_random_obstacles(n_obstacles=25,grid_size = 60 , number_of_runs=10,obstacle_size = 15):
     for i in range(number_of_runs):
-        f = open("../build/obs_256_15_"+str(i)+".txt","w")
+        f = open("../build/obs_"+str(grid_size)+"_"+str(n_obstacles)+"_"+str(i)+".txt","w")
         j= 0
         while j<n_obstacles:
             x = random.randint(0,grid_size-1)
@@ -140,9 +140,10 @@ def generate_custom_clustered(file_name,grid_size = 256):
 
 
 
+generate_random_obstacles(30,256,1,10)
 # generate_custom_clustered('../build/custom_clustered_256_10_1.txt')
 # generate_random_obstacles(60,256,10)
-helper_multimodal_gaussian()
+# helper_multimodal_gaussian()
 # helper_generate_maze()
 # generate_grid_1("../build/grid_256_1.txt",5,245)
 

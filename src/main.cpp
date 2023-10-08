@@ -389,7 +389,8 @@ class Robot
         
         if(top_explore.print_time)
         {
-            top_explore.time_file.open("time_file.txt",std::ios_base::app);
+            top_explore.time_file_name =  depth_result_file_prefix+"time_file.txt";
+            top_explore.time_file.open(top_explore.time_file_name,std::ios_base::app);
             top_explore.time_file<<"-\n";
             top_explore.time_file.close();
         }
@@ -1298,9 +1299,10 @@ int main(int argc, char *argv[])
     else if(choice ==7)
     {
         use_window = false;
-        Robot robot(60,600,10.0,25,use_window,"result_obs_0.txt","obs0.txt",8,false,false,200,"obs0_",false);
+        // Robot robot(60,600,10.0,25,use_window,"result_obs_0.txt","obs0.txt",8,false,false,200,"obs0_",false);
         // robot.topological_explore_4({0,0});
         // robot.start_exploring(0,0);
+        Robot robot(256, 768,3.0,30,use_window,"result_obs_0.txt","obs_256_30_0.txt",32,false,false,200,"obs0_",false);
         robot.topological_explore_4({0,0});
     
         // for(int i=0;i<10;++i)

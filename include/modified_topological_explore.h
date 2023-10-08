@@ -407,7 +407,7 @@ class ModifiedTopolgicalExplore
 
             if(print_time)
             {
-                time_file.open("time_file.txt",std::ios_base::app);
+                time_file.open(time_file_name,std::ios_base::app);
             }
             auto start_time = high_resolution_clock::now();
 
@@ -911,6 +911,7 @@ class ModifiedTopolgicalExplore
     bool print_logs;
     
     bool print_time = true;
+    std::string time_file_name = "time_file.txt";  
     std::fstream time_file;
 
 };
