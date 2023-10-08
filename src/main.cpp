@@ -1090,7 +1090,7 @@ int main(int argc, char *argv[])
         auto frontier_start = high_resolution_clock::now();
         robot.start_exploring(0, 0);
         auto frontier_stop = high_resolution_clock::now();
-        auto duration_frontier = duration_cast<seconds>(frontier_stop - frontier_start);
+        auto duration_frontier = duration_cast<milliseconds>(frontier_stop - frontier_start);
         
         int topological_seconds = 0;
         for(int i=0;i<topology_num_runs;++i)
@@ -1101,7 +1101,7 @@ int main(int argc, char *argv[])
             auto topo_start = high_resolution_clock::now();
             robot.topological_explore_4({0,0});
             auto topo_stop = high_resolution_clock::now();
-            topological_seconds += duration_cast<seconds>(topo_stop - topo_start).count();
+            topological_seconds += duration_cast<milliseconds>(topo_stop - topo_start).count();
             SDL_Delay(1000);
         }
 
@@ -1142,7 +1142,7 @@ int main(int argc, char *argv[])
         auto frontier_start = high_resolution_clock::now();
         robot.start_exploring(0, 0);
         auto frontier_stop = high_resolution_clock::now();
-        auto duration_frontier = duration_cast<seconds>(frontier_stop - frontier_start);
+        auto duration_frontier = duration_cast<milliseconds>(frontier_stop - frontier_start);
         
         int topological_seconds = 0;
         for(int i=0;i<topology_num_runs;++i)
@@ -1153,7 +1153,7 @@ int main(int argc, char *argv[])
             auto topo_start = high_resolution_clock::now();
             robot.topological_explore_4({0,0});
             auto topo_stop = high_resolution_clock::now();
-            topological_seconds += duration_cast<seconds>(topo_stop - topo_start).count();
+            topological_seconds += duration_cast<milliseconds>(topo_stop - topo_start).count();
             SDL_Delay(1000);
         }
 
@@ -1172,7 +1172,7 @@ int main(int argc, char *argv[])
             auto rw_start = high_resolution_clock::now();
             robot.random_walk_explore({0,0});
             auto rw_stop = high_resolution_clock::now();
-            random_walk_seconds += duration_cast<seconds>(rw_stop - rw_start).count();
+            random_walk_seconds += duration_cast<milliseconds>(rw_stop - rw_start).count();
             SDL_Delay(1000);
         }
         

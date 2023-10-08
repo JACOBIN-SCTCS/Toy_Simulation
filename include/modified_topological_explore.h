@@ -713,7 +713,7 @@ class ModifiedTopolgicalExplore
                 }
             }
             auto end_time = high_resolution_clock::now();
-            auto duration = duration_cast<microseconds>(end_time - start_time);
+            auto duration = duration_cast<milliseconds>(end_time - start_time);
             if(print_time)
             {
                 time_file<<duration.count()<<"\n";
