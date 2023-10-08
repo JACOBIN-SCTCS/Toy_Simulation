@@ -24,40 +24,17 @@ class ModifiedTopolgicalExplore
         struct AstarNode
         {
             std::complex<double> point;
-            Eigen::VectorXd h_signature;
+            std::vector<double> h_signature;
             double f;
             double g;
             double cost;
             struct AstarNode *parent;
             std::vector<std::complex<double>> edge;
-
-            bool operator==(const AstarNode &node) const
-            {
-                auto difference_h = h_signature - node.h_signature;
-                bool difference_result = false;
-                if(difference_h.isZero(0.001))
-                {
-                    difference_result = true;
-                }
-                return (point.real() == node.point.real()) && (point.imag() == node.point.imag()) && difference_result;
-            }
-
-            AstarNode(std::complex<double> p, Eigen::VectorXd h, double f_,double g_,struct AstarNode *pa, std::vector<std::complex<double>> e) : point(p), h_signature(h), f(f_),g(g_), parent(pa), edge(e) {}
-            AstarNode(std::complex<double> p, Eigen::VectorXd h, double c_,struct AstarNode *pa, std::vector<std::complex<double>> e) : point(p), h_signature(h), cost(c_), parent(pa), edge(e) {}
+ 
+            AstarNode(std::complex<double> p, std::vector<double> h, double f_,double g_,struct AstarNode *pa, std::vector<std::complex<double>> e) : point(p), h_signature(h), f(f_),g(g_), parent(pa), edge(e) {}
+            AstarNode(std::complex<double> p, std::vector<double> h, double c_,struct AstarNode *pa, std::vector<std::complex<double>> e) : point(p), h_signature(h), cost(c_), parent(pa), edge(e) {}
         };
 
-        struct AstarKeyHash
-        {
-            std::size_t operator()(const AstarNode &node) const
-            {
-                std::size_t h_hash = 0;
-                for(unsigned int i=0;i<node.h_signature.size();++i)
-                {
-                    h_hash = h_hash ^ std::hash<double>()(node.h_signature(i));
-                }
-                return std::hash<double>()(node.point.real()) ^ std::hash<double>()(node.point.imag()) ^ h_hash;
-            }
-        };
 
 
         ModifiedTopolgicalExplore(std::vector<std::vector<int>> *g, 
@@ -230,22 +207,6 @@ class ModifiedTopolgicalExplore
             // struct NonHomologouspath p;
             if(print_logs)
                 std::cout << "Reached inside"<<std::endl;
-            auto customOp = [](const std::complex<double> &a, const std::complex<double> &b) -> double
-            {
-                double minimum_phase_difference = std::arg(b) - std::arg(a);
-                for (int i = -2; i < 3; ++i)
-                {
-                    for (int j = -2; j < 3; ++j)
-                    {
-                        double phase_difference = (std::arg(b) + 2 * M_PIf64 * i) - (std::arg(a) + 2 * M_PIf64 * j);
-                        if (std::abs(phase_difference) < std::abs(minimum_phase_difference))
-                        {
-                            minimum_phase_difference = phase_difference;
-                        }
-                    }
-                }
-                return minimum_phase_difference;
-            };
             
             std::vector<std::vector<int>> &obstacles_ref = *obstacles_seen;
             std::vector<std::vector<int>> &obstacles_seen_start_point_ref = *obstacles_seen_start_point;
@@ -353,14 +314,22 @@ class ModifiedTopolgicalExplore
             
             for(int i=0;i<traversed_paths.size();++i)
             {
-                Eigen::VectorXd prev_h_signature = recompute_h_signature(traversed_paths[i],obstacles_to_use);
-                Eigen::VectorXd augmented_path_signature_start = Eigen::VectorXd::Zero(obstacles_to_use.size());
-                Eigen::VectorXd augmented_path_signature_goal = Eigen::VectorXd::Zero(obstacles_to_use.size());
+                // Eigen::VectorXd prev_h_signature = recompute_h_signature(traversed_paths[i],obstacles_to_use);
+                // Eigen::VectorXd augmented_path_signature_start = Eigen::VectorXd::Zero(obstacles_to_use.size());
+                // Eigen::VectorXd augmented_path_signature_goal = Eigen::VectorXd::Zero(obstacles_to_use.size());
                 
+                std::vector<double> prev_h_signature = recompute_h_signature(traversed_paths[i],obstacles_to_use);
+                std::vector<double> augmented_path_signature_start;
+                std::vector<double> augmented_path_signature_goal;
+
                 if(print_logs)
                 {
                     std::cout <<"Traversed paths size = "<< traversed_paths.size()<<std::endl;
-                    std::cout << "Previous H signature = " << prev_h_signature.transpose() << std::endl;
+                    for(int aa = 0; aa < prev_h_signature.size();++aa)
+                    {
+                        std::cout << prev_h_signature[aa] << " ";
+                    }
+                    std::cout <<std::endl;
                     std::cout << "Traversed_path size = " << traversed_paths[i].size() << std::endl;
                     std::cout << "Current index= " << i <<std::endl;
                     std::cout << "Start quadrant index = " << start_quadrants[i] << std::endl;
@@ -380,7 +349,13 @@ class ModifiedTopolgicalExplore
                     if(boundary_points_path[start_quadrants[i]][j][0].first == traversed_paths[i][0].first && boundary_points_path[start_quadrants[i]][j][0].second == traversed_paths[i][0].second)
                     {
 
-                        augmented_path_signature_start = -recompute_h_signature(boundary_points_path[start_quadrants[i]][j],obstacles_to_use);
+                        augmented_path_signature_start = recompute_h_signature(boundary_points_path[start_quadrants[i]][j],obstacles_to_use);
+                        
+                        for(int k = 0; k < augmented_path_signature_start.size();++k)
+                        {
+                            augmented_path_signature_start[k] = -augmented_path_signature_start[k];
+                        }
+                        
                         // Forgot a break here
                         break;
                         // Do we need to copy to an auxilary array ?
@@ -409,10 +384,22 @@ class ModifiedTopolgicalExplore
                         // std::reverse(current_path_tmp.begin(),current_path_tmp.end());
                         // augmented_path_signature_goal = recompute_h_signature(current_path_tmp,obstacles_to_use);
                     }
-                }           
-                prev_h_signature =  prev_h_signature + augmented_path_signature_start + augmented_path_signature_goal;
-                prev_h_signature = (prev_h_signature.array().abs() < 0.001).select(0, prev_h_signature);
+                } 
+
+                // prev_h_signature =  prev_h_signature + augmented_path_signature_start + augmented_path_signature_goal;
+                // prev_h_signature = (prev_h_signature.array().abs() < 0.001).select(0, prev_h_signature);
+                // traversed_signatures.push_back(prev_h_signature);
+
+                // Replace the above 3 lines with an equivalent for vectors
+                // Assuming prev_h_signature, augmented_path_signature_start, and augmented_path_signature_goal are all normal vectors
+                for (int j = 0; j < prev_h_signature.size(); j++) {
+                    prev_h_signature[j] = prev_h_signature[j] + augmented_path_signature_start[j] + augmented_path_signature_goal[j];
+                    if (std::abs(prev_h_signature[j]) < 0.001) {
+                        prev_h_signature[j] = 0;
+                    }
+                }
                 traversed_signatures.push_back(prev_h_signature);
+
             }
 
 
@@ -424,7 +411,8 @@ class ModifiedTopolgicalExplore
             }
             auto start_time = high_resolution_clock::now();
 
-            Eigen::VectorXd partial_signature = Eigen::VectorXd::Zero(obstacles_to_use.size());
+            // Eigen::VectorXd partial_signature = Eigen::VectorXd::Zero(obstacles_to_use.size());
+            std::vector<double> partial_signature;
             partial_signature = recompute_h_signature(current_path,obstacles_to_use,current_path_index);
 
         
@@ -465,8 +453,14 @@ class ModifiedTopolgicalExplore
     
             std::stringstream ss;
             Eigen::VectorXd zeros = Eigen::VectorXd::Zero(obstacles_to_use.size());
-            ss << start_point << "-\n"
-            << partial_signature;
+            // ss << start_point << "-\n"
+            // << partial_signature;
+            ss << start_point << "-\n";
+            for(int i=0;i<partial_signature.size();++i)
+            {
+                ss << partial_signature[i] << " ";
+            }
+
             distance_count[ss.str()] = f; //std::abs(goal_point - start_point);
             pq.push(node);
 
@@ -477,20 +471,42 @@ class ModifiedTopolgicalExplore
                 pq.pop();
                 if (node->point == goal_point)
                 {
-                    Eigen::VectorXd filtered = (1.0 / (2 * M_PIf64)) * node->h_signature;
-                    if ((filtered.array() > 1.0).any() || (filtered.array() < -1.0).any())
+                    // Eigen::VectorXd filtered = (1.0 / (2 * M_PIf64)) * node->h_signature;
+                    // if ((filtered.array() > 1.0).any() || (filtered.array() < -1.0).any())
+                    //     continue;
+
+                    bool invalid = false;
+                    for(int aa = 0; aa < node->h_signature.size(); ++aa)
+                    {
+                        auto normalized_value = (1.0 / (2 * M_PIf64))* node->h_signature[aa];
+                        // Check if absolute value is greater than 1.0 . If so exit out of the outer if loop
+                        if(std::abs(normalized_value) > 1.0)
+                        {
+                            invalid = true;
+                            break;
+                        }
+                    }
+                    if(invalid)
                         continue;
 
                     bool is_already_seen = false;
                     auto corrected_signature = node->h_signature;
 
-                    Eigen::VectorXd augmented_start_signature = Eigen::VectorXd::Zero(obstacles_to_use.size());
-                    Eigen::VectorXd augmented_goal_signature = Eigen::VectorXd::Zero(obstacles_to_use.size());
+                    // Eigen::VectorXd augmented_start_signature = Eigen::VectorXd::Zero(obstacles_to_use.size());
+                    // Eigen::VectorXd augmented_goal_signature = Eigen::VectorXd::Zero(obstacles_to_use.size());
+                    std::vector<double> augmented_start_signature;
+                    std::vector<double> augmented_goal_signature;
+
                     for(int j = 0; j < boundary_points_path[current_start_quadrant].size();++j)
                     {
                         if(boundary_points_path[current_start_quadrant][j][0].first == current_start[0] && boundary_points_path[current_start_quadrant][j][0].second == current_start[1])
                         {
-                            augmented_start_signature =  - recompute_h_signature(boundary_points_path[current_start_quadrant][j],obstacles_to_use);
+                            augmented_start_signature =  recompute_h_signature(boundary_points_path[current_start_quadrant][j],obstacles_to_use);
+                            // Negate elements in augmented_start_signature;
+                            for(int k = 0; k < augmented_start_signature.size();++k)
+                            {
+                                augmented_start_signature[k] = -augmented_start_signature[k];
+                            }
                             break;
                         }
                     }
@@ -503,31 +519,73 @@ class ModifiedTopolgicalExplore
                             break;
                         }
                     }
+                    
+                    // corrected_signature = corrected_signature + augmented_start_signature + augmented_goal_signature;
+                    // corrected_signature  = (corrected_signature.array().abs() < 0.001).select(0, corrected_signature);
 
-                    corrected_signature = corrected_signature + augmented_start_signature + augmented_goal_signature;
-                    corrected_signature  = (corrected_signature.array().abs() < 0.001).select(0, corrected_signature);
+                     for (int j = 0; j < corrected_signature.size(); j++) {
+                        corrected_signature[j] = corrected_signature[j] + augmented_start_signature[j] + augmented_goal_signature[j];
+                        if (std::abs(corrected_signature[j]) < 0.001) {
+                           corrected_signature[j] = 0;
+                        }
+                    }
 
                     for (int i = 0; i < traversed_signatures.size(); ++i)
                     {
-                        Eigen::VectorXd diff = traversed_signatures[i] - corrected_signature;
-                        if (diff.isZero(0.0001) || 
-                            diff.isApproxToConstant(2*M_PIf64, 0.0001) ||
-                            diff.isApproxToConstant(-2*M_PIf64, 0.0001) || 
-                            diff.isApproxToConstant(4*M_PIf64, 0.0001) ||
-                            diff.isApproxToConstant(-4*M_PIf64, 0.0001) || 
-                            diff.isApproxToConstant(6*M_PIf64, 0.0001) ||
-                            diff.isApproxToConstant(-6*M_PIf64, 0.0001)
-                        
-                            )
+                        // Compute the difference vector
+                        bool is_different = false;
+                        for(int j=0;j<traversed_signatures[i].size();++j)
+                        {
+                            //double difference = 
+                            double difference = (corrected_signature[j] - traversed_signatures[i][j]);
+                            if(
+
+                               !(std::abs(difference) <  0.0001 
+                                // std::abs(difference - 2*M_PIf64) < 0.0001 ||
+                                // std::abs(difference + 2*M_PIf64) < 0.0001 ||
+                                // std::abs(difference - 4*M_PIf64) < 0.0001 ||
+                                // std::abs(difference + 4*M_PIf64) < 0.0001 ||
+                                // std::abs(difference - 6*M_PIf64) < 0.0001 ||
+                                // std::abs(difference + 6*M_PIf64) < 0.0001 
+                                
+                                 ))
+                            {
+                                is_different = true;
+                                break;
+                            }
+                        }
+                        if(!is_different)
                         {
                             is_already_seen = true;
                             break;
                         }
+                        
+                        // Eigen::VectorXd diff = traversed_signatures[i] - corrected_signature;
+                        // if (diff.isZero(0.0001) || 
+                        //     diff.isApproxToConstant(2*M_PIf64, 0.0001) ||
+                        //     diff.isApproxToConstant(-2*M_PIf64, 0.0001) || 
+                        //     diff.isApproxToConstant(4*M_PIf64, 0.0001) ||
+                        //     diff.isApproxToConstant(-4*M_PIf64, 0.0001) || 
+                        //     diff.isApproxToConstant(6*M_PIf64, 0.0001) ||
+                        //     diff.isApproxToConstant(-6*M_PIf64, 0.0001)
+                        
+                        //     )
+                        // {
+                        //     is_already_seen = true;
+                        //     break;
+                        // }
                     }
                     if (is_already_seen)
                         continue;
                     if(print_logs)
-                        std::cout<<"H signature = "<< corrected_signature << std::endl;
+                    {
+                        std::cout<<"H signature = ";
+                        for(int aa = 0 ; aa < corrected_signature.size();++aa)
+                        {
+                            std::cout << corrected_signature[aa] << " ";
+                        }
+                        std::cout << std::endl;
+                    }
                     std::vector<std::pair<int, int>> path;
                     AstarNode *temp = node;
                     while (temp != NULL)
@@ -570,13 +628,57 @@ class ModifiedTopolgicalExplore
                         std::complex<double> new_point = node->point + directions[i];
                         if (int(real(new_point)) < 0 || int(real(new_point)) >= grid_ref.size() || int(imag(new_point)) < 0 || int(imag(new_point)) >= grid_ref[0].size() || grid_ref[int(real(new_point))][int(imag(new_point))] == 0)
                             continue;
-                        Eigen::VectorXcd s_vec = Eigen::VectorXcd::Constant(obstacle_points.size(), node->point) - obstacle_points;
-                        Eigen::VectorXcd e_vec = Eigen::VectorXcd::Constant(obstacle_points.size(), new_point) - obstacle_points;
-                        Eigen::VectorXd t = s_vec.array().binaryExpr(e_vec.array(), customOp);
-                        Eigen::VectorXd temp = node->h_signature + t;
-                        Eigen::VectorXd filtered = (1.0 / (2 * M_PIf64)) * temp;
-                        if ((filtered.array() > 1.0).any() || (filtered.array() < -1.0).any())
+                        //Eigen::VectorXcd s_vec = Eigen::VectorXcd::Constant(obstacle_points.size(), node->point) - obstacle_points;
+                        //Eigen::VectorXcd e_vec = Eigen::VectorXcd::Constant(obstacle_points.size(), new_point) - obstacle_points;
+                        // Eigen::VectorXd t = s_vec.array().binaryExpr(e_vec.array(), customOp);
+                        
+                        std::complex<double> s_point = node->point;
+                        std::complex<double> e_point = new_point;
+                        std::vector<double> current_edge_signature;
+                        std::vector<double> temp;
+       
+                        
+                        for(int j=0;j<obstacle_points.size();++j)
+                        {
+                            std::complex<double> obstacle_point(obstacles_to_use[j][0], obstacles_to_use[j][1]);
+                            std::complex<double> a = s_point - obstacle_point;
+                            std::complex<double> b = e_point - obstacle_point;
+                            double minimum_phase_difference = std::arg(b) - std::arg(a);
+                            for (int k = -2; k < 3; ++k)
+                            {
+                                for (int l = -2; l < 3; ++l)
+                                {
+                                    double phase_difference = (std::arg(b) + 2 * M_PIf64 * k) - (std::arg(a) + 2 * M_PIf64 * l);
+                                    if (std::abs(phase_difference) < std::abs(minimum_phase_difference))
+                                    {
+                                        minimum_phase_difference = phase_difference;
+                                    }
+                                }
+                            }
+                            current_edge_signature.push_back(minimum_phase_difference);
+                        }
+                        // Add to current h signature
+                        bool should_use = true;
+                        for(int j=0;j<node->h_signature.size();++j)
+                        {
+                            temp.push_back(node->h_signature[j] + current_edge_signature[j]);
+                            double filtered_value = (1.0 / (2 * M_PIf64))* temp[j];
+                            if(std::abs(filtered_value) > 1.0)
+                            {
+                                should_use = false;
+                                break;
+                            }
+                        }
+                        if(!should_use)
                             continue;
+  
+                        // Eigen::VectorXd temp = node->h_signature + t;
+                        
+                        
+                        
+                        // Eigen::VectorXd filtered = (1.0 / (2 * M_PIf64)) * temp;
+                        // if ((filtered.array() > 1.0).any() || (filtered.array() < -1.0).any())
+                        //     continue;
                         // double cell_cost = 1.0; // grid_ref[new_point.real()][new_point.imag()];
                         // if (cell_cost == -1)
                         //     cell_cost = 1.0;
@@ -588,8 +690,14 @@ class ModifiedTopolgicalExplore
                         // double c = node->cost + f + g;
 
                         std::stringstream ss;
-                        ss << new_point << "-\n"
-                        << temp;
+                        // ss << new_point << "-\n"
+                        // << temp;
+                         ss << new_point << "-\n";
+                        for(int z=0;z<temp.size();++z)
+                        {
+                            ss << temp[z] << " ";
+                        }
+
                         std::string key = ss.str();
                         // if (distance_count.find(key) == distance_count.end() || distance_count[key] > (f+g))
                         if (distance_count.find(key) == distance_count.end() || distance_count[key] > f)
@@ -614,43 +722,47 @@ class ModifiedTopolgicalExplore
             return false;
         }
         
-        Eigen::VectorXd recompute_h_signature(std::vector<std::pair<int,int>> path,std::vector<std::vector<int>> obstacles_to_use, int index = -1)
+        std::vector<double> recompute_h_signature(std::vector<std::pair<int,int>> path,std::vector<std::vector<int>> obstacles_to_use, int index = -1)
         {
             int n = (index==-1)?(path.size()-1):index;
-
-            auto customOp = [](const std::complex<double> &a, const std::complex<double> &b) -> double
+            std::vector<double> current_h_signature;
+            std::vector<double> temp;
+            for(int i = 0; i < obstacles_to_use.size();++i)
             {
-                double minimum_phase_difference = std::arg(b) - std::arg(a);
-                for (int i = -2; i < 3; ++i)
+                temp.push_back(0.0);
+            }
+            // Eigen::VectorXd current_h_signature = Eigen::VectorXd::Zero(obstacles_to_use.size());
+            for(int i = 1; i <= n ; ++i)
+            {
+                std::complex<double> start_point(path[i-1].first,path[i-1].second);
+                std::complex<double> end_point(path[i].first,path[i].second);
+                std::vector<double> current_edge_signature;
+                for(int j=0;j<obstacles_to_use.size();++j)
                 {
-                    for (int j = -2; j < 3; ++j)
+                    std::complex<double> obstacle_point(obstacles_to_use[j][0], obstacles_to_use[j][1]);
+                    std::complex<double> a = start_point - obstacle_point;
+                    std::complex<double> b = end_point - obstacle_point;
+                    double minimum_phase_difference = std::arg(b) - std::arg(a);
+                    for (int k = -2; k < 3; ++k)
                     {
-                        double phase_difference = (std::arg(b) + 2 * M_PIf64 * i) - (std::arg(a) + 2 * M_PIf64 * j);
-                        if (std::abs(phase_difference) < std::abs(minimum_phase_difference))
+                        for (int l = -2; l < 3; ++l)
                         {
-                            minimum_phase_difference = phase_difference;
+                            double phase_difference = (std::arg(b) + 2 * M_PIf64 * k) - (std::arg(a) + 2 * M_PIf64 * l);
+                            if (std::abs(phase_difference) < std::abs(minimum_phase_difference))
+                            {
+                                minimum_phase_difference = phase_difference;
+                            }
                         }
                     }
+                    current_edge_signature.push_back(minimum_phase_difference);
                 }
-                return minimum_phase_difference;
-            };
-
-            Eigen::VectorXd current_h_signature = Eigen::VectorXd::Zero(obstacles_to_use.size());
-            
-            Eigen::VectorXcd obstacle_points = Eigen::VectorXcd::Zero(obstacles_to_use.size());
-            for (unsigned int i = 0; i < obstacles_to_use.size(); ++i)
-                obstacle_points(i) = std::complex<double>(obstacles_to_use[i][0], obstacles_to_use[i][1]);
-            
-            Eigen::VectorXd sum = Eigen::VectorXd::Zero(obstacles_to_use.size());
-            for(int i=1;i<=n;++i)
-            {
-                Eigen::VectorXcd s_vec = Eigen::VectorXcd::Constant(obstacle_points.size(), std::complex<double>(path[i-1].first, path[i-1].second)) - obstacle_points;
-                Eigen::VectorXcd e_vec = Eigen::VectorXcd::Constant(obstacle_points.size(), std::complex<double>(path[i].first, path[i].second)) - obstacle_points;
-                Eigen::VectorXd t = s_vec.array().binaryExpr(e_vec.array(), customOp);
-                Eigen::VectorXd temp = t;
-                sum += temp;
+                // Add to current h signature
+                for(int j=0;j<obstacles_to_use.size();++j)
+                {
+                    temp[j]  = temp[j]  +  current_edge_signature[j];
+                }
             }
-            current_h_signature = sum;
+            current_h_signature = temp;
             return current_h_signature;
         }
 
@@ -790,7 +902,8 @@ class ModifiedTopolgicalExplore
     std::vector<std::vector<std::pair<int,int>>> traversed_paths;
     std::vector<std::pair<int,int>> current_path;
     int current_path_index;
-    std::vector<Eigen::VectorXd> traversed_signatures;
+    // std::vector<Eigen::VectorXd> traversed_signatures;
+    std::vector<std::vector<double>> traversed_signatures;
     std::vector<std::vector<int>> *grid_original;
     bool remove_explored_obstacles = false;
     int obstacle_size = 4;
