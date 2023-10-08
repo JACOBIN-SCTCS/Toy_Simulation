@@ -384,6 +384,18 @@ class Robot
         double epsilon = 1.0;
         int t = 0;
         int previously_chosen = 0;
+
+        double total_duration = 0.0;
+        
+        if(top_explore.print_time)
+        {
+            top_explore.time_file.open("time_file.txt",std::ios_base::app);
+            top_explore.time_file<<"-\n";
+            top_explore.time_file.close();
+        }
+
+        auto start_time = high_resolution_clock::now();
+        
         while(true)
         {
             double drawn_number = ((double)rand()/(double)RAND_MAX);
@@ -557,6 +569,9 @@ class Robot
             if(t>=1000)
                 break;
         }
+        auto end_time = high_resolution_clock::now();
+        double time_taken = duration_cast<milliseconds>(end_time - start_time).count();
+        std::cout<< "Time taken for exploration = "<<time_taken<<std::endl;
         std::cout<<"Done Exploration"<<std::endl;
         f.close();
         depth_file.close();
@@ -1285,7 +1300,15 @@ int main(int argc, char *argv[])
         use_window = false;
         Robot robot(60,600,10.0,25,use_window,"result_obs_0.txt","obs0.txt",8,false,false,200,"obs0_",false);
         // robot.topological_explore_4({0,0});
-        robot.start_exploring(0,0);
+        // robot.start_exploring(0,0);
+        robot.topological_explore_4({0,0});
+    
+        // for(int i=0;i<10;++i)
+        // {
+        //     Robot robot(60,600,10.0,25,use_window,"result_obs_0.txt","obs0.txt",8,false,false,200,"obs0_",false);
+        //     robot.topological_explore_4({0,0});
+        // }
+        
         // Robot robot(5,100,20.0,25,use_window,"result_obs_0.txt","obs0.txt",8,false,false,200,"obs0_");
         // robot.test_function();
     }

@@ -14,6 +14,9 @@
 #include <set>
 #include <random>
 #include <map>
+#include <chrono>
+
+using namespace std::chrono;
 
 class ModifiedTopolgicalExplore
 {
@@ -413,6 +416,14 @@ class ModifiedTopolgicalExplore
             }
 
 
+            // Start computing the time from here
+
+            if(print_time)
+            {
+                time_file.open("time_file.txt",std::ios_base::app);
+            }
+            auto start_time = high_resolution_clock::now();
+
             Eigen::VectorXd partial_signature = Eigen::VectorXd::Zero(obstacles_to_use.size());
             partial_signature = recompute_h_signature(current_path,obstacles_to_use,current_path_index);
 
@@ -542,6 +553,14 @@ class ModifiedTopolgicalExplore
                             current_path.push_back({path[i].first,path[i].second});
                         }
                     }
+
+                    auto end_time = high_resolution_clock::now();
+                    auto duration = duration_cast<milliseconds>(end_time - start_time);
+                    if(print_time)
+                    {
+                        time_file<<duration.count()<<"\n";
+                        time_file.close();
+                    }
                     return true;
                 }
                 else
@@ -584,6 +603,13 @@ class ModifiedTopolgicalExplore
                         }
                     }
                 }
+            }
+            auto end_time = high_resolution_clock::now();
+            auto duration = duration_cast<microseconds>(end_time - start_time);
+            if(print_time)
+            {
+                time_file<<duration.count()<<"\n";
+                time_file.close();
             }
             return false;
         }
@@ -770,5 +796,8 @@ class ModifiedTopolgicalExplore
     int obstacle_size = 4;
     
     bool print_logs;
+    
+    bool print_time = true;
+    std::fstream time_file;
 
 };
