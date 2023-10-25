@@ -584,7 +584,9 @@ class ModifiedTopolgicalExplore
                         // }
                     }
                     if (is_already_seen)
-                        continue;
+                    {
+                        return false;
+                    }
                     if(print_logs)
                     {
                         std::cout<<"H signature = ";

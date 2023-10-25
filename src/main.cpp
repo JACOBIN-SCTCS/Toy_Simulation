@@ -413,6 +413,7 @@ class Robot
 
         double total_duration = 0.0;
         
+        int retry_count = 0;
         if(top_explore.print_time)
         {
             top_explore.time_file_name =  depth_result_file_prefix+"time_file.txt";
@@ -432,6 +433,7 @@ class Robot
             
             if(drawn_number <= epsilon)
             {
+                topological:
                 if(print_logs)
                     std::cout<<"Doing a topological exploration strategy"<<std::endl;
                 
@@ -454,9 +456,28 @@ class Robot
                 {
                     if(print_logs)
                         std::cout<<"No Topological exploration path found"<<std::endl;
+                    
+                    retry_count +=1;
+                    if(retry_count >= retry_limit)
+                        goto frontier;
+                    
+                    
+                    srand(time(NULL));
+                    std::default_random_engine generator;
+                    std::vector<int> quadrant_weights = top_explore.get_quadrant_vector();
+                    std::discrete_distribution<int> distribution(quadrant_weights.begin(),quadrant_weights.end());
+                    int quadrant_select_index = distribution(generator);//rand() % 4;
+                    int next_quadrant_index = quadrant_select_index;               
+                    std::vector<std::pair<int,int>> dest_points = top_explore.get_destination_point(quadrant_select_index);
+            
+                    int random_index = rand() % dest_points.size();
+                    top_explore.current_goal = {dest_points[random_index].first,dest_points[random_index].second};
+                    top_explore.current_goal_quadrant  = next_quadrant_index;
+                    goto topological;
+                    // choose another destination point and continue
                     // t+=1;
                     // epsilon = 1.0 - ((double)total_cells_mapped/(total_free_space) + pow(2.71828,0.01*t)/(total_free_space));//pow(2.71828,-0.02*t);
-                    goto frontier;
+                    // goto frontier;
                     // if(t>=1000)
                     //  break;
                 }
@@ -1098,6 +1119,7 @@ private:
     bool use_costmap = true;
     int inflation_radius = 5;
     int animation_delay = 50;
+    int retry_limit = 5;
 
 };
 
