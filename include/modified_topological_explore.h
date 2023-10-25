@@ -43,10 +43,12 @@ class ModifiedTopolgicalExplore
         std::vector<std::vector<int>> *g_o,
         std::vector<std::vector<int>> *o_s,
         bool r_explored=false, int obstacle_size=4,
-        bool print_logs = true
+        bool print_logs = true,
+        std::vector<std::vector<int>> *grid_costmap=nullptr,
+        bool use_costmap = false
         )
         
-         : grid(g), obstacles_seen(o), start_coordinates(start),grid_original(g_o),remove_explored_obstacles(r_explored), obstacle_size(obstacle_size) , obstacles_seen_start_point(o_s) , print_logs(print_logs)
+         : grid(g), obstacles_seen(o), start_coordinates(start),grid_original(g_o),remove_explored_obstacles(r_explored), obstacle_size(obstacle_size) , obstacles_seen_start_point(o_s) , print_logs(print_logs) , grid_costmap(grid_costmap), use_costmap(use_costmap)
         {
             current_start = {start[0],start[1]};
             std::vector<std::vector<int>> &grid_ref = *grid;
@@ -446,6 +448,12 @@ class ModifiedTopolgicalExplore
             std::set<std::string> visited;
             
             double f = 0.0;
+            if(use_costmap)
+            {
+                std::vector<std::vector<int>> &grid_costmap_ref = *grid_costmap;
+                f = grid_costmap_ref[x][y];
+
+            }
             // double f=cell_costs[x][y];
             // Can comment out below for loop
         
@@ -683,6 +691,13 @@ class ModifiedTopolgicalExplore
                         // if (cell_cost == -1)
                         //     cell_cost = 1.0;
                         double cell_cost = std::abs(new_point-node->point);
+                        if(use_costmap)
+                        {
+                            std::vector<std::vector<int>> &grid_costmap_ref = *grid_costmap;
+                            int x_new = (int) new_point.real();
+                            int y_new = (int) new_point.imag();
+                            cell_cost =  std::abs(new_point - node->point)*(1.0 + multiplier*(((double) grid_costmap_ref[x_new][y_new])/ (divider)));
+                        }
                         // double cell_cost=  cell_costs[int(real(new_point))][int(imag(new_point))];
                         double f = cell_cost  + node->f;
                         //double f = cell_cost;
@@ -913,5 +928,10 @@ class ModifiedTopolgicalExplore
     bool print_time = true;
     std::string time_file_name = "time_file.txt";  
     std::fstream time_file;
+
+    bool use_costmap;
+    int multiplier = 2.0;
+    int divider = 254;
+    std::vector<std::vector<int>> *grid_costmap;
 
 };

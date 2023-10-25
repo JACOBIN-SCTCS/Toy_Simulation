@@ -34,6 +34,15 @@ class Robot
             use_window  = window;
             output_file_name = filename;
             grid.resize(grid_size, std::vector<int>(grid_size, -1));
+
+            for(int i=0;i<grid_size;++i)
+            {
+                std::vector<int> row_cost;
+                for(int j=0;j<grid_size;++j)
+                    row_cost.push_back(1);
+                grid_costmap.push_back(row_cost);
+            }
+
             grid_original.resize(grid_size,std::vector<int>(grid_size,1));
             grid_original_only_boundary.resize(grid_size,std::vector<int>(grid_size,1));
             obstacle_id_grid.resize(grid_size,std::vector<int>(grid_size,-1));
@@ -194,6 +203,22 @@ class Robot
                     if(grid_original[inter_new_int_x][inter_new_int_y]==0)
                     {
                         grid[inter_new_int_x][inter_new_int_y]=0;
+                        grid_costmap[inter_new_int_x][inter_new_int_y] = 255;
+
+                        for(int k = -inflation_radius ; k < inflation_radius;++k)
+                        {
+                            for(int l = -inflation_radius; l < inflation_radius ; ++l)
+                            {
+                                if( (l*l + k*k)  <= inflation_radius*inflation_radius)
+                                {
+                                    int circle_x = inter_new_int_x + k;
+                                    int circle_y = inter_new_int_y + l;
+                                    if(circle_x>=0 && circle_x < grid_size && circle_y >= 0 && circle_y < grid_size)
+                                        grid_costmap[circle_x][circle_y] = std::max(grid_costmap[circle_x][circle_y], 254);
+                                }
+                            }
+                        }
+                        
                         if(touched_an_obstacle[obstacle_id_grid[inter_new_int_x][inter_new_int_y]] == false)
                         {
                             touched_an_obstacle[obstacle_id_grid[inter_new_int_x][inter_new_int_y]] = true;
@@ -207,6 +232,7 @@ class Robot
                         if(grid[inter_new_int_x][inter_new_int_y]==-1 || grid[inter_new_int_x][inter_new_int_y]==3)
                             total_cells_mapped+=1;
                         
+                        grid_costmap[inter_new_int_x][inter_new_int_y] = std::max(1,grid_costmap[inter_new_int_x][inter_new_int_y]);
                         grid[inter_new_int_x][inter_new_int_y] = 1;
                     
                     }
@@ -272,7 +298,7 @@ class Robot
         double time_taken  = 0;
         
         // FrontierExplore f_explore(&grid,&obstacles_seen,print_logs);
-        FrontierExplore f_explore(&grid,print_logs);   
+        FrontierExplore f_explore(&grid,print_logs,true,&grid_costmap);   
        
         auto start_time = high_resolution_clock::now();
         // Start benchmarking from here, Sometimes writting to the file f can take time.
@@ -313,7 +339,7 @@ class Robot
                 if(use_window)
                 {
                     fw.render_screen(grid);
-                    SDL_Delay(500);
+                    SDL_Delay(animation_delay);
                 }
                 // fw.render_screen(grid);
                 // SDL_Delay(500);
@@ -376,9 +402,9 @@ class Robot
         
         // Start benchmarking from here
 
-        ModifiedTopolgicalExplore top_explore(&grid,&obstacles_seen,start,&grid_original,&obstacles_seen_start_point,true,square_obstacle_size,print_logs);
+        ModifiedTopolgicalExplore top_explore(&grid,&obstacles_seen,start,&grid_original,&obstacles_seen_start_point,true,square_obstacle_size,print_logs,&grid_costmap,true);
         // FrontierExplore f_explore(&grid,&obstacles_seen,print_logs);
-        FrontierExplore f_explore(&grid,print_logs);
+        FrontierExplore f_explore(&grid,print_logs,true,&grid_costmap);
         
         std::vector<std::vector<std::pair<int,int>>> already_traversed_paths;
         double epsilon = 1.0;
@@ -477,7 +503,7 @@ class Robot
                         break;
                     }
                     if(use_window)
-                        SDL_Delay(500);
+                        SDL_Delay(animation_delay);
                 }
                 if(current_x== top_explore.current_goal[0] && current_y==top_explore.current_goal[1])
                 {
@@ -554,7 +580,7 @@ class Robot
                     if(use_window)
                     {
                         fw.render_screen(grid);
-                        SDL_Delay(500);
+                        SDL_Delay(animation_delay);
                     }
                     if(((i+1)<path.size() && grid_original[path[i+1].first][path[i+1].second]==0))
                     {
@@ -648,7 +674,7 @@ class Robot
                 if(use_window)
                 {
                     fw.render_screen(grid);
-                    SDL_Delay(500);
+                    SDL_Delay(animation_delay);
                 }
                 bool towards_an_obstacle = false;
             
@@ -1035,6 +1061,8 @@ private:
     int grid_size;
     std::vector<std::vector<int>> grid;
     std::vector<std::vector<int>> grid_original;
+    std::vector<std::vector<int>> grid_costmap;
+
     std::vector<std::vector<int>> grid_original_only_boundary;
 
     std::vector<std::vector<int>> obstacle_id_grid;
@@ -1064,9 +1092,12 @@ private:
     bool depth_result_visualize = false;
     int  depth_result_visualize_timestep = 200;
     std::string depth_result_file_prefix = "obs0";
-    int square_obstacle_size = 4;
+    int square_obstacle_size = 30;
 
     bool print_logs = true;
+    bool use_costmap = true;
+    int inflation_radius = 5;
+    int animation_delay = 50;
 
 };
 
@@ -1298,11 +1329,12 @@ int main(int argc, char *argv[])
     }
     else if(choice ==7)
     {
-        use_window = false;
+        use_window = true;
         // Robot robot(60,600,10.0,25,use_window,"result_obs_0.txt","obs0.txt",8,false,false,200,"obs0_",false);
         // robot.topological_explore_4({0,0});
         // robot.start_exploring(0,0);
         Robot robot(256, 768,3.0,30,use_window,"result_obs_0.txt","obs_256_30_0.txt",32,false,false,200,"obs0_",false);
+        // robot.start_exploring(0,0);
         robot.topological_explore_4({0,0});
     
         // for(int i=0;i<10;++i)

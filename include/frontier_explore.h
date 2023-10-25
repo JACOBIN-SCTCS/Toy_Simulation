@@ -31,7 +31,7 @@ class FrontierExplore
         };
 
         // FrontierExplore(std::vector<std::vector<int>> *grid, std::vector<std::vector<int>> *obs, bool print_logs = true) : grid(grid), obstacles(obs) , print_logs(print_logs)
-        FrontierExplore(std::vector<std::vector<int>> *grid, bool print_logs = true) : grid(grid), print_logs(print_logs)
+        FrontierExplore(std::vector<std::vector<int>> *grid, bool print_logs = true , bool use_costmap=false, std::vector<std::vector<int>> *grid_costmap=nullptr) : grid(grid),grid_costmap(grid_costmap), use_costmap(use_costmap),print_logs(print_logs)
         {
             ;
         }
@@ -116,6 +116,17 @@ class FrontierExplore
                         }
                         if(frontier_tag[x_new][y_new]==true)
                         {
+                            int selected_x  = x_new;
+                            int selected_y = y_new;
+                            int selected_val = 0.0;
+
+                            if(use_costmap)
+                            {
+                                std::vector<std::vector<int>> &grid_costmap_ref = *grid_costmap;
+                                selected_val = grid_costmap_ref[selected_x][selected_y];
+                            }
+
+                            
                             std::queue<std::pair<int,int>> new_q;
                             new_q.push({x_new,y_new});
                             std::vector<std::pair<int,int>> frontier_cells;
@@ -149,14 +160,24 @@ class FrontierExplore
                                         {
                                             new_q.push({x_prime_new,y_prime_new});
                                             frontier_cells.push_back({x_prime_new,y_prime_new});
+                                            if(use_costmap)
+                                            {
+                                                std::vector<std::vector<int>>& grid_costmap_ref = *grid_costmap;
+                                                if(selected_val > grid_costmap_ref[x_prime_new][y_prime_new])
+                                                {
+                                                    selected_val = grid_costmap_ref[x_prime_new][y_prime_new];
+                                                    selected_x = x_prime_new;
+                                                    selected_y = y_prime_new;
+                                                } 
+                                            }
                                         }                                      
                                     }
                                 }
                             } 
                             Frontier frontier;
                             
-                            frontier.x = x_new;
-                            frontier.y = y_new;
+                            frontier.x = selected_x;
+                            frontier.y = selected_y;
                             frontier.cells = frontier_cells;
                             frontiers.push_back(frontier);
                         }
@@ -191,7 +212,7 @@ class FrontierExplore
             }
 
 
-            distance[start_x][start_y] = 0;
+            
     	    std::priority_queue<AstarNode*, std::vector<AstarNode*>, std::function<bool(AstarNode*, AstarNode*)>> pq([](AstarNode* a, AstarNode* b) {
                 // return  ((a->f + a->g) > (b->f + b->g));
                 // return ((a->cost) > (b->cost));
@@ -199,8 +220,12 @@ class FrontierExplore
              });
 
             double cell_cost = 0.0;
-            
-           
+            if(use_costmap)
+            {
+                std::vector<std::vector<int>> &grid_costmap_ref = *grid_costmap;
+                cell_cost = grid_costmap_ref[start_x][start_y];
+            }
+            distance[start_x][start_y] = cell_cost;
 
             AstarNode* start_node = new AstarNode();
             start_node->x = start_x;
@@ -267,7 +292,11 @@ class FrontierExplore
                         std::complex<double> current_point_complex(x,y);
                         std::complex<double> neighbour_complex(x_new,y_new);
                         double new_cell_cost = std::abs(neighbour_complex - current_point_complex);
-                        
+                        if(use_costmap)
+                        {
+                            std::vector<std::vector<int>> &grid_costmap_ref = *grid_costmap;
+                            new_cell_cost  = std::abs(neighbour_complex - current_point_complex)*(1.0 + multiplier*(((double) grid_costmap_ref[x_new][y_new])/ (divider)));
+                        }
                         double f_new = curr->f +  new_cell_cost;
                         double g_new = f_new + sqrt((x_new-end_x)*(x_new-end_x) + (y_new-end_y)*(y_new-end_y));
                         if(f_new < distance[x_new][y_new])
@@ -297,8 +326,12 @@ class FrontierExplore
         }
 
         std::vector<std::vector<int>>* grid;
+        std::vector<std::vector<int>>* grid_costmap;
         // std::vector<std::vector<int>> *obstacles;
         std::vector<Frontier> frontiers;
 
         bool print_logs;
+        bool use_costmap;
+        int multiplier = 2.0;
+        int divider = 254;
 };
