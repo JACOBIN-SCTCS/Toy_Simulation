@@ -376,7 +376,8 @@ class Robot
         int current_x = start[0] ;
         int current_y = start[1];
         srand(time(NULL));
-
+        std::fstream time_file;
+        time_file.open("time_algorithm_without.txt",std::ios_base::app);
      
         if(!use_window)
         {
@@ -619,6 +620,8 @@ class Robot
         }
         auto end_time = high_resolution_clock::now();
         double time_taken = duration_cast<milliseconds>(end_time - start_time).count();
+        time_file << time_taken<<"\n";
+        time_file.close();
         std::cout<< "Time taken for exploration = "<<time_taken<<std::endl;
         std::cout<<"Done Exploration"<<std::endl;
         f.close();
@@ -1351,19 +1354,25 @@ int main(int argc, char *argv[])
     }
     else if(choice ==7)
     {
-        use_window = true;
+        use_window = false;
         // Robot robot(60,600,10.0,25,use_window,"result_obs_0.txt","obs0.txt",8,false,false,200,"obs0_",false);
         // robot.topological_explore_4({0,0});
         // robot.start_exploring(0,0);
-        Robot robot(256, 768,3.0,30,use_window,"result_obs_0.txt","obs_256_30_0.txt",32,false,false,200,"obs0_",false);
+        // Robot robot(256, 768,3.0,30,use_window,"result_obs_0.txt","obs_256_30_0.txt",32,false,false,200,"obs0_",false);
         // robot.start_exploring(0,0);
-        robot.topological_explore_4({0,0});
-    
-        // for(int i=0;i<10;++i)
-        // {
-        //     Robot robot(60,600,10.0,25,use_window,"result_obs_0.txt","obs0.txt",8,false,false,200,"obs0_",false);
-        //     robot.topological_explore_4({0,0});
-        // }
+        // robot.topological_explore_4({0,0});
+        //Robot robot(256, 768,3.0,30,use_window,"result_obs_0.txt","obs_256_30_0.txt",32,false,false,200,"obs0_",false);
+        //robot.topological_explore_4({0,0});
+        //for(int i=0;i<100;++i)
+        //{
+            
+            Robot robot(256, 768,3.0,30,use_window,"result_obs_0.txt","obs_256_30_0.txt",32,false,false,200,"obs0_",false);
+            // Robot robot(256, 768,3.0,30,use_window,"result_obs_0.txt","obs_256_30_0.txt",32,false,false,200,"obs0_",false);
+            // robot.start_exploring(0,0);
+                // Robot robot(256, 768,3.0,30,use_window,"result_obs_0.txt","obs_256_30_0.txt",32,false,false,200,"obs0_",false);
+            // robot.start_exploring(0,0);
+            robot.topological_explore_4({0,0});
+        //}
         
         // Robot robot(5,100,20.0,25,use_window,"result_obs_0.txt","obs0.txt",8,false,false,200,"obs0_");
         // robot.test_function();
