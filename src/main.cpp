@@ -6,6 +6,7 @@
 #include "topolgoical_explore.h"
 #include "modified_topological_explore.h"
 #include "random_walk.h"
+#include "winding_topological_explore.h"
 #include <chrono>
 
 using namespace std::chrono;
@@ -629,6 +630,265 @@ class Robot
 
     }
 
+    void winding_topolgical_explore(std::vector<int> start)
+    {
+        // WindingTopolgicalExplore top_explore(&grid,&obstacles_seen,start,&grid_original,&obstacles_seen_start_point,true,square_obstacle_size,print_logs,&grid_costmap,true);
+        int current_x = start[0] ;
+        int current_y = start[1];
+
+        srand(time(NULL));
+        std::fstream time_file;
+        time_file.open("time_algorithm_without.txt",std::ios_base::app);
+        if(!use_window)
+        {
+            f.open(output_file_name, std::ios::app);
+            f << "-\n";
+        }
+        if(depth_result_visualize)
+        {
+            depth_file.open(depth_result_file_prefix,std::ios::app);
+            depth_file<<"-\n";
+        }
+        
+        
+        int start_x = current_x , start_y = current_y;
+        sensor_model(current_x, current_y);
+        if(!use_window)
+        {
+            if(depth_result)
+            {
+                print_depth_result();
+            }
+        }
+        
+        // Start benchmarking from here
+        WindingTopolgicalExplore top_explore(&grid,&obstacles_seen,start,&grid_original,&obstacles_seen_start_point,true,square_obstacle_size,print_logs,&grid_costmap,true);
+        // ModifiedTopolgicalExplore top_explore(&grid,&obstacles_seen,start,&grid_original,&obstacles_seen_start_point,true,square_obstacle_size,print_logs,&grid_costmap,true);
+        // FrontierExplore f_explore(&grid,&obstacles_seen,print_logs);
+        FrontierExplore f_explore(&grid,print_logs,true,&grid_costmap);
+        
+        std::vector<std::vector<std::pair<int,int>>> already_traversed_paths;
+        double epsilon = 1.0;
+        int t = 0;
+        int previously_chosen = 0;
+
+        double total_duration = 0.0;
+        
+        int retry_count = 0;
+        if(top_explore.print_time)
+        {
+            top_explore.time_file_name =  depth_result_file_prefix+"time_file.txt";
+            top_explore.time_file.open(top_explore.time_file_name,std::ios_base::app);
+            top_explore.time_file<<"-\n";
+            top_explore.time_file.close();
+        }
+
+        auto start_time = high_resolution_clock::now();
+        
+        while(true)
+        {
+            double drawn_number = ((double)rand()/(double)RAND_MAX);
+            double stopping_percentage = ((double)total_cells_mapped/(total_free_space)) * 100;
+            if(stopping_percentage>=99.0)
+                break;
+            
+            if(drawn_number <= epsilon)
+            {
+                topological:
+                if(print_logs)
+                    std::cout<<"Doing a topological exploration strategy"<<std::endl;
+                
+                if(grid[top_explore.current_goal[0]][top_explore.current_goal[1]]!=-1)
+                {
+                    std::default_random_engine generator;
+                    std::vector<int> quadrant_weights = top_explore.get_quadrant_vector();
+                    std::discrete_distribution<int> distribution(quadrant_weights.begin(),quadrant_weights.end());
+                    int quadrant_select_index = distribution(generator);//rand() % 4;
+                    int next_quadrant_index = quadrant_select_index;
+                    std::vector<std::pair<int,int>> dest_points = top_explore.get_destination_point(quadrant_select_index);
+                    int random_index = rand() % dest_points.size();
+                    top_explore.current_goal = {dest_points[random_index].first,dest_points[random_index].second};
+                    top_explore.current_goal_quadrant  = next_quadrant_index;
+                }
+
+                bool status = top_explore.getNonHomologousPaths(current_x,current_y,{});
+                std::vector<std::pair<int,int>> p = top_explore.current_path;
+                if(!status)
+                {
+                    if(print_logs)
+                        std::cout<<"No Topological exploration path found"<<std::endl;
+                    
+                    // retry_count +=1;
+                    // if(retry_count >= retry_limit)
+                    //     goto frontier;
+                    
+                    
+                    // srand(time(NULL));
+                    // std::default_random_engine generator;
+                    // std::vector<int> quadrant_weights = top_explore.get_quadrant_vector();
+                    // std::discrete_distribution<int> distribution(quadrant_weights.begin(),quadrant_weights.end());
+                    // int quadrant_select_index = distribution(generator);//rand() % 4;
+                    // int next_quadrant_index = quadrant_select_index;               
+                    // std::vector<std::pair<int,int>> dest_points = top_explore.get_destination_point(quadrant_select_index);
+            
+                    // int random_index = rand() % dest_points.size();
+                    // top_explore.current_goal = {dest_points[random_index].first,dest_points[random_index].second};
+                    // top_explore.current_goal_quadrant  = next_quadrant_index;
+                    // goto topological;
+                    // choose another destination point and continue
+                    // t+=1;
+                    // epsilon = 1.0 - ((double)total_cells_mapped/(total_free_space) + pow(2.71828,0.01*t)/(total_free_space));//pow(2.71828,-0.02*t);
+                    goto frontier;
+                    // if(t>=1000)
+                    //  break;
+                }
+                int start_idx = top_explore.current_path_index;
+                // for(int i=start_idx;i<p.size();++i)
+                // {
+                //  grid[p[i].first][p[i].second] = 2;
+                    
+                // }
+                if (use_window)
+                    fw.render_screen(grid);
+                for(int i=start_idx;i < p.size();++i)
+                {
+                    timesteps_taken+=1;
+                    grid[current_x][current_y] = 1;
+                    current_x = p[i].first;
+                    current_y = p[i].second;
+                    grid[current_x][current_y] = 2;
+                    sensor_model(current_x,current_y);
+                    if(!use_window)
+                    {
+                        if(depth_result)
+                        {
+                            print_depth_result();
+                        }
+                        else
+                        {
+                            f << timesteps_taken << " " << ((double)total_cells_mapped/(total_free_space)) * 100<<"\n";
+                        }
+                    }
+                    if(use_window)
+                        fw.render_screen(grid);
+                    if((i+1)< p.size() && grid_original[p[i+1].first][p[i+1].second] ==0)
+                    {
+                        grid[p[i+1].first][p[i+1].second] = 0;
+                        
+                        // Can cut the cost of duplicating the array
+                        std::vector<std::pair<int,int>> new_current_path;
+                        for(int j=0;j<=i;++j)
+                            new_current_path.push_back(p[j]);
+                        top_explore.current_path = new_current_path;
+                        // top_explore.current_path.erase(p.begin()+i+1);
+                        top_explore.current_path_index = i;
+                        break;
+                    }
+                    if(use_window)
+                        SDL_Delay(animation_delay);
+                }
+                if(current_x== top_explore.current_goal[0] && current_y==top_explore.current_goal[1])
+                {
+                    top_explore.start_quadrants.push_back(top_explore.current_start_quadrant);
+                    top_explore.goal_quadrants.push_back(top_explore.current_goal_quadrant);
+
+                    top_explore.current_start = {top_explore.current_goal[0],top_explore.current_goal[1]};
+                    top_explore.current_start_quadrant = top_explore.current_goal_quadrant;
+            
+                    std::default_random_engine generator;
+                    std::vector<int> quadrant_weights = top_explore.get_quadrant_vector();
+                    std::discrete_distribution<int> distribution(quadrant_weights.begin(),quadrant_weights.end());
+                    int quadrant_select_index = distribution(generator);//rand() % 4;
+                    int next_quadrant_index = quadrant_select_index;
+                    std::vector<std::pair<int,int>> dest_points = top_explore.get_destination_point(quadrant_select_index);
+                    int random_index = rand() % dest_points.size();
+                    top_explore.current_goal = {dest_points[random_index].first,dest_points[random_index].second};
+                    top_explore.current_goal_quadrant  = next_quadrant_index;
+                    
+                    std::vector<std::pair<int,int>> current_path_copy;
+                    for(int i=0;i<top_explore.current_path.size();++i)
+                    {
+                        current_path_copy.push_back({top_explore.current_path[i].first,top_explore.current_path[i].second});
+                    }
+                    top_explore.traversed_paths.push_back(current_path_copy);
+                    top_explore.current_path.clear();
+                    top_explore.current_path_index = 0;
+                }
+                previously_chosen = 0;
+
+            }
+            else
+            {
+                frontier:
+                if(print_logs)
+                    std::cout<<"Doing Frontier Based exploration"<<std::endl;
+                f_explore.findFrontiers(current_x, current_y);
+                if(f_explore.frontiers.size() <=0)
+                {
+                    t+=1000;
+                    break;
+                }
+                
+                std::vector<std::pair<int, int>> path = f_explore.getPath(current_x, current_y, f_explore.frontiers[0].x, f_explore.frontiers[0].y);
+                grid[f_explore.frontiers[0].x][f_explore.frontiers[0].y] = 3;
+
+                if(print_logs)
+                    std::cout << "Frontier ExplorationPath size = " << path.size() << std::endl;
+                std::vector<std::pair<int,int>> new_current_path_copy;
+                for(int i =0;i<top_explore.current_path_index;++i)
+                    new_current_path_copy.push_back(top_explore.current_path[i]);
+                    
+                for (int i = 0; i < path.size(); ++i)
+                {   timesteps_taken+=1;
+                    new_current_path_copy.push_back(path[i]);
+                    top_explore.current_path_index  = new_current_path_copy.size()-1;
+
+                    grid[current_x][current_y] = 1;
+                    current_x = path[i].first;
+                    current_y = path[i].second;
+                    grid[current_x][current_y] = 2;
+                    sensor_model(current_x,current_y);
+                    if(!use_window)
+                    {
+                        if(depth_result)
+                        {
+                           print_depth_result();
+                        }
+                        else
+                        {
+                            f << timesteps_taken << " " << ((double)total_cells_mapped/(total_free_space)) * 100<<"\n";
+                        }
+                    }
+                    if(use_window)
+                    {
+                        fw.render_screen(grid);
+                        SDL_Delay(animation_delay);
+                    }
+                    if(((i+1)<path.size() && grid_original[path[i+1].first][path[i+1].second]==0))
+                    {
+                        grid[path[i+1].first][path[i+1].second] = 0;
+                        break;
+                    }
+                }
+                top_explore.current_path = new_current_path_copy;
+                previously_chosen = 1;  
+            }
+            t+=1;
+           epsilon = 1.0 - ((double)total_cells_mapped/total_free_space); 
+            if(t>=1000)
+                break;
+        }
+        auto end_time = high_resolution_clock::now();
+        double time_taken = duration_cast<milliseconds>(end_time - start_time).count();
+        time_file << time_taken<<"\n";
+        time_file.close();
+        std::cout<< "Time taken for exploration = "<<time_taken<<std::endl;
+        std::cout<<"Done Exploration"<<std::endl;
+        f.close();
+        depth_file.close();
+    }
+
+
     void random_walk_explore(std::vector<int> start)
     {
         int current_x = start[0] ;
@@ -1128,7 +1388,7 @@ private:
 
 int main(int argc, char *argv[])
 {
-    int choice = 7;
+    int choice = 8;
     bool use_window = false;
     if(choice==0)
     {
@@ -1376,6 +1636,14 @@ int main(int argc, char *argv[])
         
         // Robot robot(5,100,20.0,25,use_window,"result_obs_0.txt","obs0.txt",8,false,false,200,"obs0_");
         // robot.test_function();
+    }
+    else if(choice == 8)
+    {
+        use_window = false;
+        Robot robot(256, 768,3.0,30,use_window,"result_obs_0.txt","obs_256_30_0.txt",32,false,false,200,"obs0_",false);
+        // robot.start_exploring(0,0);
+        robot.winding_topolgical_explore({0,0});
+        // robot.topological_explore_4({0,0});
     }
     else
     {

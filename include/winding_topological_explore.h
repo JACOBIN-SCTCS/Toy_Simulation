@@ -47,39 +47,39 @@ public:
         bool use_costmap = false) : grid(g), obstacles_seen(o), start_coordinates(start), grid_original(g_o), remove_explored_obstacles(r_explored), obstacle_size(obstacle_size), obstacles_seen_start_point(o_s), print_logs(print_logs), grid_costmap(grid_costmap), use_costmap(use_costmap)
     {
 
-        current_start = {start[0], start[1]};
+        current_start = {start[0],start[1]};
         std::vector<std::vector<int>> &grid_ref = *grid;
         boundary_points_path = getBoundaryPaths(grid_ref.size());
-
-        // This could be reduced to a series of if else. Since start point is 0,0 no need to optimize. first run will break out of loop;
         int quadrant = -1;
-        for (int i = 0; i < boundary_points_path.size(); ++i)
+
+        // This could be reduced to a series of if else
+        for(int i=0;i<boundary_points_path.size();++i)
         {
-            for (int j = 0; j < boundary_points_path[i].size(); ++j)
+            for(int j = 0; j < boundary_points_path[i].size();++j)
             {
-                if (current_start[0] == boundary_points_path[i][j][boundary_points_path[i][j].size() - 1].first && current_start[1] == boundary_points_path[i][j][boundary_points_path[i][j].size() - 1].second)
+                if(current_start[0] == boundary_points_path[i][j][0].first && current_start[1] == boundary_points_path[i][j][0].second)
                 {
                     quadrant = i;
                     break;
                 }
             }
-            if (quadrant != -1)
+            if(quadrant != - 1)
                 break;
         }
-        current_start_quadrant = quadrant;
 
-        // choosing the destination point
+        
+        current_start_quadrant = quadrant;
         srand(time(NULL));
         std::default_random_engine generator;
         std::vector<int> quadrant_weights = get_quadrant_vector();
-        std::discrete_distribution<int> distribution(quadrant_weights.begin(), quadrant_weights.end());
+        std::discrete_distribution<int> distribution(quadrant_weights.begin(),quadrant_weights.end());
         int quadrant_select_index = distribution(generator);
 
-        std::vector<std::pair<int, int>> dest_points = get_destination_point(quadrant_select_index);
-
+        std::vector<std::pair<int,int>> dest_points = get_destination_point(quadrant_select_index);
+        
         int random_index = rand() % dest_points.size();
-        current_goal = {dest_points[random_index].first, dest_points[random_index].second};
-
+        current_goal = {dest_points[random_index].first,dest_points[random_index].second};
+        
         current_goal_quadrant = quadrant_select_index;
         current_path_index = 0;
         traversed_paths.clear();
@@ -87,45 +87,96 @@ public:
         traversed_signatures.clear();
     }
 
-    std::vector<std::vector<std::vector<std::pair<int, int>>>> getBoundaryPaths(int grid_size)
+     std::vector<std::vector<std::vector<std::pair<int,int>>>> getBoundaryPaths(int grid_size)
     {
-        std::vector<std::vector<std::vector<std::pair<int, int>>>> v;
-        std::vector<std::pair<int, int>> running_path;
-
-        for (int i = 0; i < 4; ++i)
+        std::vector<std::vector<std::vector<std::pair<int,int>>>> v;
+        for(int i=0;i<4;++i)
         {
-            std::vector<std::vector<std::pair<int, int>>> current_quadrant_paths;
-            if (i == 0)
+            std::vector<std::vector<std::pair<int,int>>> current_quadrant_paths;
+            if(i==0)
             {
-                for (int j = 0; j < grid_size - 1; ++j)
+                for(int j=0;j<grid_size-1;++j)
                 {
-                    running_path.push_back({0, j});
-                    current_quadrant_paths.push_back(running_path);
+                    std::vector<std::pair<int,int>> current_path;
+                    current_path.push_back({0,j});
+                    for(int k = j; k>=-1;k--)
+                    {
+                        current_path.push_back({-1,k});
+                    }
+                    current_path.push_back({0,0});
+                    current_quadrant_paths.push_back(current_path);
                 }
             }
-            else if (i == 1)
+            else if(i==1)
             {
-                for (int j = 0; j < grid_size - 1; ++j)
+                for(int j=0;j<grid_size-1; ++ j)
                 {
-                    running_path.push_back({j, grid_size - 1});
-                    current_quadrant_paths.push_back(running_path);
+                    std::vector<std::pair<int,int>> current_path;
+                    current_path.push_back({j,grid_size-1});
+                    for(int k = j; k>=-1;k--)
+                    {
+                        current_path.push_back({k,grid_size});
+                    }
+                    for(int k = grid_size; k>=-1;k--)
+                    {
+                        current_path.push_back({-1,k});
+                    }
+                    current_path.push_back({0,0});
+                    current_quadrant_paths.push_back(current_path);
                 }
             }
-            else if (i == 2)
+            else if(i==2)
             {
-                for (int j = grid_size - 1; j >= 1; j--)
+                for(int j=1;j<grid_size; ++ j)
                 {
-                    running_path.push_back({grid_size - 1, j});
-                    current_quadrant_paths.push_back(running_path);
+                    std::vector<std::pair<int,int>> current_path;
+                    current_path.push_back({grid_size-1,j});
+                    for(int k = j; k<=grid_size;k++)
+                    {
+                        current_path.push_back({grid_size,k});
+                    }
+                    for(int k=grid_size;k>=-1;k--)
+                    {
+                        current_path.push_back({k,grid_size});
+                    }
+                    for(int k = grid_size; k>=-1;k--)
+                    {
+                        current_path.push_back({-1,k});
+                    }
+                    current_path.push_back({0,0});
+                    current_quadrant_paths.push_back(current_path);
                 }
+
             }
             else
             {
-                for (int j = grid_size - 1; j >= 1; j--)
+                for(int j=1;j<grid_size; ++ j)
                 {
-                    running_path.push_back({j, 0});
-                    current_quadrant_paths.push_back(running_path);
+                    std::vector<std::pair<int,int>> current_path;
+                    current_path.push_back({j,0});
+                    
+                    
+                    for(int k = j; k<=grid_size;k++)
+                    {
+                        current_path.push_back({k,-1});
+                    }
+                    for(int k=-1;k<=grid_size;k++)
+                    {
+                        current_path.push_back({grid_size,k});
+                    }
+                    for(int k=grid_size;k>=-1;k--)
+                    {
+                        current_path.push_back({k,grid_size});
+                    }
+                    for(int k = grid_size; k>=-1;k--)
+                    {
+                        current_path.push_back({-1,k});
+                    }
+
+                    current_path.push_back({0,0});
+                    current_quadrant_paths.push_back(current_path);
                 }
+
             }
             v.push_back(current_quadrant_paths);
         }
@@ -149,7 +200,7 @@ public:
         return neighbours;
     }
 
-    double euclidean_distance(const std::vector<int> &vec1, const std::vector<int> &vec2)
+    double euclidean_distance(const std::vector<int> vec1, const std::vector<int> vec2)
     {
         double sum = 0.0;
         for (int i = 0; i < vec1.size(); ++i)
@@ -307,12 +358,14 @@ public:
 
             for (int j = 0; j < boundary_points_path[start_quadrants[i]].size(); ++j)
             {
-                // if(boundary_points_path[start_quadrants[i]][j][0].first == traversed_paths[i][0].first && boundary_points_path[start_quadrants[i]][j][0].second == traversed_paths[i][0].second)
-                int n = boundary_points_path[start_quadrants[i]][j].size();
-                if (boundary_points_path[start_quadrants[i]][j][n - 1].first == traversed_paths[i][0].first && boundary_points_path[start_quadrants[i]][j][n - 1].second == traversed_paths[i][0].second)
+                if(boundary_points_path[start_quadrants[i]][j][0].first == traversed_paths[i][0].first && boundary_points_path[start_quadrants[i]][j][0].second == traversed_paths[i][0].second)
                 {
 
                     augmented_path_signature_start = recompute_h_signature(boundary_points_path[start_quadrants[i]][j], obstacles_to_use);
+                    for (int k = 0; k < augmented_path_signature_start.size(); ++k)
+                    {
+                        augmented_path_signature_start[k] = -augmented_path_signature_start[k];
+                    }
                     break;
                 }
             }
@@ -320,14 +373,9 @@ public:
             for (int j = 0; j < boundary_points_path[goal_quadrants[i]].size(); ++j)
             {
                 int n = boundary_points_path[goal_quadrants[i]][j].size();
-                if (boundary_points_path[goal_quadrants[i]][j][n - 1].first == traversed_paths[i][traversed_paths[i].size() - 1].first && boundary_points_path[goal_quadrants[i]][j][n - 1].second == traversed_paths[i][traversed_paths[i].size() - 1].second)
+                if (boundary_points_path[goal_quadrants[i]][j][0].first == traversed_paths[i][traversed_paths[i].size() - 1].first && boundary_points_path[goal_quadrants[i]][j][0].second == traversed_paths[i][traversed_paths[i].size() - 1].second)
                 {
-                    augmented_path_signature_goal = recompute_h_signature(boundary_points_path[start_quadrants[i]][j], obstacles_to_use);
-
-                    for (int k = 0; k < augmented_path_signature_goal.size(); ++k)
-                    {
-                        augmented_path_signature_goal[k] = -augmented_path_signature_goal[k];
-                    }
+                    augmented_path_signature_goal = recompute_h_signature(boundary_points_path[start_quadrants[i]][j], obstacles_to_use);       
                     break;
                 }
             }
@@ -414,7 +462,7 @@ public:
         // Can comment out below for loop
 
         // AstarNode *node = new AstarNode(start_point, partial_signature, f ,std::abs(goal_point - start_point), NULL);
-        AstarNode *node = new AstarNode(start_point, partial_signature, f, euclidean_distance(start_point, goal_quadrants), NULL);
+        AstarNode *node = new AstarNode(start_point, partial_signature, f, euclidean_distance(start_point, goal_point), NULL);
 
         std::stringstream ss;
         // Eigen::VectorXd zeros = Eigen::VectorXd::Zero(obstacles_to_use.size());
@@ -461,41 +509,44 @@ public:
 
                 for (int j = 0; j < boundary_points_path[current_start_quadrant].size(); ++j)
                 {
-                    int n = boundary_points_path[current_start_quadrant][j].size();
-                    if (boundary_points_path[current_start_quadrant][j][n - 1].first == current_start[0] && boundary_points_path[current_start_quadrant][j][n - 1].second == current_start[1])
+                    
+                    if (boundary_points_path[current_start_quadrant][j][0].first == current_start[0] && boundary_points_path[current_start_quadrant][j][0].second == current_start[1])
                     {
                         augmented_start_signature = recompute_h_signature(boundary_points_path[current_start_quadrant][j], obstacles_to_use);
                         // Negate elements in augmented_start_signature;
-                        // for(int k = 0; k < augmented_start_signature.size();++k)
-                        // {
-                        //     augmented_start_signature[k] = -augmented_start_signature[k];
-                        // }
+                        for(int k = 0; k < augmented_start_signature.size();++k)
+                        {
+                            augmented_start_signature[k] = -augmented_start_signature[k];
+                        }
                         break;
                     }
                 }
 
                 for (int j = 0; j < boundary_points_path[current_goal_quadrant].size(); ++j)
                 {
-                    int n = boundary_points_path[current_goal_quadrant][j].size();
-                    if (boundary_points_path[current_goal_quadrant][j][n - 1].first == current_goal[0] && boundary_points_path[current_goal_quadrant][j][n - 1].second == current_goal[1])
+                    // int n = boundary_points_path[current_goal_quadrant][j].size();
+                    if (boundary_points_path[current_goal_quadrant][j][0].first == current_goal[0] && boundary_points_path[current_goal_quadrant][j][0].second == current_goal[1])
                     {
                         augmented_goal_signature = recompute_h_signature(boundary_points_path[current_goal_quadrant][j], obstacles_to_use);
-                        for (int k = 0; k < augmented_goal_signature.size(); ++k)
-                        {
-                            augmented_goal_signature[k] = -augmented_goal_signature[k];
-                        }
+                        // for (int k = 0; k < augmented_goal_signature.size(); ++k)
+                        // {
+                        //     augmented_goal_signature[k] = -augmented_goal_signature[k];
+                        // }
                         break;
                     }
                 }
-
+              
                 for (int j = 0; j < corrected_signature.size(); j++)
                 {
+                    
                     corrected_signature[j] = corrected_signature[j] + augmented_start_signature[j] + augmented_goal_signature[j];
+                    
                     if (std::abs(corrected_signature[j]) < 0.001)
                     {
                         corrected_signature[j] = 0;
                     }
                 }
+              
 
                 for (int i = 0; i < traversed_signatures.size(); ++i)
                 {
@@ -529,7 +580,8 @@ public:
                 }
                 if (is_already_seen)
                 {
-                    return false;
+                    // return false;
+                    continue;
                 }
                 if (print_logs)
                 {
@@ -629,50 +681,48 @@ public:
                                 return w
 
                         */
-
-                        double minimum_phase_difference = 0.0;
-                        std::vector<int> p1 = {s_point[0] - obstacles_to_use[j][0], s_point[1] - obstacles_to_use[j][1]};
-                        std::vector<int> p2 = {e_point[0] - obstacles_to_use[j][0], e_point[1] - obstacles_to_use[j][1]};
-
-                        if (p1[1] * p2[1] < 0)
-                        {
-                            double r = p1[0] + ((((double)p1[1] * (p2[0] - p1[0]))) / (p1[1] - p2[1]));
-                            if (r > 0)
+                            double w = 0.0;
+                            std::vector<int> p1 = { s_point[0] - obstacles_to_use[j][0],  s_point[1] - obstacles_to_use[j][1] };
+                            std::vector<int> p2 = { e_point[0] - obstacles_to_use[j][0] , e_point[1] - obstacles_to_use[j][1]};
+                            if(p1[1]*p2[1] < 0)
                             {
-                                if (p1[1] < 0)
-                                {
-                                    minimum_phase_difference = minimum_phase_difference + 1.0;
-                                }
-                                else
-                                {
-                                    minimum_phase_difference = minimum_phase_difference - 1.0;
-                                }
-                            }
-                            else if (p1[1] == 0 and p1[0] > 0)
-                            {
-                                if (p2[1] > 0)
-                                {
-                                    minimum_phase_difference = minimum_phase_difference + 0.5;
-                                }
-                                else
-                                {
-                                    minimum_phase_difference = minimum_phase_difference - 0.5;
-                                }
-                            }
-                            else if (p2[1] == 0 and p2[0] > 0)
-                            {
-                                if (p1[1] < 0)
-                                {
-                                    minimum_phase_difference = minimum_phase_difference + 0.5;
-                                }
-                                else
-                                {
-                                    minimum_phase_difference = minimum_phase_difference - 0.5;
-                                }
-                            }
-                        }
+                                    double r = p1[0] + ((double)(p1[1]*(p2[0]-p1[0])))/(p1[1]-p2[1]);
+                                    if(r>0)
+                                    {
+                                            if(p1[0] < 0)
+                                            {
+                                                    w = w + 1.0;
+                                            }
+                                            else
+                                            {
+                                                    w = w -1.0;
+                                            }
+                                    }
 
-                        current_edge_signature.push_back(minimum_phase_difference);
+                            }
+                            else if(p1[1] == 0 && p1[0] > 0)
+                            {
+                                    if(p2[1] > 0)
+                                    {
+                                            w = w + 0.5;
+                                    }
+                                    else
+                                    {
+                                            w = w - 0.5;
+                                    }
+                            }
+                            else if(p2[1] == 0 && p2[0] > 0)
+                            {
+                                    if(p1[1] < 0)
+                                    {
+                                            w = w + 0.5;
+                                    }
+                                    else
+                                    {
+                                            w = w - 0.5;
+                                    }
+                            }
+                            current_edge_signature.push_back(w);
                     }
                     // Add to current h signature
                     bool should_use = true;
@@ -765,49 +815,49 @@ public:
 
             for (int j = 0; j < obstacles_to_use.size(); ++j)
             {
-                double minimum_phase_difference = 0.0;
-                std::vector<int> p1 = {start_point[0] - obstacles_to_use[j][0], start_point[1] - obstacles_to_use[j][1]};
-                std::vector<int> p2 = {end_point[0] - obstacles_to_use[j][0], end_point[1] - obstacles_to_use[j][1]};
-
-                if (p1[1] * p2[1] < 0)
+                double w = 0.0;
+                
+                std::vector<int> p1 = { start_point[0] - obstacles_to_use[j][0],  start_point[1] - obstacles_to_use[j][1] };
+                std::vector<int> p2 = { end_point[0] - obstacles_to_use[j][0] , end_point[1] - obstacles_to_use[j][1]};
+                if(p1[1]*p2[1] < 0)
                 {
-                    double r = p1[0] + ((((double)p1[1] * (p2[0] - p1[0]))) / (p1[1] - p2[1]));
-                    if (r > 0)
-                    {
-                        if (p1[1] < 0)
+                        double r = p1[0] + ((double)(p1[1]*(p2[0]-p1[0])))/(p1[1]-p2[1]);
+                        if(r>0)
                         {
-                            minimum_phase_difference = minimum_phase_difference + 1.0;
+                                if(p1[0] < 0)
+                                {
+                                        w = w + 1.0;
+                                }
+                                else
+                                {
+                                        w = w -1.0;
+                                }
                         }
-                        else
-                        {
-                            minimum_phase_difference = minimum_phase_difference - 1.0;
-                        }
-                    }
-                    else if (p1[1] == 0 and p1[0] > 0)
-                    {
-                        if (p2[1] > 0)
-                        {
-                            minimum_phase_difference = minimum_phase_difference + 0.5;
-                        }
-                        else
-                        {
-                            minimum_phase_difference = minimum_phase_difference - 0.5;
-                        }
-                    }
-                    else if (p2[1] == 0 and p2[0] > 0)
-                    {
-                        if (p1[1] < 0)
-                        {
-                            minimum_phase_difference = minimum_phase_difference + 0.5;
-                        }
-                        else
-                        {
-                            minimum_phase_difference = minimum_phase_difference - 0.5;
-                        }
-                    }
-                }
 
-                current_edge_signature.push_back(minimum_phase_difference);
+                }
+                else if(p1[1] == 0 && p1[0] > 0)
+                {
+                        if(p2[1] > 0)
+                        {
+                                w = w + 0.5;
+                        }
+                        else
+                        {
+                                w = w - 0.5;
+                        }
+                }
+                else if(p2[1] == 0 && p2[0] > 0)
+                {
+                        if(p1[1] < 0)
+                        {
+                                w = w + 0.5;
+                        }
+                        else
+                        {
+                                w = w - 0.5;
+                        }
+                }
+                current_edge_signature.push_back(w);
             }
             // Add to current h signature
             for (int j = 0; j < obstacles_to_use.size(); ++j)
@@ -815,6 +865,12 @@ public:
                 temp[j] = temp[j] + current_edge_signature[j];
             }
         }
+        // std::cout << "Recomputed signature =";
+        // for(int i=0;i<temp.size();++i)
+        // {
+        //     std::cout << temp[i] << " ";
+        // }
+        // std::cout << std::endl;
         current_h_signature = temp;
         return current_h_signature;
     }
